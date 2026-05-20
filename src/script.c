@@ -92,7 +92,9 @@ int scriptInterrupt(scriptRunCtx *run_ctx) {
     serverLog(LL_WARNING,
               "Slow script detected: still in execution after %lld milliseconds. "
               "You can try killing the script using the %s command. Script name is: %s.",
-              elapsed, (run_ctx->flags & SCRIPT_EVAL_MODE) ? "SCRIPT KILL" : "FUNCTION KILL", run_ctx->funcname);
+              elapsed,
+              (run_ctx->flags & SCRIPT_EVAL_MODE) ? "SCRIPT KILL" : "FUNCTION KILL",
+              run_ctx->funcname);
 
     enterScriptTimedoutMode(run_ctx);
     /* Once the script timeouts we reenter the event loop to permit others
@@ -133,8 +135,8 @@ int scriptPrepareForRun(scriptRunCtx *run_ctx,
     serverAssert(!curr_run_ctx);
     int client_allow_oom = !!(caller->flag.allow_oom);
 
-    int running_stale =
-        server.primary_host && server.repl_state != REPL_STATE_CONNECTED && server.repl_serve_stale_data == 0;
+    int running_stale = server.primary_host && server.repl_state != REPL_STATE_CONNECTED
+                        && server.repl_serve_stale_data == 0;
     int obey_client = mustObeyClient(caller);
 
     if (!(script_flags & SCRIPT_FLAG_EVAL_COMPAT_MODE)) {
@@ -144,9 +146,10 @@ int scriptPrepareForRun(scriptRunCtx *run_ctx,
         }
 
         if (running_stale && !(script_flags & SCRIPT_FLAG_ALLOW_STALE)) {
-            addReplyError(caller, "-MASTERDOWN Link with MASTER is down, "
-                                  "replica-serve-stale-data is set to 'no' "
-                                  "and 'allow-stale' flag is not set on the script.");
+            addReplyError(caller,
+                          "-MASTERDOWN Link with MASTER is down, "
+                          "replica-serve-stale-data is set to 'no' "
+                          "and 'allow-stale' flag is not set on the script.");
             return C_ERR;
         }
 
@@ -195,10 +198,11 @@ int scriptPrepareForRun(scriptRunCtx *run_ctx,
 
         /* Check OOM state. the no-writes flag imply allow-oom. we tested it
          * after the no-write error, so no need to mention it in the error reply. */
-        if (!client_allow_oom && server.pre_command_oom_state && server.maxmemory &&
-            !(script_flags & (SCRIPT_FLAG_ALLOW_OOM | SCRIPT_FLAG_NO_WRITES))) {
-            addReplyError(caller, "-OOM allow-oom flag is not set on the script, "
-                                  "can not run it when used memory > 'maxmemory'");
+        if (!client_allow_oom && server.pre_command_oom_state && server.maxmemory
+            && !(script_flags & (SCRIPT_FLAG_ALLOW_OOM | SCRIPT_FLAG_NO_WRITES))) {
+            addReplyError(caller,
+                          "-OOM allow-oom flag is not set on the script, "
+                          "can not run it when used memory > 'maxmemory'");
             return C_ERR;
         }
 
@@ -227,8 +231,8 @@ int scriptPrepareForRun(scriptRunCtx *run_ctx,
          * flag, we will not allow write commands. */
         run_ctx->flags |= SCRIPT_READ_ONLY;
     }
-    if (client_allow_oom ||
-        (!(script_flags & SCRIPT_FLAG_EVAL_COMPAT_MODE) && (script_flags & SCRIPT_FLAG_ALLOW_OOM))) {
+    if (client_allow_oom
+        || (!(script_flags & SCRIPT_FLAG_EVAL_COMPAT_MODE) && (script_flags & SCRIPT_FLAG_ALLOW_OOM))) {
         /* Note: we don't need to test the no-writes flag here and set this run_ctx flag,
          * since only write commands can deny-oom. */
         run_ctx->flags |= SCRIPT_ALLOW_OOM;
@@ -287,15 +291,17 @@ void scriptKill(client *c, int is_eval) {
         return;
     }
     if (mustObeyClient(curr_run_ctx->original_client)) {
-        addReplyError(c, "-UNKILLABLE The busy script was sent by a master instance in the context of replication and "
-                         "cannot be killed.");
+        addReplyError(c,
+                      "-UNKILLABLE The busy script was sent by a master instance in the context of replication and "
+                      "cannot be killed.");
         return;
     }
     if (curr_run_ctx->flags & SCRIPT_WRITE_DIRTY) {
-        addReplyError(c, "-UNKILLABLE Sorry the script already executed write "
-                         "commands against the dataset. You can either wait the "
-                         "script termination or kill the server in a hard way "
-                         "using the SHUTDOWN NOSAVE command.");
+        addReplyError(c,
+                      "-UNKILLABLE Sorry the script already executed write "
+                      "commands against the dataset. You can either wait the "
+                      "script termination or kill the server in a hard way "
+                      "using the SHUTDOWN NOSAVE command.");
         return;
     }
     if (is_eval && !(curr_run_ctx->flags & SCRIPT_EVAL_MODE)) {

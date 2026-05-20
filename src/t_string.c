@@ -193,8 +193,8 @@ void setGenericCommand(client *c,
         for (j = 0; j < c->argc; j++) {
             char *a = objectGetVal(c->argv[j]);
             /* Skip GET which may be repeated multiple times. */
-            if (j >= 3 && (a[0] == 'g' || a[0] == 'G') && (a[1] == 'e' || a[1] == 'E') &&
-                (a[2] == 't' || a[2] == 'T') && a[3] == '\0')
+            if (j >= 3 && (a[0] == 'g' || a[0] == 'G') && (a[1] == 'e' || a[1] == 'E') && (a[2] == 't' || a[2] == 'T')
+                && a[3] == '\0')
                 continue;
             argv[argc++] = c->argv[j];
             incrRefCount(c->argv[j]);
@@ -254,7 +254,8 @@ void setCommand(client *c) {
     int unit = UNIT_SECONDS;
     int flags = ARGS_NO_FLAGS;
 
-    if (parseExtendedCommandArgumentsOrReply(c, COMMAND_SET, 3, c->argc, &flags, &unit, NULL, &expire, &comparison) != C_OK) {
+    if (parseExtendedCommandArgumentsOrReply(c, COMMAND_SET, 3, c->argc, &flags, &unit, NULL, &expire, &comparison)
+        != C_OK) {
         return;
     }
 
@@ -302,8 +303,7 @@ void delifeqCommand(client *c) {
 int getGenericCommand(client *c) {
     robj *o;
 
-    if ((o = lookupKeyReadOrReply(c, c->argv[1], shared.null[c->resp])) == NULL)
-        return C_OK;
+    if ((o = lookupKeyReadOrReply(c, c->argv[1], shared.null[c->resp])) == NULL) return C_OK;
 
     if (checkType(c, o, OBJ_STRING)) {
         return C_ERR;
@@ -354,8 +354,7 @@ void getexCommand(client *c) {
 
     robj *o;
 
-    if ((o = lookupKeyReadOrReply(c, c->argv[1], shared.null[c->resp])) == NULL)
-        return;
+    if ((o = lookupKeyReadOrReply(c, c->argv[1], shared.null[c->resp])) == NULL) return;
 
     if (checkType(c, o, OBJ_STRING)) {
         return;
@@ -434,8 +433,7 @@ void setrangeCommand(client *c) {
     long offset;
     sds value = objectGetVal(c->argv[3]);
 
-    if (getLongFromObjectOrReply(c, c->argv[2], &offset, NULL) != C_OK)
-        return;
+    if (getLongFromObjectOrReply(c, c->argv[2], &offset, NULL) != C_OK) return;
 
     if (offset < 0) {
         addReplyError(c, "offset is out of range");
@@ -451,8 +449,7 @@ void setrangeCommand(client *c) {
         }
 
         /* Return when the resulting string exceeds allowed size */
-        if (checkStringLength(c, offset, sdslen(value)) != C_OK)
-            return;
+        if (checkStringLength(c, offset, sdslen(value)) != C_OK) return;
 
         o = createObject(OBJ_STRING, sdsnewlen(NULL, offset + sdslen(value)));
         dbAdd(c->db, c->argv[1], &o);
@@ -460,8 +457,7 @@ void setrangeCommand(client *c) {
         size_t olen;
 
         /* Key exists, check type */
-        if (checkType(c, o, OBJ_STRING))
-            return;
+        if (checkType(c, o, OBJ_STRING)) return;
 
         /* Return existing string length when setting nothing */
         olen = stringObjectLen(o);
@@ -471,8 +467,7 @@ void setrangeCommand(client *c) {
         }
 
         /* Return when the resulting string exceeds allowed size */
-        if (checkStringLength(c, offset, sdslen(value)) != C_OK)
-            return;
+        if (checkStringLength(c, offset, sdslen(value)) != C_OK) return;
 
         /* Create a copy when the object is shared or encoded. */
         o = dbUnshareStringValue(c->db, c->argv[1], o);
@@ -492,12 +487,9 @@ void getrangeCommand(client *c) {
     char *str, llbuf[32];
     size_t strlen;
 
-    if (getLongLongFromObjectOrReply(c, c->argv[2], &start, NULL) != C_OK)
-        return;
-    if (getLongLongFromObjectOrReply(c, c->argv[3], &end, NULL) != C_OK)
-        return;
-    if ((o = lookupKeyReadOrReply(c, c->argv[1], shared.emptybulk)) == NULL ||
-        checkType(c, o, OBJ_STRING)) return;
+    if (getLongLongFromObjectOrReply(c, c->argv[2], &start, NULL) != C_OK) return;
+    if (getLongLongFromObjectOrReply(c, c->argv[3], &end, NULL) != C_OK) return;
+    if ((o = lookupKeyReadOrReply(c, c->argv[1], shared.emptybulk)) == NULL || checkType(c, o, OBJ_STRING)) return;
 
     if (o->encoding == OBJ_ENCODING_INT) {
         str = llbuf;
@@ -581,8 +573,7 @@ void msetGenericCommand(client *c, int nx) {
         }
         notifyKeyspaceEvent(NOTIFY_STRING, "set", c->argv[j], c->db->id);
         /* In MSETNX, It could be that we're overriding the same key, we can't be sure it doesn't exist. */
-        if (nx)
-            setkey_flags = SETKEY_ADD_OR_UPDATE;
+        if (nx) setkey_flags = SETKEY_ADD_OR_UPDATE;
     }
     server.dirty += (c->argc - 1) / 2;
     addReply(c, nx ? shared.cone : shared.ok);
@@ -611,8 +602,8 @@ void msetexCommand(client *c) {
     int setkey_flags = 0;
 
     /* Parse the numkeys. */
-    if (getRangeLongFromObjectOrReply(c, c->argv[1], 1, INT_MAX, &numkeys,
-                                      "invalid numkeys value or out of range") != C_OK) {
+    if (getRangeLongFromObjectOrReply(c, c->argv[1], 1, INT_MAX, &numkeys, "invalid numkeys value or out of range")
+        != C_OK) {
         return;
     }
 
@@ -623,8 +614,16 @@ void msetexCommand(client *c) {
         addReplyErrorObject(c, shared.syntaxerr);
         return;
     }
-    if (parseExtendedCommandArgumentsOrReply(c, COMMAND_MSET, (int)args_start_idx, c->argc,
-                                             &flags, &unit, &expire_idx, &expire, NULL) != C_OK) {
+    if (parseExtendedCommandArgumentsOrReply(c,
+                                             COMMAND_MSET,
+                                             (int)args_start_idx,
+                                             c->argc,
+                                             &flags,
+                                             &unit,
+                                             &expire_idx,
+                                             &expire,
+                                             NULL)
+        != C_OK) {
         return;
     }
 
@@ -644,8 +643,7 @@ void msetexCommand(client *c) {
     if (flags & (ARGS_SET_NX | ARGS_SET_XX)) {
         for (int j = 2; j < args_start_idx; j += 2) {
             robj *o = lookupKeyWrite(c->db, c->argv[j]);
-            if (((flags & ARGS_SET_NX) && o != NULL) ||
-                ((flags & ARGS_SET_XX) && o == NULL)) {
+            if (((flags & ARGS_SET_NX) && o != NULL) || ((flags & ARGS_SET_XX) && o == NULL)) {
                 addReply(c, shared.czero);
                 return;
             }
@@ -703,15 +701,14 @@ void incrDecrCommand(client *c, long long incr) {
     if (getLongLongFromObjectOrReply(c, o, &value, NULL) != C_OK) return;
 
     oldvalue = value;
-    if ((incr < 0 && oldvalue < 0 && incr < (LLONG_MIN - oldvalue)) ||
-        (incr > 0 && oldvalue > 0 && incr > (LLONG_MAX - oldvalue))) {
+    if ((incr < 0 && oldvalue < 0 && incr < (LLONG_MIN - oldvalue))
+        || (incr > 0 && oldvalue > 0 && incr > (LLONG_MAX - oldvalue))) {
         addReplyError(c, "increment or decrement would overflow");
         return;
     }
     value += incr;
 
-    if (o && o->refcount == 1 && o->encoding == OBJ_ENCODING_INT &&
-        value >= LONG_MIN && value <= LONG_MAX) {
+    if (o && o->refcount == 1 && o->encoding == OBJ_ENCODING_INT && value >= LONG_MIN && value <= LONG_MAX) {
         new = o;
         objectSetVal(o, (void *)((long)value));
     } else {
@@ -761,8 +758,8 @@ void incrbyfloatCommand(client *c) {
 
     o = lookupKeyWrite(c->db, c->argv[1]);
     if (checkType(c, o, OBJ_STRING)) return;
-    if (getLongDoubleFromObjectOrReply(c, o, &value, NULL) != C_OK ||
-        getLongDoubleFromObjectOrReply(c, c->argv[2], &incr, NULL) != C_OK)
+    if (getLongDoubleFromObjectOrReply(c, o, &value, NULL) != C_OK
+        || getLongDoubleFromObjectOrReply(c, c->argv[2], &incr, NULL) != C_OK)
         return;
 
     value += incr;
@@ -812,13 +809,11 @@ void appendCommand(client *c) {
         }
     } else {
         /* Key exists, check type */
-        if (checkType(c, o, OBJ_STRING))
-            return;
+        if (checkType(c, o, OBJ_STRING)) return;
 
         /* "append" is an argument, so always an sds */
         append = c->argv[2];
-        if (checkStringLength(c, stringObjectLen(o), sdslen(objectGetVal(append))) != C_OK)
-            return;
+        if (checkStringLength(c, stringObjectLen(o), sdslen(objectGetVal(append))) != C_OK) return;
 
         /* Append the value */
         o = dbUnshareStringValue(c->db, c->argv[1], o);
@@ -833,8 +828,7 @@ void appendCommand(client *c) {
 
 void strlenCommand(client *c) {
     robj *o;
-    if ((o = lookupKeyReadOrReply(c, c->argv[1], shared.czero)) == NULL ||
-        checkType(c, o, OBJ_STRING)) return;
+    if ((o = lookupKeyReadOrReply(c, c->argv[1], shared.czero)) == NULL || checkType(c, o, OBJ_STRING)) return;
     addReplyLongLong(c, stringObjectLen(o));
 }
 
@@ -848,10 +842,8 @@ void lcsCommand(client *c) {
 
     obja = lookupKeyRead(c->db, c->argv[1]);
     objb = lookupKeyRead(c->db, c->argv[2]);
-    if ((obja && obja->type != OBJ_STRING) ||
-        (objb && objb->type != OBJ_STRING)) {
-        addReplyError(c,
-                      "The specified keys must contain string values");
+    if ((obja && obja->type != OBJ_STRING) || (objb && objb->type != OBJ_STRING)) {
+        addReplyError(c, "The specified keys must contain string values");
         /* Don't cleanup the objects, we need to do that
          * only after calling getDecodedObject(). */
         obja = NULL;
@@ -885,8 +877,7 @@ void lcsCommand(client *c) {
 
     /* Complain if the user passed ambiguous parameters. */
     if (getlen && getidx) {
-        addReplyError(c,
-                      "If you want both the length and indexes, please just use IDX.");
+        addReplyError(c, "If you want both the length and indexes, please just use IDX.");
         goto cleanup;
     }
 
@@ -907,7 +898,8 @@ void lcsCommand(client *c) {
 #define LCS(A, B) lcs[(B) + ((A) * (blen + 1))]
 
     /* Try to allocate the LCS table, and abort on overflow or insufficient memory. */
-    unsigned long long lcssize = (unsigned long long)(alen + 1) * (blen + 1); /* Can't overflow due to the size limits above. */
+    unsigned long long lcssize = (unsigned long long)(alen + 1)
+                                 * (blen + 1); /* Can't overflow due to the size limits above. */
     unsigned long long lcsalloc = lcssize * sizeof(uint32_t);
     uint32_t *lcs = NULL;
     if (lcsalloc < SIZE_MAX && lcsalloc / lcssize == sizeof(uint32_t)) {
@@ -951,10 +943,8 @@ void lcsCommand(client *c) {
     uint32_t idx = LCS(alen, blen);
     sds result = NULL;            /* Resulting LCS string. */
     void *arraylenptr = NULL;     /* Deferred length of the array for IDX. */
-    uint32_t arange_start = alen, /* alen signals that values are not set. */
-        arange_end = 0,
-             brange_start = 0,
-             brange_end = 0;
+    uint32_t arange_start = alen; /* alen signals that values are not set. */
+    uint32_t arange_end = 0, brange_start = 0, brange_end = 0;
 
     /* Do we need to compute the actual LCS string? Allocate it in that case. */
     int computelcs = getidx || !getlen;

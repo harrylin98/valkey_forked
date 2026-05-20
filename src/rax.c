@@ -440,8 +440,13 @@ raxNode *raxCompressNode(raxNode *n, unsigned char *s, size_t len, raxNode **chi
  * means that the current node represents the key (that is, none of the
  * compressed node characters are needed to represent the key, just all
  * its parents nodes). */
-static inline size_t
-raxLowWalk(rax *rax, unsigned char *s, size_t len, raxNode **stopnode, raxNode ***plink, int *splitpos, raxStack *ts) {
+static inline size_t raxLowWalk(rax *rax,
+                                unsigned char *s,
+                                size_t len,
+                                raxNode **stopnode,
+                                raxNode ***plink,
+                                int *splitpos,
+                                raxStack *ts) {
     raxNode *h = rax->head;
     raxNode **parentlink = &rax->head;
 
@@ -1041,7 +1046,10 @@ int raxRemove(rax *rax, unsigned char *s, size_t len, void **old) {
         raxNode *child = NULL;
         while (h != rax->head) {
             child = h;
-            debugf("Freeing child %p [%.*s] key:%d\n", (void *)child, (int)child->size, (char *)child->data,
+            debugf("Freeing child %p [%.*s] key:%d\n",
+                   (void *)child,
+                   (int)child->size,
+                   (char *)child->data,
                    child->iskey);
             rax->alloc_size -= rax_ptr_alloc_size(child);
             rax_free(child);

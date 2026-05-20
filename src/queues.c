@@ -176,7 +176,9 @@ inline void *spmcDequeue(spmcQueue *q) {
 
         if (diff == 0) {
             /* Slot has data. Attempt to claim via CAS on head. */
-            if (atomic_compare_exchange_weak_explicit(&q->head, &head, head + 1,
+            if (atomic_compare_exchange_weak_explicit(&q->head,
+                                                      &head,
+                                                      head + 1,
                                                       memory_order_relaxed,
                                                       memory_order_relaxed)) {
                 data = cell->data;

@@ -150,9 +150,15 @@ char *rdb_type_string[] = {
     "hash-volatile-items",
 };
 
-static_assert(sizeof(rdb_type_string) / sizeof(rdb_type_string[0]) == RDB_TYPE_LAST, "Mismatch between enum and string table");
+static_assert(sizeof(rdb_type_string) / sizeof(rdb_type_string[0]) == RDB_TYPE_LAST,
+              "Mismatch between enum and string table");
 
-char *type_name[OBJ_TYPE_MAX] = {"string", "list", "set", "zset", "hash", "module", /* module type is special */
+char *type_name[OBJ_TYPE_MAX] = {"string",
+                                 "list",
+                                 "set",
+                                 "zset",
+                                 "hash",
+                                 "module", /* module type is special */
                                  "stream"};
 
 /********************** Rdb stats **********************/
@@ -256,10 +262,8 @@ void computeDatasetProfile(int dbid, robj *keyobj, robj *o, long long expiretime
     stats->keys++;
 
     /* Check if the key already expired. */
-    if (expiretime != -1 && expiretime < now)
-        stats->already_expired++;
-    if (expiretime != -1)
-        stats->expires++;
+    if (expiretime != -1 && expiretime < now) stats->already_expired++;
+    if (expiretime != -1) stats->expires++;
 
     /* Save the key and associated value */
     if (o->type == OBJ_STRING) {
@@ -378,26 +382,25 @@ void computeDatasetProfile(int dbid, robj *keyobj, robj *o, long long expiretime
     }
 }
 
-char *stats_field_string[] = {
-    "type.name",
-    "keys.total",
-    "expire_keys.total",
-    "already_expired.total",
-    "keys.size",
-    "keys.value_size",
-    "elements.total",
-    "elements.size",
-    "elements.num.max",
-    "elements.num.avg",
-    "elements.num.p99",
-    "elements.num.p90",
-    "elements.num.p50",
-    "elements.size.max",
-    "elements.size.avg",
-    "elements.size.p99",
-    "elements.size.p90",
-    "elements.size.p50",
-    NULL};
+char *stats_field_string[] = {"type.name",
+                              "keys.total",
+                              "expire_keys.total",
+                              "already_expired.total",
+                              "keys.size",
+                              "keys.value_size",
+                              "elements.total",
+                              "elements.size",
+                              "elements.num.max",
+                              "elements.num.avg",
+                              "elements.num.p99",
+                              "elements.num.p90",
+                              "elements.num.p50",
+                              "elements.size.max",
+                              "elements.size.avg",
+                              "elements.size.p99",
+                              "elements.size.p90",
+                              "elements.size.p50",
+                              NULL};
 
 void rdbStatsPrintInfo(rdbStats *stats, char *field_string, char *value, size_t value_len) {
     if (!strcasecmp(field_string, "type.name")) {
@@ -429,7 +432,10 @@ void rdbStatsPrintInfo(rdbStats *stats, char *field_string, char *value, size_t 
     } else if (!strcasecmp(field_string, "elements.size.max")) {
         snprintf(value, value_len, "%lu", stats->elements_size_max);
     } else if (!strcasecmp(field_string, "elements.size.avg")) {
-        snprintf(value, value_len, "%.2lf", (stats->elements > 0 ? (float)stats->all_elements_size / (float)stats->elements : 0));
+        snprintf(value,
+                 value_len,
+                 "%.2lf",
+                 (stats->elements > 0 ? (float)stats->all_elements_size / (float)stats->elements : 0));
     } else if (!strcasecmp(field_string, "elements.size.p99")) {
         snprintf(value, value_len, "%.2lf", (float)hdr_value_at_percentile(stats->element_size_histogram, 99.0));
     } else if (!strcasecmp(field_string, "elements.size.p90")) {
@@ -480,7 +486,12 @@ void rdbShowGenericInfo(void) {
 
                     if (rdbstate.format == OUTPUT_FORMAT_INFO) {
                         if (i == 0) continue;
-                        snprintf(field_string, sizeof(field_string), "[info] db.%d.type.%s.%s", dbid, type_name[stats->type], stats_field_string[i]);
+                        snprintf(field_string,
+                                 sizeof(field_string),
+                                 "[info] db.%d.type.%s.%s",
+                                 dbid,
+                                 type_name[stats->type],
+                                 stats_field_string[i]);
                         printf("%s:", field_string);
                     } else if (rdbstate.format == OUTPUT_FORMAT_TABLE) {
                         printf("\t");
@@ -499,8 +510,7 @@ void rdbShowGenericInfo(void) {
                         printf("\n");
                     }
                 }
-                if (rdbstate.format == OUTPUT_FORMAT_TABLE || rdbstate.format == OUTPUT_FORMAT_CSV)
-                    printf("\n");
+                if (rdbstate.format == OUTPUT_FORMAT_TABLE || rdbstate.format == OUTPUT_FORMAT_CSV) printf("\n");
             }
         }
         if (rdbCheckOutput) {
@@ -526,7 +536,8 @@ void rdbCheckError(const char *fmt, ...) {
     printf("[additional info] While doing: %s\n", rdb_check_doing_string[rdbstate.doing]);
     if (rdbstate.key) printf("[additional info] Reading key '%s'\n", (char *)objectGetVal(rdbstate.key));
     if (rdbstate.key_type != -1)
-        printf("[additional info] Reading type %d (%s)\n", rdbstate.key_type,
+        printf("[additional info] Reading type %d (%s)\n",
+               rdbstate.key_type,
                ((unsigned)rdbstate.key_type < sizeof(rdb_type_string) / sizeof(char *))
                    ? rdb_type_string[rdbstate.key_type]
                    : "unknown");
@@ -627,9 +638,8 @@ int redis_check_rdb(char *rdbfilename, FILE *fp) {
         goto err;
     }
     rdbver = atoi(buf + 6);
-    if (rdbver < 1 ||
-        (rdbver < RDB_FOREIGN_VERSION_MIN && !is_redis_magic) ||
-        (rdbver > RDB_FOREIGN_VERSION_MAX && !is_valkey_magic)) {
+    if (rdbver < 1 || (rdbver < RDB_FOREIGN_VERSION_MIN && !is_redis_magic)
+        || (rdbver > RDB_FOREIGN_VERSION_MAX && !is_valkey_magic)) {
         rdbCheckError("Can't handle RDB format version %d", rdbver);
         goto err;
     } else if (rdbver > RDB_VERSION) {
@@ -765,9 +775,7 @@ int redis_check_rdb(char *rdbfilename, FILE *fp) {
             }
             rdbstate.functions_num++;
             continue;
-        } else if (rdbIsForeignVersion(rdbver) &&
-                   type >= RDB_FOREIGN_TYPE_MIN &&
-                   type <= RDB_FOREIGN_TYPE_MAX) {
+        } else if (rdbIsForeignVersion(rdbver) && type >= RDB_FOREIGN_TYPE_MIN && type <= RDB_FOREIGN_TYPE_MAX) {
             rdbCheckError("Unknown object type %d in RDB file with foreign version %d", type, rdbver);
             goto err;
         } else if (!rdbIsObjectType(type)) {
@@ -788,7 +796,8 @@ int redis_check_rdb(char *rdbfilename, FILE *fp) {
         rdbstate.keys++;
         /* Read value */
         rdbstate.doing = RDB_CHECK_DOING_READ_OBJECT_VALUE;
-        if ((val = rdbLoadObject(type, &rdb, objectGetVal(key), selected_dbid, NULL, RDBFLAGS_NONE, 0)) == NULL) goto eoferr;
+        if ((val = rdbLoadObject(type, &rdb, objectGetVal(key), selected_dbid, NULL, RDBFLAGS_NONE, 0)) == NULL)
+            goto eoferr;
         if (rdbCheckStats) {
             int max_stats_num = (rdbstate.databases + 1) * OBJ_TYPE_MAX;
             if (max_stats_num > rdbstate.stats_num) {

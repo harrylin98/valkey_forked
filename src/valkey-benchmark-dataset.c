@@ -19,9 +19,16 @@
 #define PLACEHOLDER_COUNT 10
 #define PLACEHOLDER_LEN 12
 
-static const char *PLACEHOLDERS[PLACEHOLDER_COUNT] = {
-    "__rand_int__", "__rand_1st__", "__rand_2nd__", "__rand_3rd__", "__rand_4th__",
-    "__rand_5th__", "__rand_6th__", "__rand_7th__", "__rand_8th__", "__rand_9th__"};
+static const char *PLACEHOLDERS[PLACEHOLDER_COUNT] = {"__rand_int__",
+                                                      "__rand_1st__",
+                                                      "__rand_2nd__",
+                                                      "__rand_3rd__",
+                                                      "__rand_4th__",
+                                                      "__rand_5th__",
+                                                      "__rand_6th__",
+                                                      "__rand_7th__",
+                                                      "__rand_8th__",
+                                                      "__rand_9th__"};
 
 /* Forward declarations */
 static bool datasetBuildFieldMap(dataset *ds, sds *template_argv, int template_argc);
@@ -33,9 +40,18 @@ static int findFieldIndex(dataset *ds, const char *field_name, size_t field_name
 static const char *extractDatasetFieldValue(dataset *ds, int field_idx, int record_index);
 static sds replaceOccurrence(sds processed_arg, const char *pos, const char *replacement);
 static sds processFieldsInArg(dataset *ds, sds arg, int record_index);
-static sds processRandPlaceholdersForDataSet(sds cmd, _Atomic uint64_t *seq_key, int replace_placeholders, int keyspacelen, int sequential_replacement);
+static sds processRandPlaceholdersForDataSet(sds cmd,
+                                             _Atomic uint64_t *seq_key,
+                                             int replace_placeholders,
+                                             int keyspacelen,
+                                             int sequential_replacement);
 
-dataset *datasetInit(const char *filename, int max_documents, int has_field_placeholders, sds *template_argv, int template_argc, int verbose) {
+dataset *datasetInit(const char *filename,
+                     int max_documents,
+                     int has_field_placeholders,
+                     sds *template_argv,
+                     int template_argc,
+                     int verbose) {
     if (!filename) return NULL;
 
     dataset *ds = zcalloc(sizeof(dataset));
@@ -160,7 +176,14 @@ size_t datasetGetRecordCount(dataset *ds) {
     return ds ? ds->record_count : 0;
 }
 
-sds datasetGenerateCommand(dataset *ds, int record_index, sds *template_argv, int template_argc, _Atomic uint64_t *seq_key, int replace_placeholders, int keyspacelen, int sequential_replacement) {
+sds datasetGenerateCommand(dataset *ds,
+                           int record_index,
+                           sds *template_argv,
+                           int template_argc,
+                           _Atomic uint64_t *seq_key,
+                           int replace_placeholders,
+                           int keyspacelen,
+                           int sequential_replacement) {
     if (!ds || !template_argv) return NULL;
 
     sds *processed_argv = zmalloc(template_argc * sizeof(sds));
@@ -183,8 +206,8 @@ sds datasetGenerateCommand(dataset *ds, int record_index, sds *template_argv, in
     sds result = sdsnewlen(cmd, len);
     free(cmd);
 
-    result = processRandPlaceholdersForDataSet(result, seq_key, replace_placeholders,
-                                               keyspacelen, sequential_replacement);
+    result =
+        processRandPlaceholdersForDataSet(result, seq_key, replace_placeholders, keyspacelen, sequential_replacement);
 
     for (int i = 0; i < template_argc; i++) {
         sdsfree(processed_argv[i]);
@@ -351,8 +374,7 @@ static bool csvLoadDocuments(dataset *ds, int verbose) {
 
 static int findFieldIndex(dataset *ds, const char *field_name, size_t field_name_len) {
     for (int k = 0; k < ds->field_count; k++) {
-        if (strlen(ds->field_names[k]) == field_name_len &&
-            !memcmp(ds->field_names[k], field_name, field_name_len)) {
+        if (strlen(ds->field_names[k]) == field_name_len && !memcmp(ds->field_names[k], field_name, field_name_len)) {
             return ds->field_map ? ds->field_map[k] : k;
         }
     }
@@ -414,7 +436,11 @@ static sds processFieldsInArg(dataset *ds, sds arg, int record_index) {
     return arg;
 }
 
-static sds processRandPlaceholdersForDataSet(sds cmd, _Atomic uint64_t *seq_key, int replace_placeholders, int keyspacelen, int sequential_replacement) {
+static sds processRandPlaceholdersForDataSet(sds cmd,
+                                             _Atomic uint64_t *seq_key,
+                                             int replace_placeholders,
+                                             int keyspacelen,
+                                             int sequential_replacement) {
     if (!replace_placeholders || keyspacelen == 0) return cmd;
 
     for (int ph = 0; ph < PLACEHOLDER_COUNT; ph++) {

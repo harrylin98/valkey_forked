@@ -15,3 +15,5 @@ sha256.*
 siphash.c
 strl.c
 trace/trace_*
+server.h
+valkeymodule.h

@@ -217,9 +217,9 @@ sds createLatencyReport(void) {
     /* Return ASAP if the latency engine is disabled and it looks like it
      * was never enabled so far. */
     if (dictSize(server.latency_events) == 0 && server.latency_monitor_threshold == 0) {
-        report = sdscat(
-            report, "I'm sorry, Dave, I can't do that. Latency monitoring is disabled in this Valkey instance. You may "
-                    "use \"CONFIG SET latency-monitor-threshold <milliseconds>.\" in order to enable it.\n");
+        report = sdscat(report,
+                        "I'm sorry, Dave, I can't do that. Latency monitoring is disabled in this Valkey instance. You "
+                        "may use \"CONFIG SET latency-monitor-threshold <milliseconds>.\" in order to enable it.\n");
         return report;
     }
 
@@ -245,8 +245,13 @@ sds createLatencyReport(void) {
         report = sdscatprintf(report,
                               "%d. %s: %d latency spikes (average %lums, mean deviation %lums, period %.2f sec). Worst "
                               "all time event %lums.",
-                              eventnum, event, ls.samples, (unsigned long)ls.avg, (unsigned long)ls.mad,
-                              (double)ls.period / ls.samples, (unsigned long)ts->max);
+                              eventnum,
+                              event,
+                              ls.samples,
+                              (unsigned long)ls.avg,
+                              (unsigned long)ls.mad,
+                              (double)ls.period / ls.samples,
+                              (unsigned long)ts->max);
 
         /* Fork */
         if (!strcasecmp(event, "fork")) {
@@ -269,7 +274,8 @@ sds createLatencyReport(void) {
 
         /* Potentially commands. */
         if (!strcasecmp(event, "command")) {
-            if (server.commandlog[COMMANDLOG_TYPE_SLOW].threshold < 0 || server.commandlog[COMMANDLOG_TYPE_SLOW].max_len == 0) {
+            if (server.commandlog[COMMANDLOG_TYPE_SLOW].threshold < 0
+                || server.commandlog[COMMANDLOG_TYPE_SLOW].max_len == 0) {
                 advise_slowlog_enabled = 1;
                 advices++;
             } else if (server.commandlog[COMMANDLOG_TYPE_SLOW].threshold / 1000 > server.latency_monitor_threshold) {
@@ -358,21 +364,24 @@ sds createLatencyReport(void) {
     }
 
     if (eventnum == 0 && advices == 0) {
-        report = sdscat(report, "No latency spike was observed during the lifetime of this Valkey instance, not "
-                                "in the slightest bit.\n");
+        report = sdscat(report,
+                        "No latency spike was observed during the lifetime of this Valkey instance, not "
+                        "in the slightest bit.\n");
     } else if (eventnum > 0 && advices == 0) {
-        report = sdscat(report, "\nThere are latency events logged that are not easy to fix. Please get some "
-                                "help from Valkey community, providing this report in your help request.\n");
+        report = sdscat(report,
+                        "\nThere are latency events logged that are not easy to fix. Please get some "
+                        "help from Valkey community, providing this report in your help request.\n");
     } else {
         /* Add all the suggestions accumulated so far. */
 
         /* Better VM. */
         report = sdscat(report, "\nHere is some advice for you:\n\n");
         if (advise_better_vm) {
-            report = sdscat(report, "- If you are using a virtual machine, consider upgrading it with a faster one "
-                                    "using a hypervisior that provides less latency during fork() calls. Xen is known "
-                                    "to have poor fork() performance. Even in the context of the same VM provider, "
-                                    "certain kinds of instances can execute fork faster than others.\n");
+            report = sdscat(report,
+                            "- If you are using a virtual machine, consider upgrading it with a faster one "
+                            "using a hypervisior that provides less latency during fork() calls. Xen is known "
+                            "to have poor fork() performance. Even in the context of the same VM provider, "
+                            "certain kinds of instances can execute fork faster than others.\n");
         }
 
         /* Slow log. */
@@ -386,11 +395,11 @@ sds createLatencyReport(void) {
         }
 
         if (advise_slowlog_tuning) {
-            report = sdscatprintf(
-                report,
-                "- Your current Slow Log configuration only logs events that are slower than your configured latency "
-                "monitor threshold. Please use 'CONFIG SET slowlog-log-slower-than %llu'.\n",
-                (unsigned long long)server.latency_monitor_threshold * 1000);
+            report = sdscatprintf(report,
+                                  "- Your current Slow Log configuration only logs events that are slower than your "
+                                  "configured latency "
+                                  "monitor threshold. Please use 'CONFIG SET slowlog-log-slower-than %llu'.\n",
+                                  (unsigned long long)server.latency_monitor_threshold * 1000);
         }
 
         if (advise_slowlog_inspect) {
@@ -429,66 +438,72 @@ sds createLatencyReport(void) {
         }
 
         if (advise_data_writeback) {
-            report =
-                sdscat(report, "- Mounting ext3/4 filesystems with data=writeback can provide a performance boost "
-                               "compared to data=ordered, however this mode of operation provides less guarantees, and "
-                               "sometimes it can happen that after a hard crash the AOF file will have a half-written "
-                               "command at the end and will require to be repaired before Valkey restarts.\n");
+            report = sdscat(report,
+                            "- Mounting ext3/4 filesystems with data=writeback can provide a performance boost "
+                            "compared to data=ordered, however this mode of operation provides less guarantees, and "
+                            "sometimes it can happen that after a hard crash the AOF file will have a half-written "
+                            "command at the end and will require to be repaired before Valkey restarts.\n");
         }
 
         if (advise_disk_contention) {
-            report = sdscat(report, "- Try to lower the disk contention. This is often caused by other disk intensive "
-                                    "processes running in the same computer (including other Valkey instances).\n");
+            report = sdscat(report,
+                            "- Try to lower the disk contention. This is often caused by other disk intensive "
+                            "processes running in the same computer (including other Valkey instances).\n");
         }
 
         if (advise_no_appendfsync) {
-            report = sdscat(report, "- Assuming from the point of view of data safety this is viable in your "
-                                    "environment, you could try to enable the 'no-appendfsync-on-rewrite' option, so "
-                                    "that fsync will not be performed while there is a child rewriting the AOF file or "
-                                    "producing an RDB file (the moment where there is high disk contention).\n");
+            report = sdscat(report,
+                            "- Assuming from the point of view of data safety this is viable in your "
+                            "environment, you could try to enable the 'no-appendfsync-on-rewrite' option, so "
+                            "that fsync will not be performed while there is a child rewriting the AOF file or "
+                            "producing an RDB file (the moment where there is high disk contention).\n");
         }
 
         if (advise_relax_fsync_policy && server.aof_fsync == AOF_FSYNC_ALWAYS) {
-            report = sdscat(report, "- Your fsync policy is set to 'always'. It is very hard to get good performances "
-                                    "with such a setup, if possible try to relax the fsync policy to 'onesec'.\n");
+            report = sdscat(report,
+                            "- Your fsync policy is set to 'always'. It is very hard to get good performances "
+                            "with such a setup, if possible try to relax the fsync policy to 'onesec'.\n");
         }
 
         if (advise_write_load_info) {
-            report = sdscat(
-                report, "- Latency during the AOF atomic rename operation or when the final difference is flushed to "
-                        "the AOF file at the end of the rewrite, sometimes is caused by very high write load, causing "
-                        "the AOF buffer to get very large. If possible try to send less commands to accomplish the "
-                        "same work, or use Lua scripts to group multiple operations into a single EVALSHA call.\n");
+            report = sdscat(report,
+                            "- Latency during the AOF atomic rename operation or when the final difference is flushed "
+                            "to the AOF file at the end of the rewrite, sometimes is caused by very high write load, "
+                            "causing the AOF buffer to get very large. If possible try to send less commands to "
+                            "accomplish the same work, or use Lua scripts to group multiple operations into a single "
+                            "EVALSHA call.\n");
         }
 
         if (advise_hz && server.hz < 100) {
-            report = sdscat(report, "- In order to make the Valkey keys expiring process more incremental, try to set "
-                                    "the 'hz' configuration parameter to 100 using 'CONFIG SET hz 100'.\n");
+            report = sdscat(report,
+                            "- In order to make the Valkey keys expiring process more incremental, try to set "
+                            "the 'hz' configuration parameter to 100 using 'CONFIG SET hz 100'.\n");
         }
 
         if (advise_large_objects) {
-            report =
-                sdscat(report, "- Deleting, expiring or evicting (because of maxmemory policy) large objects is a "
-                               "blocking operation. If you have very large objects that are often deleted, expired, or "
-                               "evicted, try to fragment those objects into multiple smaller objects.\n");
+            report = sdscat(report,
+                            "- Deleting, expiring or evicting (because of maxmemory policy) large objects is a "
+                            "blocking operation. If you have very large objects that are often deleted, expired, or "
+                            "evicted, try to fragment those objects into multiple smaller objects.\n");
         }
 
         if (advise_mass_eviction) {
-            report = sdscat(report, "- Sudden changes to the 'maxmemory' setting via 'CONFIG SET', or allocation of "
-                                    "large objects via sets or sorted sets intersections, STORE option of SORT, Valkey "
-                                    "Cluster large keys migrations (RESTORE command), may create sudden memory "
-                                    "pressure forcing the server to block trying to evict keys. \n");
+            report = sdscat(report,
+                            "- Sudden changes to the 'maxmemory' setting via 'CONFIG SET', or allocation of "
+                            "large objects via sets or sorted sets intersections, STORE option of SORT, Valkey "
+                            "Cluster large keys migrations (RESTORE command), may create sudden memory "
+                            "pressure forcing the server to block trying to evict keys. \n");
         }
 
         if (advise_disable_thp) {
-            report =
-                sdscat(report, "- I detected a non zero amount of anonymous huge pages used by your process. This "
-                               "creates very serious latency events in different conditions, especially when "
-                               "Valkey is persisting on disk. To disable THP support use the command 'echo never > "
-                               "/sys/kernel/mm/transparent_hugepage/enabled', make sure to also add it into "
-                               "/etc/rc.local so that the command will be executed again after a reboot. Note "
-                               "that even if you have already disabled THP, you still need to restart the Valkey "
-                               "process to get rid of the huge pages already created.\n");
+            report = sdscat(report,
+                            "- I detected a non zero amount of anonymous huge pages used by your process. This "
+                            "creates very serious latency events in different conditions, especially when "
+                            "Valkey is persisting on disk. To disable THP support use the command 'echo never > "
+                            "/sys/kernel/mm/transparent_hugepage/enabled', make sure to also add it into "
+                            "/etc/rc.local so that the command will be executed again after a reboot. Note "
+                            "that even if you have already disabled THP, you still need to restart the Valkey "
+                            "process to get rid of the huge pages already created.\n");
         }
     }
 
@@ -660,8 +675,12 @@ sds latencyCommandGenSparkeline(char *event, struct latencyTimeSeries *ts) {
         sparklineSequenceAddSample(seq, ts->samples[i].latency, buf);
     }
 
-    graph = sdscatprintf(graph, "%s - high %lu ms, low %lu ms (all time high %lu ms)\n", event, (unsigned long)max,
-                         (unsigned long)min, (unsigned long)ts->max);
+    graph = sdscatprintf(graph,
+                         "%s - high %lu ms, low %lu ms (all time high %lu ms)\n",
+                         event,
+                         (unsigned long)max,
+                         (unsigned long)min,
+                         (unsigned long)ts->max);
     for (j = 0; j < LATENCY_GRAPH_COLS; j++) graph = sdscatlen(graph, "-", 1);
     graph = sdscatlen(graph, "\n", 1);
     graph = sparklineRender(graph, seq, LATENCY_GRAPH_COLS, 4, SPARKLINE_FILL);
@@ -747,7 +766,8 @@ void latencyCommand(client *c) {
             "    Reset latency data of one or more <event> classes.",
             "    (default: reset all data for all event classes)",
             "HISTOGRAM [COMMAND ...]",
-            "    Return a cumulative distribution of latencies in the format of a histogram for the specified command names.",
+            "    Return a cumulative distribution of latencies in the format of a histogram for the specified command "
+            "names.",
             "    If no commands are specified then all histograms are replied.",
             NULL,
         };

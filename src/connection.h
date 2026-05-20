@@ -43,8 +43,9 @@
 #define CONN_INFO_LEN 32
 #define CONN_ADDR_STR_LEN 128
 
-#define NET_HOST_STR_LEN 256                          /* Longest valid hostname */
-#define NET_IP_STR_LEN 46                             /* INET6_ADDRSTRLEN is 46, but we need to be sure */
+#define NET_HOST_STR_LEN 256 /* Longest valid hostname */
+#define NET_IP_STR_LEN 46    /* INET6_ADDRSTRLEN is 46, but we need to be sure */
+
 #define NET_HOST_PORT_STR_LEN (NET_HOST_STR_LEN + 32) /* Must be enough for hostname:port */
 
 struct aeEventLoop;
@@ -76,16 +77,11 @@ typedef enum {
 
 static inline const char *getConnectionTypeName(int type) {
     switch (type) {
-    case CONN_TYPE_SOCKET:
-        return "tcp";
-    case CONN_TYPE_UNIX:
-        return "unix";
-    case CONN_TYPE_TLS:
-        return "tls";
-    case CONN_TYPE_RDMA:
-        return "rdma";
-    default:
-        return "invalid type";
+    case CONN_TYPE_SOCKET: return "tcp";
+    case CONN_TYPE_UNIX: return "unix";
+    case CONN_TYPE_TLS: return "tls";
+    case CONN_TYPE_RDMA: return "rdma";
+    default: return "invalid type";
     }
 }
 

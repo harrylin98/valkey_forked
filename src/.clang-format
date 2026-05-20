@@ -15,9 +15,10 @@ BinPackArguments: false
 InsertNewlineAtEOF: true
 ColumnLimit: 120
 PenaltyReturnTypeOnItsOwnLine: 1000000
-PenaltyBreakAssignment: 1000
+PenaltyBreakAssignment: 100
 PenaltyBreakOpenParenthesis: 1000
 ReflowComments: false
 SkipMacroDefinitionBody: true
 AllowShortEnumsOnASingleLine: false
 AllowAllArgumentsOnNextLine: false
+BreakBeforeBinaryOperators: NonAssignment

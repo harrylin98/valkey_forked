@@ -145,8 +145,8 @@ int HelloTypeRange_ValkeyCommand(ValkeyModuleCtx *ctx, ValkeyModuleString **argv
     }
 
     long long first, count;
-    if (ValkeyModule_StringToLongLong(argv[2], &first) != VALKEYMODULE_OK ||
-        ValkeyModule_StringToLongLong(argv[3], &count) != VALKEYMODULE_OK || first < 0 || count < 0) {
+    if (ValkeyModule_StringToLongLong(argv[2], &first) != VALKEYMODULE_OK
+        || ValkeyModule_StringToLongLong(argv[3], &count) != VALKEYMODULE_OK || first < 0 || count < 0) {
         return ValkeyModule_ReplyWithError(ctx, "ERR invalid first or count parameters");
     }
 
@@ -241,7 +241,13 @@ int HelloTypeBRange_ValkeyCommand(ValkeyModuleCtx *ctx, ValkeyModuleString **arg
 
     /* Otherwise let's block on the key. */
     void *privdata = ValkeyModule_Alloc(100);
-    ValkeyModule_BlockClientOnKeys(ctx, HelloBlock_Reply, HelloBlock_Timeout, HelloBlock_FreeData, timeout, argv + 1, 1,
+    ValkeyModule_BlockClientOnKeys(ctx,
+                                   HelloBlock_Reply,
+                                   HelloBlock_Timeout,
+                                   HelloBlock_FreeData,
+                                   timeout,
+                                   argv + 1,
+                                   1,
                                    privdata);
     return VALKEYMODULE_OK;
 }
@@ -322,20 +328,20 @@ int ValkeyModule_OnLoad(ValkeyModuleCtx *ctx, ValkeyModuleString **argv, int arg
     HelloType = ValkeyModule_CreateDataType(ctx, "hellotype", 0, &tm);
     if (HelloType == NULL) return VALKEYMODULE_ERR;
 
-    if (ValkeyModule_CreateCommand(ctx, "hellotype.insert", HelloTypeInsert_ValkeyCommand, "write deny-oom", 1, 1, 1) ==
-        VALKEYMODULE_ERR)
+    if (ValkeyModule_CreateCommand(ctx, "hellotype.insert", HelloTypeInsert_ValkeyCommand, "write deny-oom", 1, 1, 1)
+        == VALKEYMODULE_ERR)
         return VALKEYMODULE_ERR;
 
-    if (ValkeyModule_CreateCommand(ctx, "hellotype.range", HelloTypeRange_ValkeyCommand, "readonly", 1, 1, 1) ==
-        VALKEYMODULE_ERR)
+    if (ValkeyModule_CreateCommand(ctx, "hellotype.range", HelloTypeRange_ValkeyCommand, "readonly", 1, 1, 1)
+        == VALKEYMODULE_ERR)
         return VALKEYMODULE_ERR;
 
-    if (ValkeyModule_CreateCommand(ctx, "hellotype.len", HelloTypeLen_ValkeyCommand, "readonly", 1, 1, 1) ==
-        VALKEYMODULE_ERR)
+    if (ValkeyModule_CreateCommand(ctx, "hellotype.len", HelloTypeLen_ValkeyCommand, "readonly", 1, 1, 1)
+        == VALKEYMODULE_ERR)
         return VALKEYMODULE_ERR;
 
-    if (ValkeyModule_CreateCommand(ctx, "hellotype.brange", HelloTypeBRange_ValkeyCommand, "readonly", 1, 1, 1) ==
-        VALKEYMODULE_ERR)
+    if (ValkeyModule_CreateCommand(ctx, "hellotype.brange", HelloTypeBRange_ValkeyCommand, "readonly", 1, 1, 1)
+        == VALKEYMODULE_ERR)
         return VALKEYMODULE_ERR;
 
     return VALKEYMODULE_OK;

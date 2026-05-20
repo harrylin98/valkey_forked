@@ -327,8 +327,8 @@ void parseUri(const char *uri, const char *tool_name, cliConnInfo *connInfo, int
     const char *userinfo, *username, *port, *host, *path;
 
     /* URI must start with a valid scheme. */
-    if (!strncasecmp(tlsscheme, curr, strlen(tlsscheme)) ||
-        !strncasecmp(redisTlsscheme, curr, strlen(redisTlsscheme))) {
+    if (!strncasecmp(tlsscheme, curr, strlen(tlsscheme))
+        || !strncasecmp(redisTlsscheme, curr, strlen(redisTlsscheme))) {
 #ifdef USE_OPENSSL
         *tls_flag = 1;
         const char *del = strstr(curr, "://");
@@ -408,17 +408,18 @@ sds cliVersion(void) {
 }
 
 /* This is a wrapper to call valkeyConnect or valkeyConnectWithTimeout. */
-valkeyContext *valkeyConnectWrapper(enum valkeyConnectionType ct, const char *ip_or_path, int port, const struct timeval tv, int nonblock, int multipath) {
+valkeyContext *valkeyConnectWrapper(enum valkeyConnectionType ct,
+                                    const char *ip_or_path,
+                                    int port,
+                                    const struct timeval tv,
+                                    int nonblock,
+                                    int multipath) {
     valkeyOptions options = {0};
 
     switch (ct) {
-    case VALKEY_CONN_TCP:
-        VALKEY_OPTIONS_SET_TCP(&options, ip_or_path, port);
-        break;
+    case VALKEY_CONN_TCP: VALKEY_OPTIONS_SET_TCP(&options, ip_or_path, port); break;
 
-    case VALKEY_CONN_UNIX:
-        VALKEY_OPTIONS_SET_UNIX(&options, ip_or_path);
-        break;
+    case VALKEY_CONN_UNIX: VALKEY_OPTIONS_SET_UNIX(&options, ip_or_path); break;
 
     case VALKEY_CONN_RDMA:
 #ifdef USE_RDMA
@@ -428,8 +429,7 @@ valkeyContext *valkeyConnectWrapper(enum valkeyConnectionType ct, const char *ip
         assert(0); /* requesting RDMA connection without RDMA support??? */
 #endif
 
-    default:
-        assert(0); /* this should not happen */
+    default: assert(0); /* this should not happen */
     }
 
     if (tv.tv_sec || tv.tv_usec) {

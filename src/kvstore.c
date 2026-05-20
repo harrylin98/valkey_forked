@@ -52,6 +52,7 @@
 
 static hashtable *kvstoreIteratorNextHashtable(kvstoreIterator *kvs_it);
 
+// clang-format off
 struct _kvstore {
     int flags;
     hashtableType *dtype;
@@ -71,6 +72,7 @@ struct _kvstore {
     hashtable *importing;                     /* The set of hashtable indexes that are being imported */
     unsigned long long importing_key_count;   /* Total number of importing keys in this kvstore. */
 };
+// clang-format on
 
 /* Structure for kvstore iterator that allows iterating across multiple hashtables. */
 struct _kvstoreIterator {
@@ -211,8 +213,8 @@ static hashtable *createHashtableIfNeeded(kvstore *kvs, int didx) {
  * and Scan, we won't delete the hashtable. We will check whether it needs
  * to be deleted when we're releasing the iterator. */
 static void freeHashtableIfNeeded(kvstore *kvs, int didx) {
-    if (!(kvs->flags & KVSTORE_FREE_EMPTY_HASHTABLES) || !kvstoreGetHashtable(kvs, didx) || kvstoreHashtableSize(kvs, didx) != 0 ||
-        kvstoreHashtableIsRehashingPaused(kvs, didx))
+    if (!(kvs->flags & KVSTORE_FREE_EMPTY_HASHTABLES) || !kvstoreGetHashtable(kvs, didx)
+        || kvstoreHashtableSize(kvs, didx) != 0 || kvstoreHashtableIsRehashingPaused(kvs, didx))
         return;
     hashtableRelease(kvs->hashtables[didx]);
     kvs->hashtables[didx] = NULL;
@@ -304,7 +306,9 @@ kvstore *kvstoreCreate(hashtableType *type, int num_hashtables_bits, int flags) 
     kvs->hashtables = zcalloc(sizeof(hashtable *) * kvs->num_hashtables);
     kvs->importing = hashtableCreate(&intHashtableType);
     kvs->rehashing = listCreate();
-    kvs->hashtable_size_index = kvs->num_hashtables > 1 ? zcalloc(sizeof(unsigned long long) * (kvs->num_hashtables + 1)) : NULL;
+    kvs->hashtable_size_index = kvs->num_hashtables > 1
+                                    ? zcalloc(sizeof(unsigned long long) * (kvs->num_hashtables + 1))
+                                    : NULL;
     if (!(kvs->flags & KVSTORE_ALLOCATE_HASHTABLES_ON_DEMAND)) {
         for (int i = 0; i < kvs->num_hashtables; i++) createHashtableIfNeeded(kvs, i);
     }
@@ -331,7 +335,8 @@ void kvstoreEmpty(kvstore *kvs, void(callback)(hashtable *)) {
     kvs->non_empty_hashtables = 0;
     kvs->resize_cursor = 0;
     kvs->bucket_count = 0;
-    if (kvs->hashtable_size_index) memset(kvs->hashtable_size_index, 0, sizeof(unsigned long long) * (kvs->num_hashtables + 1));
+    if (kvs->hashtable_size_index)
+        memset(kvs->hashtable_size_index, 0, sizeof(unsigned long long) * (kvs->num_hashtables + 1));
     kvs->overhead_hashtable_rehashing = 0;
 }
 
@@ -897,7 +902,11 @@ bool kvstoreHashtableAdd(kvstore *kvs, int didx, void *entry) {
     return ret;
 }
 
-bool kvstoreHashtableFindPositionForInsert(kvstore *kvs, int didx, void *key, hashtablePosition *position, void **existing) {
+bool kvstoreHashtableFindPositionForInsert(kvstore *kvs,
+                                           int didx,
+                                           void *key,
+                                           hashtablePosition *position,
+                                           void **existing) {
     hashtable *ht = createHashtableIfNeeded(kvs, didx);
     return hashtableFindPositionForInsert(ht, key, position, existing);
 }

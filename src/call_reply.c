@@ -122,8 +122,7 @@ static void callReplyNullBulkString(void *ctx, const char *proto, size_t proto_l
 
 static void callReplyNullArray(void *ctx, const char *proto, size_t proto_len) {
     CallReply *rep = ctx;
-    int type = rep->flags & REPLY_FLAG_EXACT_TYPE ? VALKEYMODULE_REPLY_ARRAY_NULL
-                                                  : VALKEYMODULE_REPLY_NULL;
+    int type = rep->flags & REPLY_FLAG_EXACT_TYPE ? VALKEYMODULE_REPLY_ARRAY_NULL : VALKEYMODULE_REPLY_NULL;
     callReplySetSharedData(rep, type, proto, proto_len, 0);
 }
 
@@ -143,8 +142,7 @@ static void callReplyError(void *ctx, const char *str, size_t len, const char *p
 
 static void callReplySimpleStr(void *ctx, const char *str, size_t len, const char *proto, size_t proto_len) {
     CallReply *rep = ctx;
-    int type = rep->flags & REPLY_FLAG_EXACT_TYPE ? VALKEYMODULE_REPLY_SIMPLE_STRING
-                                                  : VALKEYMODULE_REPLY_STRING;
+    int type = rep->flags & REPLY_FLAG_EXACT_TYPE ? VALKEYMODULE_REPLY_SIMPLE_STRING : VALKEYMODULE_REPLY_STRING;
     callReplySetSharedData(rep, type, proto, proto_len, 0);
     rep->len = len;
     rep->val.str = str;
@@ -366,9 +364,9 @@ int callReplyType(CallReply *rep) {
  */
 const char *callReplyGetString(CallReply *rep, size_t *len) {
     callReplyParse(rep);
-    if (rep->type != VALKEYMODULE_REPLY_STRING &&
-        rep->type != VALKEYMODULE_REPLY_SIMPLE_STRING &&
-        rep->type != VALKEYMODULE_REPLY_ERROR) return NULL;
+    if (rep->type != VALKEYMODULE_REPLY_STRING && rep->type != VALKEYMODULE_REPLY_SIMPLE_STRING
+        && rep->type != VALKEYMODULE_REPLY_ERROR)
+        return NULL;
     if (len) *len = rep->len;
     return rep->val.str;
 }

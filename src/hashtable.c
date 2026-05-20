@@ -333,8 +333,7 @@ struct iter {
 };
 
 /* The opaque hashtableIterator is defined as a blob of bytes. */
-static_assert(sizeof(hashtableIterator) >= sizeof(iter),
-              "Opaque iterator size");
+static_assert(sizeof(hashtableIterator) >= sizeof(iter), "Opaque iterator size");
 
 /* Position, used by some hashtable functions such as two-phase insert and delete. */
 typedef struct {
@@ -343,8 +342,7 @@ typedef struct {
     uint16_t table_index;
 } position;
 
-static_assert(sizeof(hashtablePosition) >= sizeof(position),
-              "Opaque iterator size");
+static_assert(sizeof(hashtablePosition) >= sizeof(position), "Opaque iterator size");
 
 /* State for incremental find. */
 typedef struct {
@@ -363,8 +361,7 @@ typedef struct {
     uint64_t hash;
 } incrementalFind;
 
-static_assert(sizeof(hashtableIncrementalFindState) >= sizeof(incrementalFind),
-              "Opaque incremental find state size");
+static_assert(sizeof(hashtableIncrementalFindState) >= sizeof(incrementalFind), "Opaque incremental find state size");
 
 /* Struct used for stats functions. */
 struct hashtableStats {
@@ -825,7 +822,13 @@ static bool expand(hashtable *ht, size_t size, int *malloc_failed) {
  * entry at that position matches the provided key. If a match is found, it
  * updates the position and table index pointers and returns 1. Otherwise,
  * it returns 0. */
-static inline int checkCandidateInBucket(hashtable *ht, bucket *b, int pos, const void *key, int table, int *pos_in_bucket, int *table_index) {
+static inline int checkCandidateInBucket(hashtable *ht,
+                                         bucket *b,
+                                         int pos,
+                                         const void *key,
+                                         int table,
+                                         int *pos_in_bucket,
+                                         int *table_index) {
     /* It's a candidate. */
     void *entry = b->entries[pos];
     const void *elem_key = entryGetKey(ht, entry);
@@ -844,7 +847,13 @@ static inline int checkCandidateInBucket(hashtable *ht, bucket *b, int pos, cons
 
 #if HAVE_X86_SIMD
 ATTRIBUTE_TARGET_SSE2
-static int findKeyInBucketSSE2(hashtable *ht, bucket *b, uint8_t h2, const void *key, int table, int *pos_in_bucket, int *table_index) {
+static int findKeyInBucketSSE2(hashtable *ht,
+                               bucket *b,
+                               uint8_t h2,
+                               const void *key,
+                               int table,
+                               int *pos_in_bucket,
+                               int *table_index) {
     /* Get the bucket's presence mask - indicates which positions are filled. */
     BUCKET_BITS_TYPE presence_mask = b->presence & ((1 << ENTRIES_PER_BUCKET) - 1);
     __m128i hash_vector = _mm_loadu_si128((__m128i *)b->hashes);
@@ -879,7 +888,13 @@ static inline int popMatchBitmask(uint64_t *mask) {
     return pos;
 }
 
-static int findKeyInBucketNeon(hashtable *ht, bucket *b, uint8_t h2, const void *key, int table, int *pos_in_bucket, int *table_index) {
+static int findKeyInBucketNeon(hashtable *ht,
+                               bucket *b,
+                               uint8_t h2,
+                               const void *key,
+                               int table,
+                               int *pos_in_bucket,
+                               int *table_index) {
     const uint8x8_t hash_vector = vld1_u8(b->hashes);             /* simple load */
     const uint8x8_t h2_vector = vdup_n_u8(h2);                    /* duplicated into every byte */
     const uint8x8_t equal_mask = vceq_u8(hash_vector, h2_vector); /* compare: 8 bits per item, 0xFF or 0x00 */
@@ -891,8 +906,7 @@ static int findKeyInBucketNeon(hashtable *ht, bucket *b, uint8_t h2, const void 
 
     while (matches) {
         int pos = popMatchBitmask(&matches);
-        if ((b->presence & (1 << pos)) &&
-            checkCandidateInBucket(ht, b, pos, key, table, pos_in_bucket, table_index))
+        if ((b->presence & (1 << pos)) && checkCandidateInBucket(ht, b, pos, key, table, pos_in_bucket, table_index))
             return 1;
     }
     return 0; /* No match */
@@ -931,8 +945,9 @@ static bucket *findBucket(hashtable *ht, uint64_t hash, const void *key, int *po
 #else
             /* Find candidate entries with presence flag set and matching h2 hash. */
             for (int pos = 0; pos < numBucketPositions(b); pos++) {
-                if (isPositionFilled(b, pos) && b->hashes[pos] == h2 &&
-                    checkCandidateInBucket(ht, b, pos, key, table, pos_in_bucket, table_index)) return b;
+                if (isPositionFilled(b, pos) && b->hashes[pos] == h2
+                    && checkCandidateInBucket(ht, b, pos, key, table, pos_in_bucket, table_index))
+                    return b;
             }
 #endif
             b = getChildBucket(b);
@@ -1966,10 +1981,8 @@ bool hashtableIncrementalFindStep(hashtableIncrementalFindState *state) {
             data->pos = 0;
         }
         return true;
-    case HASHTABLE_FOUND:
-        return false;
-    case HASHTABLE_NOT_FOUND:
-        return false;
+    case HASHTABLE_FOUND: return false;
+    case HASHTABLE_NOT_FOUND: return false;
     }
     assert(0);
 }
@@ -2043,7 +2056,12 @@ size_t hashtableScan(hashtable *ht, size_t cursor, hashtableScanFunction fn, voi
  *   purpose of defragmentation) and updating the pointer to the entry inside
  *   the hash table.
  */
-size_t hashtableScanDefrag(hashtable *ht, size_t cursor, hashtableScanFunction fn, void *privdata, void *(*defragfn)(void *), int flags) {
+size_t hashtableScanDefrag(hashtable *ht,
+                           size_t cursor,
+                           hashtableScanFunction fn,
+                           void *privdata,
+                           void *(*defragfn)(void *),
+                           int flags) {
     if (hashtableSize(ht) == 0) return 0;
 
     /* Prevent entries from being moved around during the scan call, as a
@@ -2244,8 +2262,7 @@ void hashtableCleanupIterator(hashtableIterator *iterator) {
             assert(iter->fingerprint == hashtableFingerprint(iter->hashtable));
         }
     }
-    if (isSafe(iter))
-        untrackSafeIterator(iter);
+    if (isSafe(iter)) untrackSafeIterator(iter);
 }
 
 /* Allocates and initializes an iterator. */
@@ -2308,8 +2325,8 @@ bool hashtableNext(hashtableIterator *iterator, void **elemptr) {
                      * this iterator is the only reason for pausing rehashing,
                      * we can do the compaction now when we're done with a
                      * bucket chain, before we move on to the next index. */
-                    if (iter->hashtable->pause_rehash == 1 &&
-                        iter->hashtable->used[iter->table] < iter->last_seen_size) {
+                    if (iter->hashtable->pause_rehash == 1
+                        && iter->hashtable->used[iter->table] < iter->last_seen_size) {
                         compactBucketChain(iter->hashtable, iter->index, iter->table);
                     }
                     iter->last_seen_size = iter->hashtable->used[iter->table];
@@ -2339,7 +2356,8 @@ bool hashtableNext(hashtableIterator *iterator, void **elemptr) {
             /* No entry here. */
             continue;
         }
-        if (!(iter->flags & HASHTABLE_ITER_SKIP_VALIDATION) && !validateElementIfNeeded(iter->hashtable, b->entries[iter->pos_in_bucket])) {
+        if (!(iter->flags & HASHTABLE_ITER_SKIP_VALIDATION)
+            && !validateElementIfNeeded(iter->hashtable, b->entries[iter->pos_in_bucket])) {
             continue;
         }
         /* Return the entry at this position. */
@@ -2477,20 +2495,21 @@ hashtableStats *hashtableGetStatsHt(hashtable *ht, int table_index, int full) {
 /* Generates human readable stats. */
 size_t hashtableGetStatsMsg(char *buf, size_t bufsize, hashtableStats *stats, int full) {
     size_t l = 0;
-    l += snprintf(buf + l, bufsize - l,
+    l += snprintf(buf + l,
+                  bufsize - l,
                   "Hash table %d stats (%s):\n"
                   " table size: %lu\n"
                   " number of entries: %lu\n",
                   stats->table_index,
-                  (stats->table_index == 0) ? "main hash table" : "rehashing target", stats->size,
+                  (stats->table_index == 0) ? "main hash table" : "rehashing target",
+                  stats->size,
                   stats->used);
     if (stats->table_index == 0) {
-        l += snprintf(buf + l, bufsize - l,
-                      " rehashing index: %zd\n",
-                      stats->rehash_index);
+        l += snprintf(buf + l, bufsize - l, " rehashing index: %zd\n", stats->rehash_index);
     }
     if (full) {
-        l += snprintf(buf + l, bufsize - l,
+        l += snprintf(buf + l,
+                      bufsize - l,
                       " top-level buckets: %lu\n"
                       " child buckets: %lu\n"
                       " max chain length: %lu\n"
@@ -2503,7 +2522,11 @@ size_t hashtableGetStatsMsg(char *buf, size_t bufsize, hashtableStats *stats, in
         for (unsigned long i = 0; i < HASHTABLE_STATS_VECTLEN - 1; i++) {
             if (stats->clvector[i] == 0) continue;
             if (l >= bufsize) break;
-            l += snprintf(buf + l, bufsize - l, "   %ld: %ld (%.02f%%)\n", i, stats->clvector[i],
+            l += snprintf(buf + l,
+                          bufsize - l,
+                          "   %ld: %ld (%.02f%%)\n",
+                          i,
+                          stats->clvector[i],
                           ((float)stats->clvector[i] / stats->toplevel_buckets) * 100);
         }
     }
@@ -2538,8 +2561,11 @@ void hashtableGetStats(char *buf, size_t bufsize, hashtable *ht, int full) {
 void hashtableDump(hashtable *ht) {
     for (int table = 0; table <= 1; table++) {
         printf("Table %d, used %zu, exp %d, top-level buckets %zu, child buckets %zu\n",
-               table, ht->used[table], ht->bucket_exp[table],
-               numBuckets(ht->bucket_exp[table]), ht->child_buckets[table]);
+               table,
+               ht->used[table],
+               ht->bucket_exp[table],
+               numBuckets(ht->bucket_exp[table]),
+               ht->child_buckets[table]);
         for (size_t idx = 0; idx < numBuckets(ht->bucket_exp[table]); idx++) {
             bucket *b = &ht->tables[table][idx];
             int level = 0;
@@ -2547,7 +2573,9 @@ void hashtableDump(hashtable *ht) {
                 printf("  Bucket %d:%zu level:%d\n", table, idx, level);
                 for (int pos = 0; pos < ENTRIES_PER_BUCKET; pos++) {
                     if (isPositionFilled(b, pos)) {
-                        printf("    %d h2 %02x, key \"%s\"\n", pos, b->hashes[pos],
+                        printf("    %d h2 %02x, key \"%s\"\n",
+                               pos,
+                               b->hashes[pos],
                                (const char *)entryGetKey(ht, b->entries[pos]));
                     }
                 }
@@ -2575,7 +2603,10 @@ void hashtableHistogram(hashtable *ht) {
         }
         size_t chains_left = size;
         printf("Bucket fill table=%d size=%zu children=%zu used=%zu:\n",
-               table, size, ht->child_buckets[table], ht->used[table]);
+               table,
+               size,
+               ht->child_buckets[table],
+               ht->used[table]);
         do {
             printf("    ");
             for (size_t idx = 0; idx < size; idx++) {

@@ -90,10 +90,10 @@ static int checkClocksource(sds *error_msg) {
     }
     if (getrusage(RUSAGE_SELF, &ru_end) != 0) return 0;
 
-    long long stime_us = (ru_end.ru_stime.tv_sec * 1000000 + ru_end.ru_stime.tv_usec) -
-                         (ru_start.ru_stime.tv_sec * 1000000 + ru_start.ru_stime.tv_usec);
-    long long utime_us = (ru_end.ru_utime.tv_sec * 1000000 + ru_end.ru_utime.tv_usec) -
-                         (ru_start.ru_utime.tv_sec * 1000000 + ru_start.ru_utime.tv_usec);
+    long long stime_us = (ru_end.ru_stime.tv_sec * 1000000 + ru_end.ru_stime.tv_usec)
+                         - (ru_start.ru_stime.tv_sec * 1000000 + ru_start.ru_stime.tv_usec);
+    long long utime_us = (ru_end.ru_utime.tv_sec * 1000000 + ru_end.ru_utime.tv_usec)
+                         - (ru_start.ru_utime.tv_sec * 1000000 + ru_start.ru_utime.tv_usec);
 
     /* If more than 10% of the process time was in system calls we probably have an inefficient clocksource, print a
      * warning */
@@ -108,7 +108,8 @@ static int checkClocksource(sds *error_msg) {
                                   "/sys/devices/system/clocksource/clocksource0/current_clocksource' as root. "
                                   "To permanently change the system's clocksource you'll need to set the "
                                   "'clocksource=' kernel command line parameter.",
-                                  curr ? curr : "", avail ? avail : "");
+                                  curr ? curr : "",
+                                  avail ? avail : "");
         sdsfree(avail);
         sdsfree(curr);
         return -1;
@@ -181,12 +182,12 @@ int checkTHPEnabled(sds *error_msg) {
     fclose(fp);
 
     if (strstr(buf, "[always]") != NULL) {
-        *error_msg = sdsnew(
-            "You have Transparent Huge Pages (THP) support enabled in your kernel. "
-            "This will create latency and memory usage issues with Valkey. "
-            "To fix this issue run the command 'echo madvise > /sys/kernel/mm/transparent_hugepage/enabled' as root, "
-            "and add it to your /etc/rc.local in order to retain the setting after a reboot. "
-            "Valkey must be restarted after THP is disabled (set to 'madvise' or 'never').");
+        *error_msg = sdsnew("You have Transparent Huge Pages (THP) support enabled in your kernel. "
+                            "This will create latency and memory usage issues with Valkey. "
+                            "To fix this issue run the command 'echo madvise > "
+                            "/sys/kernel/mm/transparent_hugepage/enabled' as root, "
+                            "and add it to your /etc/rc.local in order to retain the setting after a reboot. "
+                            "Valkey must be restarted after THP is disabled (set to 'madvise' or 'never').");
         return -1;
     } else {
         return 1;

@@ -208,12 +208,12 @@ struct hllhdr {
 #define HLL_INVALIDATE_CACHE(hdr) (hdr)->card[7] |= (1 << 7)
 #define HLL_VALID_CACHE(hdr) (((hdr)->card[7] & (1 << 7)) == 0)
 
-#define HLL_P 14                       /* The greater is P, the smaller the error. */
-#define HLL_Q (64 - HLL_P)             /* The number of bits of the hash value used for \
-                                          determining the number of leading zeros. */
-#define HLL_REGISTERS (1 << HLL_P)     /* With P=14, 16384 registers. */
-#define HLL_P_MASK (HLL_REGISTERS - 1) /* Mask to index register. */
-#define HLL_BITS 6                     /* Enough to count up to 63 leading zeroes. */
+#define HLL_P            14                     /* The greater is P, the smaller the error. */
+#define HLL_Q            (64 - HLL_P)                       /* The number of bits of the hash value used for \
+                                                   determining the number of leading zeros. */
+#define HLL_REGISTERS    (1 << HLL_P)     /* With P=14, 16384 registers. */
+#define HLL_P_MASK       (HLL_REGISTERS - 1) /* Mask to index register. */
+#define HLL_BITS         6                   /* Enough to count up to 63 leading zeroes. */
 #define HLL_REGISTER_MAX ((1 << HLL_BITS) - 1)
 #define HLL_HDR_SIZE sizeof(struct hllhdr)
 #define HLL_DENSE_SIZE (HLL_HDR_SIZE + ((HLL_REGISTERS * HLL_BITS + 7) / 8))
@@ -401,8 +401,8 @@ static int simd_enabled = 1;
 
 /* Macros to access the sparse representation.
  * The macros parameter is expected to be an uint8_t pointer. */
-#define HLL_SPARSE_XZERO_BIT 0x40                    /* 01xxxxxx */
-#define HLL_SPARSE_VAL_BIT 0x80                      /* 1vvvvvxx */
+#define HLL_SPARSE_XZERO_BIT 0x40                /* 01xxxxxx */
+#define HLL_SPARSE_VAL_BIT 0x80                  /* 1vvvvvxx */
 #define HLL_SPARSE_IS_ZERO(p) (((*(p)) & 0xc0) == 0) /* 00xxxxxx */
 #define HLL_SPARSE_IS_XZERO(p) (((*(p)) & 0xc0) == HLL_SPARSE_XZERO_BIT)
 #define HLL_SPARSE_IS_VAL(p) ((*(p)) & HLL_SPARSE_VAL_BIT)
@@ -1142,14 +1142,38 @@ void hllMergeDenseAVX2(uint8_t *reg_raw, const uint8_t *reg_dense) {
      * To:   {AAA0|BBB0|CCC0|DDD0|EEE0|FFF0|GGG0|HHH0}
      */
     const __m256i shuffle = _mm256_setr_epi8( //
-        4, 5, 6, -1,                          //
-        7, 8, 9, -1,                          //
-        10, 11, 12, -1,                       //
-        13, 14, 15, -1,                       //
-        0, 1, 2, -1,                          //
-        3, 4, 5, -1,                          //
-        6, 7, 8, -1,                          //
-        9, 10, 11, -1                         //
+        4,
+        5,
+        6,
+        -1, //
+        7,
+        8,
+        9,
+        -1, //
+        10,
+        11,
+        12,
+        -1, //
+        13,
+        14,
+        15,
+        -1, //
+        0,
+        1,
+        2,
+        -1, //
+        3,
+        4,
+        5,
+        -1, //
+        6,
+        7,
+        8,
+        -1, //
+        9,
+        10,
+        11,
+        -1 //
     );
 
     /* Merge the first 8 registers (6 bytes) normally
@@ -1250,10 +1274,7 @@ void hllMergeDenseNEON(uint8_t *reg_raw, const uint8_t *reg_dense) {
     uint8_t *dense_ptr = (uint8_t *)reg_dense;
     uint8_t *raw_ptr = (uint8_t *)reg_raw;
 
-    uint8x16_t idx = {0, 1, 2, 0xFF,
-                      3, 4, 5, 0xFF,
-                      6, 7, 8, 0xFF,
-                      9, 10, 11, 0xFF};
+    uint8x16_t idx = {0, 1, 2, 0xFF, 3, 4, 5, 0xFF, 6, 7, 8, 0xFF, 9, 10, 11, 0xFF};
 
     // Bit masks for extracting specific bit ranges
     uint8x16_t mask1 = vreinterpretq_u8_u32(vdupq_n_u32(0x0000003f)); // Bits 0-5
@@ -1424,16 +1445,38 @@ void hllDenseCompressAVX2(uint8_t *reg_dense, const uint8_t *reg_raw) {
      * To:   {AAAB|BBCC|CDDD|0000|EEEF|FFGG|GHHH|0000}
      */
     const __m256i shuffle = _mm256_setr_epi8( //
-        0, 1, 2,                              //
-        4, 5, 6,                              //
-        8, 9, 10,                             //
-        12, 13, 14,                           //
-        -1, -1, -1, -1,                       //
-        0, 1, 2,                              //
-        4, 5, 6,                              //
-        8, 9, 10,                             //
-        12, 13, 14,                           //
-        -1, -1, -1, -1                        //
+        0,
+        1,
+        2, //
+        4,
+        5,
+        6, //
+        8,
+        9,
+        10, //
+        12,
+        13,
+        14, //
+        -1,
+        -1,
+        -1,
+        -1, //
+        0,
+        1,
+        2, //
+        4,
+        5,
+        6, //
+        8,
+        9,
+        10, //
+        12,
+        13,
+        14, //
+        -1,
+        -1,
+        -1,
+        -1 //
     );
 
     /* Raw to Dense:
@@ -1522,6 +1565,7 @@ void hllDenseCompressNEON(uint8_t *reg_dense, const uint8_t *reg_raw) {
      * From: {AAA0|BBB0|CCC0|DDD0}
      * To:   {AAAB|BBCC|CDDD|0000}
      */
+    // clang-format off
     uint8x16_t idx = {
         0, 1, 2,               // Extract bytes from lane 0
         4, 5, 6,               // Extract bytes from lane 1
@@ -1529,6 +1573,7 @@ void hllDenseCompressNEON(uint8_t *reg_dense, const uint8_t *reg_raw) {
         12, 13, 14,            // Extract bytes from lane 3
         0xFF, 0xFF, 0xFF, 0xFF // Zero out last 4 elements (padding)
     };
+    // clang-format on
 
     // Bit masks for extracting first 6 bits from every byte within 32-bit lanes
     uint32x4_t mask1 = vdupq_n_u32(0x0000003F); // Extract bits 0-5
@@ -1655,8 +1700,9 @@ int isHLLObjectOrReply(client *c, robj *o) {
     return C_OK;
 
 invalid:
-    addReplyError(c, "-WRONGTYPE Key is not a valid "
-                     "HyperLogLog string value.");
+    addReplyError(c,
+                  "-WRONGTYPE Key is not a valid "
+                  "HyperLogLog string value.");
     return C_ERR;
 }
 
@@ -1902,7 +1948,10 @@ void pfselftestCommand(client *c) {
 
             HLL_DENSE_GET_REGISTER(val, hdr->registers, i);
             if (val != bytecounters[i]) {
-                addReplyErrorFormat(c, "TESTFAILED Register %d should be %d but is %d", i, (int)bytecounters[i],
+                addReplyErrorFormat(c,
+                                    "TESTFAILED Register %d should be %d but is %d",
+                                    i,
+                                    (int)bytecounters[i],
                                     (int)val);
                 goto cleanup;
             }
@@ -1959,8 +2008,10 @@ void pfselftestCommand(client *c) {
 
             if (abserr < 0) abserr = -abserr;
             if (abserr > (int64_t)maxerr) {
-                addReplyErrorFormat(c, "TESTFAILED Too big error. card:%llu abserr:%llu",
-                                    (unsigned long long)checkpoint, (unsigned long long)abserr);
+                addReplyErrorFormat(c,
+                                    "TESTFAILED Too big error. card:%llu abserr:%llu",
+                                    (unsigned long long)checkpoint,
+                                    (unsigned long long)abserr);
                 goto cleanup;
             }
             checkpoint *= 10;

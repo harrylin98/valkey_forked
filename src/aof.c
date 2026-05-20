@@ -125,9 +125,14 @@ sds aofInfoFormat(sds buf, aofInfo *ai) {
 
     if (sdsneedsrepr(ai->file_name)) filename_repr = sdscatrepr(sdsempty(), ai->file_name, sdslen(ai->file_name));
 
-    sds ret = sdscatprintf(buf, "%s %s %s %lld %s %c\n", AOF_MANIFEST_KEY_FILE_NAME,
-                           filename_repr ? filename_repr : ai->file_name, AOF_MANIFEST_KEY_FILE_SEQ, ai->file_seq,
-                           AOF_MANIFEST_KEY_FILE_TYPE, ai->file_type);
+    sds ret = sdscatprintf(buf,
+                           "%s %s %s %lld %s %c\n",
+                           AOF_MANIFEST_KEY_FILE_NAME,
+                           filename_repr ? filename_repr : ai->file_name,
+                           AOF_MANIFEST_KEY_FILE_SEQ,
+                           ai->file_seq,
+                           AOF_MANIFEST_KEY_FILE_TYPE,
+                           ai->file_type);
     sdsfree(filename_repr);
 
     return ret;
@@ -261,7 +266,8 @@ aofManifest *aofLoadManifestFromFile(sds am_filepath) {
         serverLog(LL_WARNING,
                   "Fatal error: can't open the AOF manifest "
                   "file %s for reading: %s",
-                  am_filepath, strerror(errno));
+                  am_filepath,
+                  strerror(errno));
         exit(1);
     }
 
@@ -435,8 +441,12 @@ sds getNewBaseFileNameAndMarkPreAsHistory(aofManifest *am, int aof_use_rdb_pream
     char *format_suffix = aof_use_rdb_preamble ? RDB_FORMAT_SUFFIX : AOF_FORMAT_SUFFIX;
 
     aofInfo *ai = aofInfoCreate();
-    ai->file_name = sdscatprintf(sdsempty(), "%s.%lld%s%s", server.aof_filename, ++am->curr_base_file_seq,
-                                 BASE_FILE_SUFFIX, format_suffix);
+    ai->file_name = sdscatprintf(sdsempty(),
+                                 "%s.%lld%s%s",
+                                 server.aof_filename,
+                                 ++am->curr_base_file_seq,
+                                 BASE_FILE_SUFFIX,
+                                 format_suffix);
     ai->file_seq = am->curr_base_file_seq;
     ai->file_type = AOF_FILE_TYPE_BASE;
     am->base_aof_info = ai;
@@ -454,8 +464,12 @@ sds getNewBaseFileNameAndMarkPreAsHistory(aofManifest *am, int aof_use_rdb_pream
 sds getNewIncrAofName(aofManifest *am) {
     aofInfo *ai = aofInfoCreate();
     ai->file_type = AOF_FILE_TYPE_INCR;
-    ai->file_name = sdscatprintf(sdsempty(), "%s.%lld%s%s", server.aof_filename, ++am->curr_incr_file_seq,
-                                 INCR_FILE_SUFFIX, AOF_FORMAT_SUFFIX);
+    ai->file_name = sdscatprintf(sdsempty(),
+                                 "%s.%lld%s%s",
+                                 server.aof_filename,
+                                 ++am->curr_incr_file_seq,
+                                 INCR_FILE_SUFFIX,
+                                 AOF_FORMAT_SUFFIX);
     ai->file_seq = am->curr_incr_file_seq;
     listAddNodeTail(am->incr_aof_list, ai);
     am->dirty = 1;
@@ -545,7 +559,9 @@ int writeAofManifestFile(sds buf) {
         if (nwritten < 0) {
             if (errno == EINTR) continue;
 
-            serverLog(LL_WARNING, "Error trying to write the temporary AOF manifest file %s: %s", tmp_am_name,
+            serverLog(LL_WARNING,
+                      "Error trying to write the temporary AOF manifest file %s: %s",
+                      tmp_am_name,
                       strerror(errno));
 
             ret = C_ERR;
@@ -564,8 +580,11 @@ int writeAofManifestFile(sds buf) {
     }
 
     if (rename(tmp_am_filepath, am_filepath) != 0) {
-        serverLog(LL_WARNING, "Error trying to rename the temporary AOF manifest file %s into %s: %s", tmp_am_name,
-                  am_name, strerror(errno));
+        serverLog(LL_WARNING,
+                  "Error trying to rename the temporary AOF manifest file %s into %s: %s",
+                  tmp_am_name,
+                  am_name,
+                  strerror(errno));
 
         ret = C_ERR;
         goto cleanup;
@@ -638,15 +657,20 @@ void aofUpgradePrepare(aofManifest *am) {
     /* Move the old AOF file to AOF directory. */
     sds aof_filepath = makePath(server.aof_dirname, server.aof_filename);
     if (rename(server.aof_filename, aof_filepath) == -1) {
-        serverLog(LL_WARNING, "Error trying to move the old AOF file %s into dir %s: %s", server.aof_filename,
-                  server.aof_dirname, strerror(errno));
+        serverLog(LL_WARNING,
+                  "Error trying to move the old AOF file %s into dir %s: %s",
+                  server.aof_filename,
+                  server.aof_dirname,
+                  strerror(errno));
         sdsfree(aof_filepath);
         exit(1);
     }
     sdsfree(aof_filepath);
 
-    serverLog(LL_NOTICE, "Successfully migrated an old-style AOF file (%s) into the AOF directory (%s).",
-              server.aof_filename, server.aof_dirname);
+    serverLog(LL_NOTICE,
+              "Successfully migrated an old-style AOF file (%s) into the AOF directory (%s).",
+              server.aof_filename,
+              server.aof_dirname);
 }
 
 /* When AOFRW success, the previous BASE and INCR AOFs will
@@ -656,8 +680,8 @@ void aofUpgradePrepare(aofManifest *am) {
  * the delete task to the bio thread.
  */
 int aofDelHistoryFiles(void) {
-    if (server.aof_manifest == NULL || server.aof_disable_auto_gc == 1 ||
-        !listLength(server.aof_manifest->history_aof_list)) {
+    if (server.aof_manifest == NULL || server.aof_disable_auto_gc == 1
+        || !listLength(server.aof_manifest->history_aof_list)) {
         return C_OK;
     }
 
@@ -966,8 +990,9 @@ int startAppendOnly(void) {
     server.aof_state = AOF_WAIT_REWRITE;
     if (hasActiveChildProcess() && server.child_type != CHILD_TYPE_AOF) {
         server.aof_rewrite_scheduled = 1;
-        serverLog(LL_NOTICE, "AOF was enabled but there is already another background operation. An AOF background was "
-                             "scheduled to start when possible.");
+        serverLog(LL_NOTICE,
+                  "AOF was enabled but there is already another background operation. An AOF background was "
+                  "scheduled to start when possible.");
     } else if (server.in_exec) {
         server.aof_rewrite_scheduled = 1;
         serverLog(LL_NOTICE,
@@ -977,15 +1002,17 @@ int startAppendOnly(void) {
          * start a new one: the old one cannot be reused because it is not
          * accumulating the AOF buffer. */
         if (server.child_type == CHILD_TYPE_AOF) {
-            serverLog(LL_NOTICE, "AOF was enabled but there is already an AOF rewriting in background. Stopping "
-                                 "background AOF and starting a rewrite now.");
+            serverLog(LL_NOTICE,
+                      "AOF was enabled but there is already an AOF rewriting in background. Stopping "
+                      "background AOF and starting a rewrite now.");
             killAppendOnlyChild();
         }
 
         if (rewriteAppendOnlyFileBackground() == C_ERR) {
             server.aof_state = AOF_OFF;
-            serverLog(LL_WARNING, "The server needs to enable the AOF but can't trigger a background AOF rewrite "
-                                  "operation. Check the above logs for more info about the error.");
+            serverLog(LL_WARNING,
+                      "The server needs to enable the AOF but can't trigger a background AOF rewrite "
+                      "operation. Check the above logs for more info about the error.");
             return C_ERR;
         }
     }
@@ -1033,8 +1060,11 @@ int restartAOFWithSyncRdb(void) {
     new_base_filepath = makePath(server.aof_dirname, new_base_filename);
 
     if (rename(server.rdb_filename, new_base_filepath) == -1) {
-        serverLog(LL_WARNING, "Error trying to rename the RDB file %s into %s: %s", server.rdb_filename,
-                  new_base_filepath, strerror(errno));
+        serverLog(LL_WARNING,
+                  "Error trying to rename the RDB file %s into %s: %s",
+                  server.rdb_filename,
+                  new_base_filepath,
+                  strerror(errno));
         goto cleanup;
     }
     rdbfile_renamed = 1;
@@ -1069,8 +1099,7 @@ int restartAOFWithSyncRdb(void) {
      * fsynced offset to avoid races on fsynced_reploff_pending. */
     bioDrainWorker(BIO_AOF_FSYNC);
     atomic_store_explicit(&server.fsynced_reploff_pending, server.primary_repl_offset, memory_order_relaxed);
-    server.fsynced_reploff =
-        atomic_load_explicit(&server.fsynced_reploff_pending, memory_order_relaxed);
+    server.fsynced_reploff = atomic_load_explicit(&server.fsynced_reploff_pending, memory_order_relaxed);
 
     int aof_bio_fsync_status = atomic_load_explicit(&server.aof_bio_fsync_status, memory_order_relaxed);
     if (aof_bio_fsync_status == C_ERR) {
@@ -1105,15 +1134,18 @@ cleanup:
             serverLog(LL_WARNING,
                       "Failed to rename AOF base back to RDB file %s: %s. "
                       "Orphan file may remain at %s",
-                      server.rdb_filename, strerror(errno), new_base_filepath);
+                      server.rdb_filename,
+                      strerror(errno),
+                      new_base_filepath);
         } else {
             rdbfile_renamed = 0;
         }
     }
     if (server.rdb_del_sync_files && allPersistenceDisabled()) {
-        serverLog(LL_NOTICE, "Removing the RDB file obtained from "
-                             "the primary. This replica has persistence "
-                             "disabled");
+        serverLog(LL_NOTICE,
+                  "Removing the RDB file obtained from "
+                  "the primary. This replica has persistence "
+                  "disabled");
         if (rdbfile_renamed) {
             bg_unlink(new_base_filepath);
         } else {
@@ -1186,16 +1218,16 @@ void flushAppendOnlyFile(int force) {
          * called only when aof buffer is not empty, so if users
          * stop write commands before fsync called in one second,
          * the data in page cache cannot be flushed in time. */
-        if (server.aof_fsync == AOF_FSYNC_EVERYSEC && server.aof_last_incr_fsync_offset != server.aof_last_incr_size &&
-            server.mstime - server.aof_last_fsync >= 1000 && !(sync_in_progress = aofFsyncInProgress())) {
+        if (server.aof_fsync == AOF_FSYNC_EVERYSEC && server.aof_last_incr_fsync_offset != server.aof_last_incr_size
+            && server.mstime - server.aof_last_fsync >= 1000 && !(sync_in_progress = aofFsyncInProgress())) {
             goto try_fsync;
 
             /* Check if we need to do fsync even the aof buffer is empty,
              * the reason is described in the previous AOF_FSYNC_EVERYSEC block,
              * and AOF_FSYNC_ALWAYS is also checked here to handle a case where
              * aof_fsync is changed from everysec to always. */
-        } else if (server.aof_fsync == AOF_FSYNC_ALWAYS &&
-                   server.aof_last_incr_fsync_offset != server.aof_last_incr_size) {
+        } else if (server.aof_fsync == AOF_FSYNC_ALWAYS
+                   && server.aof_last_incr_fsync_offset != server.aof_last_incr_size) {
             goto try_fsync;
         } else {
             /* All data is fsync'd already: Update fsynced_reploff_pending just in case.
@@ -1204,7 +1236,8 @@ void flushAppendOnlyFile(int force) {
              * (because there's no reason, from the AOF POV, to call fsync) and then WAITAOF may wait on
              * the higher offset (which contains data that was only propagated to replicas, and not to AOF) */
             if (!sync_in_progress && server.aof_fsync != AOF_FSYNC_NO)
-                atomic_store_explicit(&server.fsynced_reploff_pending, server.primary_repl_offset,
+                atomic_store_explicit(&server.fsynced_reploff_pending,
+                                      server.primary_repl_offset,
                                       memory_order_relaxed);
             return;
         }
@@ -1230,8 +1263,9 @@ void flushAppendOnlyFile(int force) {
             /* Otherwise fall through, and go write since we can't wait
              * over two seconds. */
             server.aof_delayed_fsync++;
-            serverLog(LL_NOTICE, "Asynchronous AOF fsync is taking too long (disk is busy?). Writing the AOF buffer "
-                                 "without waiting for fsync to complete, this may slow down the server.");
+            serverLog(LL_NOTICE,
+                      "Asynchronous AOF fsync is taking too long (disk is busy?). Writing the AOF buffer "
+                      "without waiting for fsync to complete, this may slow down the server.");
         }
     }
     /* We want to perform a single write. This should be guaranteed atomic
@@ -1290,7 +1324,8 @@ void flushAppendOnlyFile(int force) {
                           "Short write while writing to "
                           "the AOF file: (nwritten=%lld, "
                           "expected=%lld)",
-                          (long long)nwritten, (long long)sdslen(server.aof_buf));
+                          (long long)nwritten,
+                          (long long)sdslen(server.aof_buf));
             }
 
             if (ftruncate(server.aof_fd, server.aof_last_incr_size) == -1) {
@@ -1534,7 +1569,9 @@ int loadSingleAppendOnlyFile(char *filename) {
     if (fp == NULL) {
         int en = errno;
         if (valkey_stat(aof_filepath, &sb) == 0 || errno != ENOENT) {
-            serverLog(LL_WARNING, "Fatal error: can't open the append log file %s for reading: %s", filename,
+            serverLog(LL_WARNING,
+                      "Fatal error: can't open the append log file %s for reading: %s",
+                      filename,
                       strerror(en));
             sdsfree(aof_filepath);
             return AOF_OPEN_ERR;
@@ -1580,7 +1617,8 @@ int loadSingleAppendOnlyFile(char *filename) {
         rioInitWithFile(&rdb, fp);
         if (rdbLoadRio(&rdb, RDBFLAGS_AOF_PREAMBLE, NULL) != RDB_OK) {
             if (old_style)
-                serverLog(LL_WARNING, "Error reading the RDB preamble of the AOF file %s, AOF loading aborted",
+                serverLog(LL_WARNING,
+                          "Error reading the RDB preamble of the AOF file %s, AOF loading aborted",
                           filename);
             else
                 serverLog(LL_WARNING, "Error reading the RDB base file %s, AOF loading aborted", filename);
@@ -1724,7 +1762,9 @@ readerr: /* Read error. If feof(fp) is true, fall through to unexpected EOF. */
 uxeof: /* Unexpected AOF end of file. */
     if (server.aof_load_truncated) {
         serverLog(LL_WARNING, "!!! Warning: short read while loading the AOF file %s!!!", filename);
-        serverLog(LL_WARNING, "!!! Truncating the AOF %s at offset %llu !!!", filename,
+        serverLog(LL_WARNING,
+                  "!!! Truncating the AOF %s at offset %llu !!!",
+                  filename,
                   (unsigned long long)valid_up_to);
         if (valid_up_to == -1 || truncate(aof_filepath, valid_up_to) == -1) {
             if (valid_up_to == -1) {
@@ -1744,12 +1784,12 @@ uxeof: /* Unexpected AOF end of file. */
             }
         }
     }
-    serverLog(
-        LL_WARNING,
-        "Unexpected end of file reading the append only file %s. You can: "
-        "1) Make a backup of your AOF file, then use ./valkey-check-aof --fix <filename.manifest>. "
-        "2) Alternatively you can set the 'aof-load-truncated' configuration option to yes and restart the server.",
-        filename);
+    serverLog(LL_WARNING,
+              "Unexpected end of file reading the append only file %s. You can: "
+              "1) Make a backup of your AOF file, then use ./valkey-check-aof --fix <filename.manifest>. "
+              "2) Alternatively you can set the 'aof-load-truncated' configuration option to yes and restart the "
+              "server.",
+              filename);
     ret = AOF_FAILED;
     goto cleanup;
 
@@ -1789,9 +1829,9 @@ int loadAppendOnlyFiles(aofManifest *am) {
      *    and the 'server.aof_filename' file not exist in 'server.aof_dirname' directory
      * */
     if (fileExist(server.aof_filename)) {
-        if (!dirExists(server.aof_dirname) || (am->base_aof_info == NULL && listLength(am->incr_aof_list) == 0) ||
-            (am->base_aof_info != NULL && listLength(am->incr_aof_list) == 0 &&
-             !strcmp(am->base_aof_info->file_name, server.aof_filename) && !aofFileExist(server.aof_filename))) {
+        if (!dirExists(server.aof_dirname) || (am->base_aof_info == NULL && listLength(am->incr_aof_list) == 0)
+            || (am->base_aof_info != NULL && listLength(am->incr_aof_list) == 0
+                && !strcmp(am->base_aof_info->file_name, server.aof_filename) && !aofFileExist(server.aof_filename))) {
             aofUpgradePrepare(am);
         }
     }
@@ -1827,7 +1867,9 @@ int loadAppendOnlyFiles(aofManifest *am) {
         start = ustime();
         ret = loadSingleAppendOnlyFile(aof_name);
         if (ret == AOF_OK || (ret == AOF_TRUNCATED && last_file)) {
-            serverLog(LL_NOTICE, "DB loaded from base file %s: %.3f seconds", aof_name,
+            serverLog(LL_NOTICE,
+                      "DB loaded from base file %s: %.3f seconds",
+                      aof_name,
                       (float)(ustime() - start) / 1000000);
         }
 
@@ -1857,7 +1899,9 @@ int loadAppendOnlyFiles(aofManifest *am) {
             start = ustime();
             ret = loadSingleAppendOnlyFile(aof_name);
             if (ret == AOF_OK || (ret == AOF_TRUNCATED && last_file)) {
-                serverLog(LL_NOTICE, "DB loaded from incr file %s: %.3f seconds", aof_name,
+                serverLog(LL_NOTICE,
+                          "DB loaded from incr file %s: %.3f seconds",
+                          aof_name,
                           (float)(ustime() - start) / 1000000);
             }
 
@@ -1922,8 +1966,8 @@ int rewriteListObject(rio *r, robj *key, robj *o) {
     while (listTypeNext(li, &entry)) {
         if (count == 0) {
             int cmd_items = (items > AOF_REWRITE_ITEMS_PER_CMD) ? AOF_REWRITE_ITEMS_PER_CMD : items;
-            if (!rioWriteBulkCount(r, '*', 2 + cmd_items) || !rioWriteBulkString(r, "RPUSH", 5) ||
-                !rioWriteBulkObject(r, key)) {
+            if (!rioWriteBulkCount(r, '*', 2 + cmd_items) || !rioWriteBulkString(r, "RPUSH", 5)
+                || !rioWriteBulkObject(r, key)) {
                 listTypeReleaseIterator(li);
                 return 0;
             }
@@ -1962,8 +2006,8 @@ int rewriteSetObject(rio *r, robj *key, robj *o) {
     while (setTypeNext(si, &str, &len, &llval) != -1) {
         if (count == 0) {
             int cmd_items = (items > AOF_REWRITE_ITEMS_PER_CMD) ? AOF_REWRITE_ITEMS_PER_CMD : items;
-            if (!rioWriteBulkCount(r, '*', 2 + cmd_items) || !rioWriteBulkString(r, "SADD", 4) ||
-                !rioWriteBulkObject(r, key)) {
+            if (!rioWriteBulkCount(r, '*', 2 + cmd_items) || !rioWriteBulkString(r, "SADD", 4)
+                || !rioWriteBulkObject(r, key)) {
                 setTypeReleaseIterator(si);
                 return 0;
             }
@@ -2005,8 +2049,8 @@ int rewriteSortedSetObject(rio *r, robj *key, robj *o) {
             if (count == 0) {
                 int cmd_items = (items > AOF_REWRITE_ITEMS_PER_CMD) ? AOF_REWRITE_ITEMS_PER_CMD : items;
 
-                if (!rioWriteBulkCount(r, '*', 2 + cmd_items * 2) || !rioWriteBulkString(r, "ZADD", 4) ||
-                    !rioWriteBulkObject(r, key)) {
+                if (!rioWriteBulkCount(r, '*', 2 + cmd_items * 2) || !rioWriteBulkString(r, "ZADD", 4)
+                    || !rioWriteBulkObject(r, key)) {
                     return 0;
                 }
             }
@@ -2030,8 +2074,8 @@ int rewriteSortedSetObject(rio *r, robj *key, robj *o) {
             if (count == 0) {
                 int cmd_items = (items > AOF_REWRITE_ITEMS_PER_CMD) ? AOF_REWRITE_ITEMS_PER_CMD : items;
 
-                if (!rioWriteBulkCount(r, '*', 2 + cmd_items * 2) || !rioWriteBulkString(r, "ZADD", 4) ||
-                    !rioWriteBulkObject(r, key)) {
+                if (!rioWriteBulkCount(r, '*', 2 + cmd_items * 2) || !rioWriteBulkString(r, "ZADD", 4)
+                    || !rioWriteBulkObject(r, key)) {
                     hashtableCleanupIterator(&iter);
                     return 0;
                 }
@@ -2107,20 +2151,21 @@ int rewriteHashObject(rio *r, robj *key, robj *o) {
     non_volatile_items = hashTypeLength(o) - volatile_items;
     hashTypeInitIterator(o, &hi);
     while (hashTypeNext(&hi) != C_ERR) {
-        if (volatile_items > 0 && entryHasExpiry(hi.next))
-            continue;
+        if (volatile_items > 0 && entryHasExpiry(hi.next)) continue;
 
         if (count == 0) {
-            int cmd_items = (non_volatile_items > AOF_REWRITE_ITEMS_PER_CMD) ? AOF_REWRITE_ITEMS_PER_CMD : non_volatile_items;
+            int cmd_items = (non_volatile_items > AOF_REWRITE_ITEMS_PER_CMD) ? AOF_REWRITE_ITEMS_PER_CMD
+                                                                             : non_volatile_items;
 
-            if (!rioWriteBulkCount(r, '*', 2 + cmd_items * 2) || !rioWriteBulkString(r, "HMSET", 5) ||
-                !rioWriteBulkObject(r, key)) {
+            if (!rioWriteBulkCount(r, '*', 2 + cmd_items * 2) || !rioWriteBulkString(r, "HMSET", 5)
+                || !rioWriteBulkObject(r, key)) {
                 hashTypeResetIterator(&hi);
                 return 0;
             }
         }
 
-        if (!rioWriteHashIteratorCursor(r, &hi, OBJ_HASH_FIELD) || !rioWriteHashIteratorCursor(r, &hi, OBJ_HASH_VALUE)) {
+        if (!rioWriteHashIteratorCursor(r, &hi, OBJ_HASH_FIELD)
+            || !rioWriteHashIteratorCursor(r, &hi, OBJ_HASH_VALUE)) {
             hashTypeResetIterator(&hi);
             return 0;
         }
@@ -2208,8 +2253,8 @@ int rewriteStreamObject(rio *r, robj *key, robj *o) {
              * the ID, the second is an array of field-value pairs. */
 
             /* Emit the XADD <key> <id> ...fields... command. */
-            if (!rioWriteBulkCount(r, '*', 3 + numfields * 2) || !rioWriteBulkString(r, "XADD", 4) ||
-                !rioWriteBulkObject(r, key) || !rioWriteBulkStreamID(r, &id)) {
+            if (!rioWriteBulkCount(r, '*', 3 + numfields * 2) || !rioWriteBulkString(r, "XADD", 4)
+                || !rioWriteBulkObject(r, key) || !rioWriteBulkStreamID(r, &id)) {
                 streamIteratorStop(&si);
                 return 0;
             }
@@ -2217,8 +2262,8 @@ int rewriteStreamObject(rio *r, robj *key, robj *o) {
                 unsigned char *field, *value;
                 int64_t field_len, value_len;
                 streamIteratorGetField(&si, &field, &value, &field_len, &value_len);
-                if (!rioWriteBulkString(r, (char *)field, field_len) ||
-                    !rioWriteBulkString(r, (char *)value, value_len)) {
+                if (!rioWriteBulkString(r, (char *)field, field_len)
+                    || !rioWriteBulkString(r, (char *)value, value_len)) {
                     streamIteratorStop(&si);
                     return 0;
                 }
@@ -2230,9 +2275,9 @@ int rewriteStreamObject(rio *r, robj *key, robj *o) {
          * for the Stream type. */
         id.ms = 0;
         id.seq = 1;
-        if (!rioWriteBulkCount(r, '*', 7) || !rioWriteBulkString(r, "XADD", 4) || !rioWriteBulkObject(r, key) ||
-            !rioWriteBulkString(r, "MAXLEN", 6) || !rioWriteBulkString(r, "0", 1) || !rioWriteBulkStreamID(r, &id) ||
-            !rioWriteBulkString(r, "x", 1) || !rioWriteBulkString(r, "y", 1)) {
+        if (!rioWriteBulkCount(r, '*', 7) || !rioWriteBulkString(r, "XADD", 4) || !rioWriteBulkObject(r, key)
+            || !rioWriteBulkString(r, "MAXLEN", 6) || !rioWriteBulkString(r, "0", 1) || !rioWriteBulkStreamID(r, &id)
+            || !rioWriteBulkString(r, "x", 1) || !rioWriteBulkString(r, "y", 1)) {
             streamIteratorStop(&si);
             return 0;
         }
@@ -2240,10 +2285,10 @@ int rewriteStreamObject(rio *r, robj *key, robj *o) {
 
     /* Append XSETID after XADD, make sure lastid is correct,
      * in case of XDEL lastid. */
-    if (!rioWriteBulkCount(r, '*', 7) || !rioWriteBulkString(r, "XSETID", 6) || !rioWriteBulkObject(r, key) ||
-        !rioWriteBulkStreamID(r, &s->last_id) || !rioWriteBulkString(r, "ENTRIESADDED", 12) ||
-        !rioWriteBulkLongLong(r, s->entries_added) || !rioWriteBulkString(r, "MAXDELETEDID", 12) ||
-        !rioWriteBulkStreamID(r, &s->max_deleted_entry_id)) {
+    if (!rioWriteBulkCount(r, '*', 7) || !rioWriteBulkString(r, "XSETID", 6) || !rioWriteBulkObject(r, key)
+        || !rioWriteBulkStreamID(r, &s->last_id) || !rioWriteBulkString(r, "ENTRIESADDED", 12)
+        || !rioWriteBulkLongLong(r, s->entries_added) || !rioWriteBulkString(r, "MAXDELETEDID", 12)
+        || !rioWriteBulkStreamID(r, &s->max_deleted_entry_id)) {
         streamIteratorStop(&si);
         return 0;
     }
@@ -2257,10 +2302,10 @@ int rewriteStreamObject(rio *r, robj *key, robj *o) {
         while (raxNext(&ri)) {
             streamCG *group = ri.data;
             /* Emit the XGROUP CREATE in order to create the group. */
-            if (!rioWriteBulkCount(r, '*', 7) || !rioWriteBulkString(r, "XGROUP", 6) ||
-                !rioWriteBulkString(r, "CREATE", 6) || !rioWriteBulkObject(r, key) ||
-                !rioWriteBulkString(r, (char *)ri.key, ri.key_len) || !rioWriteBulkStreamID(r, &group->last_id) ||
-                !rioWriteBulkString(r, "ENTRIESREAD", 11) || !rioWriteBulkLongLong(r, group->entries_read)) {
+            if (!rioWriteBulkCount(r, '*', 7) || !rioWriteBulkString(r, "XGROUP", 6)
+                || !rioWriteBulkString(r, "CREATE", 6) || !rioWriteBulkObject(r, key)
+                || !rioWriteBulkString(r, (char *)ri.key, ri.key_len) || !rioWriteBulkStreamID(r, &group->last_id)
+                || !rioWriteBulkString(r, "ENTRIESREAD", 11) || !rioWriteBulkLongLong(r, group->entries_read)) {
                 raxStop(&ri);
                 streamIteratorStop(&si);
                 return 0;
@@ -2291,8 +2336,8 @@ int rewriteStreamObject(rio *r, robj *key, robj *o) {
                 raxSeek(&ri_pel, "^", NULL, 0);
                 while (raxNext(&ri_pel)) {
                     streamNACK *nack = ri_pel.data;
-                    if (rioWriteStreamPendingEntry(r, key, (char *)ri.key, ri.key_len, consumer, ri_pel.key, nack) ==
-                        0) {
+                    if (rioWriteStreamPendingEntry(r, key, (char *)ri.key, ri.key_len, consumer, ri_pel.key, nack)
+                        == 0) {
                         raxStop(&ri_pel);
                         raxStop(&ri_cons);
                         raxStop(&ri);
@@ -2421,7 +2466,9 @@ int rewriteSlotToAppendOnlyFileRio(rio *aof, int db_num, int hashslot, size_t *k
     /* SELECT the DB */
     if (rewriteSelectDbRio(aof, db_num) == C_ERR) return C_ERR;
 
-    kvstoreHashtableIterator *iter = kvstoreGetHashtableIterator(db->keys, hashslot, HASHTABLE_ITER_SAFE | HASHTABLE_ITER_PREFETCH_VALUES);
+    kvstoreHashtableIterator *iter = kvstoreGetHashtableIterator(db->keys,
+                                                                 hashslot,
+                                                                 HASHTABLE_ITER_SAFE | HASHTABLE_ITER_PREFETCH_VALUES);
     void *next;
     while (kvstoreHashtableIteratorNext(iter, &next)) {
         robj *o = next;
@@ -2670,8 +2717,9 @@ void bgrewriteaofCommand(client *c) {
     } else if (rewriteAppendOnlyFileBackground() == C_OK) {
         addReplyStatus(c, "Background append only file rewriting started");
     } else {
-        addReplyError(c, "Can't execute an AOF background rewriting. "
-                         "Please check the server logs for more information.");
+        addReplyError(c,
+                      "Can't execute an AOF background rewriting. "
+                      "Please check the server logs for more information.");
     }
 }
 
@@ -2795,8 +2843,11 @@ void backgroundRewriteDoneHandler(int exitcode, int bysignal) {
         /* Rename the temporary aof file to 'new_base_filename'. */
         latencyStartMonitor(latency);
         if (rename(tmpfile, new_base_filepath) == -1) {
-            serverLog(LL_WARNING, "Error trying to rename the temporary AOF base file %s into %s: %s", tmpfile,
-                      new_base_filepath, strerror(errno));
+            serverLog(LL_WARNING,
+                      "Error trying to rename the temporary AOF base file %s into %s: %s",
+                      tmpfile,
+                      new_base_filepath,
+                      strerror(errno));
             aofManifestFree(temp_am);
             sdsfree(new_base_filepath);
             server.aof_lastbgrewrite_status = C_ERR;
@@ -2818,8 +2869,11 @@ void backgroundRewriteDoneHandler(int exitcode, int bysignal) {
             new_incr_filepath = makePath(server.aof_dirname, new_incr_filename);
             latencyStartMonitor(latency);
             if (rename(temp_incr_filepath, new_incr_filepath) == -1) {
-                serverLog(LL_WARNING, "Error trying to rename the temporary AOF incr file %s into %s: %s",
-                          temp_incr_filepath, new_incr_filepath, strerror(errno));
+                serverLog(LL_WARNING,
+                          "Error trying to rename the temporary AOF incr file %s into %s: %s",
+                          temp_incr_filepath,
+                          new_incr_filepath,
+                          strerror(errno));
                 bg_unlink(new_base_filepath);
                 sdsfree(new_base_filepath);
                 aofManifestFree(temp_am);
@@ -2833,7 +2887,9 @@ void backgroundRewriteDoneHandler(int exitcode, int bysignal) {
             latencyEndMonitor(latency);
             latencyAddSampleIfNeeded("aof-rename", latency);
             latencyTraceIfNeeded(aof, aof_rename, latency);
-            serverLog(LL_NOTICE, "Successfully renamed the temporary AOF incr file %s into %s", temp_incr_aof_name,
+            serverLog(LL_NOTICE,
+                      "Successfully renamed the temporary AOF incr file %s into %s",
+                      temp_incr_aof_name,
                       new_incr_filename);
             sdsfree(temp_incr_filepath);
             sdsfree(temp_incr_aof_name);
@@ -2883,8 +2939,8 @@ void backgroundRewriteDoneHandler(int exitcode, int bysignal) {
             /* Update the fsynced replication offset that just now become valid.
              * This could either be the one we took in startAppendOnly, or a
              * newer one set by the bio thread. */
-            long long fsynced_reploff_pending =
-                atomic_load_explicit(&server.fsynced_reploff_pending, memory_order_relaxed);
+            long long fsynced_reploff_pending = atomic_load_explicit(&server.fsynced_reploff_pending,
+                                                                     memory_order_relaxed);
             server.fsynced_reploff = fsynced_reploff_pending;
         }
 

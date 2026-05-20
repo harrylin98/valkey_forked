@@ -104,9 +104,8 @@ robj *lookupKey(serverDb *db, robj *key, int flags) {
         /* Update the access time for the ageing algorithm.
          * Don't do it if we have a saving child, as this will trigger
          * a copy on write madness. */
-        if ((flags & LOOKUP_NOTOUCH) == 0 &&
-            server.current_client && server.current_client->flag.no_touch &&
-            server.executing_client && server.executing_client->cmd->proc != touchCommand)
+        if ((flags & LOOKUP_NOTOUCH) == 0 && server.current_client && server.current_client->flag.no_touch
+            && server.executing_client && server.executing_client->cmd->proc != touchCommand)
             flags |= LOOKUP_NOTOUCH;
         if (!hasActiveChildProcess() && !(flags & LOOKUP_NOTOUCH)) {
             /* Shared objects can't be stored in the database. */
@@ -249,9 +248,10 @@ int getKeySlot(sds key) {
      * Modules and scripts executed on the primary may get replicated as multi-execs that operate on multiple slots,
      * so we must always recompute the slot for commands coming from the primary or AOF.
      */
-    if (server.current_client && server.current_client->slot >= 0 && server.current_client->flag.executing_command &&
-        !mustObeyClient(server.current_client)) {
-        debugServerAssertWithInfo(server.current_client, NULL,
+    if (server.current_client && server.current_client->slot >= 0 && server.current_client->flag.executing_command
+        && !mustObeyClient(server.current_client)) {
+        debugServerAssertWithInfo(server.current_client,
+                                  NULL,
                                   (int)keyHashSlot(key, (int)sdslen(key)) == server.current_client->slot);
         return server.current_client->slot;
     }
@@ -341,8 +341,8 @@ static void dbSetValue(serverDb *db, robj *key, robj **valref, int overwrite, vo
         old = *oldref;
     }
 
-    if ((old->refcount == 1 && old->encoding != OBJ_ENCODING_EMBSTR) &&
-        (val->refcount == 1 && val->encoding != OBJ_ENCODING_EMBSTR)) {
+    if ((old->refcount == 1 && old->encoding != OBJ_ENCODING_EMBSTR)
+        && (val->refcount == 1 && val->encoding != OBJ_ENCODING_EMBSTR)) {
         /* Keep old object in the database. Just swap it's ptr, type and
          * encoding with the content of val. */
         int tmp_type = old->type;
@@ -452,7 +452,8 @@ robj *dbRandomKey(serverDb *db) {
         sds key = objectGetKey(valkey);
         robj *keyobj = createStringObject(key, sdslen(key));
         if (objectIsExpired(valkey)) {
-            if (allvolatile && (server.primary_host || server.import_mode || isPausedActions(PAUSE_ACTION_EXPIRE)) && --maxtries == 0) {
+            if (allvolatile && (server.primary_host || server.import_mode || isPausedActions(PAUSE_ACTION_EXPIRE))
+                && --maxtries == 0) {
                 /* If the DB is composed only of keys with an expire set,
                  * it could happen that all the keys are already logically
                  * expired in the replica, so the function cannot stop because
@@ -1115,7 +1116,12 @@ int parseScanCursorOrReply(client *c, sds buf, unsigned long long *cursor) {
     return C_OK;
 }
 
-char *obj_type_name[OBJ_TYPE_MAX] = {"string", "list", "set", "zset", "hash", NULL, /* module type is special */
+char *obj_type_name[OBJ_TYPE_MAX] = {"string",
+                                     "list",
+                                     "set",
+                                     "zset",
+                                     "hash",
+                                     NULL, /* module type is special */
                                      "stream"};
 
 /* Helper function to get type from a string in scan commands */
@@ -1171,7 +1177,8 @@ int parseScanOptionsOrReply(client *c, robj *o, int start_idx, bool allow_slot, 
             opts->pat = objectGetVal(c->argv[i + 1]);
             opts->patlen = sdslen(opts->pat);
             opts->use_pattern = !(opts->patlen == 1 && opts->pat[0] == '*');
-            opts->match_slot = opts->use_pattern && server.cluster_enabled ? patternHashSlot(opts->pat, opts->patlen) : -1;
+            opts->match_slot = opts->use_pattern && server.cluster_enabled ? patternHashSlot(opts->pat, opts->patlen)
+                                                                           : -1;
             i += 2;
         } else if (!strcasecmp(opt, "type") && o == NULL && j >= 2) {
             /* TYPE filter applies to key names only, not to object fields. */
@@ -1222,7 +1229,11 @@ int parseScanOptionsOrReply(client *c, robj *o, int start_idx, bool allow_slot, 
  * cluster_ctx is used during CLUSTERSCAN to scan a specific slot or range of
  * slots and to return the valid cursor to advance the scan.
  */
-void scanGenericCommandWithOptions(client *c, robj *o, unsigned long long cursor, const scanOptions *opts, const clusterScanCtx *cluster_ctx) {
+void scanGenericCommandWithOptions(client *c,
+                                   robj *o,
+                                   unsigned long long cursor,
+                                   const scanOptions *opts,
+                                   const clusterScanCtx *cluster_ctx) {
     int slot = cluster_ctx ? cluster_ctx->slot : -1;
     int final_slot = cluster_ctx ? cluster_ctx->final_slot : -1;
     vector result;
@@ -2361,8 +2372,8 @@ int getKeysUsingKeySpecs(struct serverCommand *cmd, robj **argv, int argc, int s
         if (spec->begin_search_type == KSPEC_BS_INDEX) {
             first = spec->bs.index.pos;
         } else if (spec->begin_search_type == KSPEC_BS_KEYWORD) {
-            int start_index =
-                spec->bs.keyword.startfrom > 0 ? spec->bs.keyword.startfrom : argc + spec->bs.keyword.startfrom;
+            int start_index = spec->bs.keyword.startfrom > 0 ? spec->bs.keyword.startfrom
+                                                             : argc + spec->bs.keyword.startfrom;
             int end_index = spec->bs.keyword.startfrom > 0 ? argc - 1 : 1;
             for (i = start_index; i != end_index; i = start_index <= end_index ? i + 1 : i - 1) {
                 if (i >= argc || i < 1) break;
@@ -2808,7 +2819,10 @@ int sortGetKeys(struct serverCommand *cmd, robj **argv, int argc, getKeysResult 
         char *name;
         int skip;
     } skiplist[] = {
-        {"limit", 2}, {"get", 1}, {"by", 1}, {NULL, 0} /* End of elements. */
+        {"limit", 2},
+        {"get", 1},
+        {"by", 1},
+        {NULL, 0} /* End of elements. */
     };
 
     for (i = 2; i < argc; i++) {
@@ -2982,8 +2996,8 @@ int setGetKeys(struct serverCommand *cmd, robj **argv, int argc, getKeysResult *
 
     for (int i = 3; i < argc; i++) {
         char *arg = objectGetVal(argv[i]);
-        if ((arg[0] == 'g' || arg[0] == 'G') && (arg[1] == 'e' || arg[1] == 'E') && (arg[2] == 't' || arg[2] == 'T') &&
-            arg[3] == '\0') {
+        if ((arg[0] == 'g' || arg[0] == 'G') && (arg[1] == 'e' || arg[1] == 'E') && (arg[2] == 't' || arg[2] == 'T')
+            && arg[3] == '\0') {
             keys[0].flags = CMD_KEY_RW | CMD_KEY_ACCESS | CMD_KEY_UPDATE;
             return 1;
         }
@@ -3046,8 +3060,7 @@ int *swapdbDbIdArgs(robj **argv, int argc, int *count) {
     if (argc < 3) return NULL;
 
     long long db1, db2;
-    if (getLongLongFromObject(argv[1], &db1) != C_OK ||
-        getLongLongFromObject(argv[2], &db2) != C_OK) return NULL;
+    if (getLongLongFromObject(argv[1], &db1) != C_OK || getLongLongFromObject(argv[2], &db2) != C_OK) return NULL;
     if (db1 < 0 || db1 >= server.dbnum || db2 < 0 || db2 >= server.dbnum) return NULL;
 
     int *result = zmalloc(2 * sizeof(int));

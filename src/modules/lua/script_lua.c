@@ -46,7 +46,12 @@
 #include <time.h>
 
 /* Forward declarations of module API functions not publicly exposed */
-extern int VM_CallArgv(ValkeyModuleCtx *ctx, ValkeyModuleString **argv, int argc, int flags, const ValkeyModuleReplyHandlers *resp_handlers, void *reply_ctx);
+extern int VM_CallArgv(ValkeyModuleCtx *ctx,
+                       ValkeyModuleString **argv,
+                       int argc,
+                       int flags,
+                       const ValkeyModuleReplyHandlers *resp_handlers,
+                       void *reply_ctx);
 extern int VM_ReplyRaw(ValkeyModuleCtx *ctx, const char *proto, size_t proto_len);
 #define ValkeyModule_CallArgv VM_CallArgv
 #define ValkeyModule_ReplyRaw VM_ReplyRaw
@@ -99,31 +104,10 @@ static char *server_api_allow_list[] = {
 
 /* Lua builtins */
 static char *lua_builtins_allow_list[] = {
-    "xpcall",
-    "tostring",
-    "setmetatable",
-    "next",
-    "assert",
-    "tonumber",
-    "rawequal",
-    "collectgarbage",
-    "getmetatable",
-    "rawset",
-    "pcall",
-    "coroutine",
-    "type",
-    "_G",
-    "select",
-    "unpack",
-    "gcinfo",
-    "pairs",
-    "rawget",
-    "loadstring",
-    "ipairs",
-    "_VERSION",
-    "load",
-    "error",
-    NULL,
+    "xpcall",         "tostring",     "setmetatable", "next",  "assert",    "tonumber",   "rawequal",
+    "collectgarbage", "getmetatable", "rawset",       "pcall", "coroutine", "type",       "_G",
+    "select",         "unpack",       "gcinfo",       "pairs", "rawget",    "loadstring", "ipairs",
+    "_VERSION",       "load",         "error",        NULL,
 };
 
 /* Lua builtins which are deprecated for sandboxing concerns */
@@ -365,9 +349,7 @@ static void luaReplyToServerReply(ValkeyModuleCtx *ctx, int resp_version, lua_St
     }
 
     switch (t) {
-    case LUA_TSTRING:
-        ValkeyModule_ReplyWithStringBuffer(ctx, lua_tostring(lua, -1), lua_strlen(lua, -1));
-        break;
+    case LUA_TSTRING: ValkeyModule_ReplyWithStringBuffer(ctx, lua_tostring(lua, -1), lua_strlen(lua, -1)); break;
     case LUA_TBOOLEAN:
         if (resp_version == 2) {
             int b = lua_toboolean(lua, -1);
@@ -1182,11 +1164,9 @@ static int luaServerGenericCommand(lua_State *lua, int raise_error) {
         ValkeyModule_Free(cmdlog);
     }
 
-    int flags = VALKEYMODULE_CALL_ARGV_SCRIPT_MODE |
-                VALKEYMODULE_CALL_ARGV_REPLICATE |
-                VALKEYMODULE_CALL_ARGV_ERRORS_AS_REPLIES |
-                VALKEYMODULE_CALL_ARGV_RESPECT_DENY_OOM |
-                VALKEYMODULE_CALL_ARGV_REPLY_EXACT;
+    int flags = VALKEYMODULE_CALL_ARGV_SCRIPT_MODE | VALKEYMODULE_CALL_ARGV_REPLICATE
+                | VALKEYMODULE_CALL_ARGV_ERRORS_AS_REPLIES | VALKEYMODULE_CALL_ARGV_RESPECT_DENY_OOM
+                | VALKEYMODULE_CALL_ARGV_REPLY_EXACT;
 
     if (!(rctx->replication_flags & PROPAGATE_AOF)) {
         flags |= VALKEYMODULE_CALL_ARGV_NO_AOF;
@@ -1531,7 +1511,9 @@ static int luaProtectedTableError(lua_State *lua) {
     luaFuncCallCtx *rctx = luaGetFromRegistry(lua, REGISTRY_RUN_CTX_NAME);
     int argc = lua_gettop(lua);
     if (argc != 2) {
-        ValkeyModule_Log(rctx->module_ctx, "warning", "malicious code trying to call luaProtectedTableError with wrong arguments");
+        ValkeyModule_Log(rctx->module_ctx,
+                         "warning",
+                         "malicious code trying to call luaProtectedTableError with wrong arguments");
         luaL_error(lua, "Wrong number of arguments to luaProtectedTableError");
     }
     if (!lua_isstring(lua, -1) && !lua_isnumber(lua, -1)) {
@@ -1560,7 +1542,9 @@ static int luaNewIndexAllowList(lua_State *lua) {
     luaFuncCallCtx *rctx = luaGetFromRegistry(lua, REGISTRY_RUN_CTX_NAME);
     int argc = lua_gettop(lua);
     if (argc != 3) {
-        ValkeyModule_Log(rctx->module_ctx, "warning", "malicious code trying to call luaNewIndexAllowList with wrong arguments");
+        ValkeyModule_Log(rctx->module_ctx,
+                         "warning",
+                         "malicious code trying to call luaNewIndexAllowList with wrong arguments");
         luaL_error(lua, "Wrong number of arguments to luaNewIndexAllowList");
     }
     if (!lua_istable(lua, -3)) {
@@ -1608,9 +1592,10 @@ static int luaNewIndexAllowList(lua_State *lua) {
             }
         }
         if (!*c && !deprecated) {
-            ValkeyModule_Log(rctx->module_ctx, "warning",
-                             "A key '%s' was added to Lua globals which is neither on the globals allow list nor listed on the "
-                             "deny list.",
+            ValkeyModule_Log(rctx->module_ctx,
+                             "warning",
+                             "A key '%s' was added to Lua globals which is neither on the globals allow list "
+                             "nor listed on the deny list.",
                              variable_name);
         }
     } else {
@@ -1664,14 +1649,8 @@ void luaSetTableProtectionRecursively(lua_State *lua) {
 
 /* Set the readonly flag on the metatable of basic types (string, nil etc.) */
 void luaSetTableProtectionForBasicTypes(lua_State *lua) {
-    static const int types[] = {
-        LUA_TSTRING,
-        LUA_TNUMBER,
-        LUA_TBOOLEAN,
-        LUA_TNIL,
-        LUA_TFUNCTION,
-        LUA_TTHREAD,
-        LUA_TLIGHTUSERDATA};
+    static const int types[] =
+        {LUA_TSTRING, LUA_TNUMBER, LUA_TBOOLEAN, LUA_TNIL, LUA_TFUNCTION, LUA_TTHREAD, LUA_TLIGHTUSERDATA};
 
     for (size_t i = 0; i < sizeof(types) / sizeof(types[0]); i++) {
         /* Push a dummy value of the type to get its metatable */
@@ -1886,8 +1865,7 @@ static void luaCreateArray(lua_State *lua, ValkeyModuleString **elev, int elec) 
 static int server_math_random(lua_State *L) {
     /* the `%' avoids the (rare) case of r==1, and is needed also because on
        some systems (SunOS!) `rand()' may return a value larger than RAND_MAX */
-    lua_Number r = (lua_Number)(serverLrand48() % SERVER_LRAND48_MAX) /
-                   (lua_Number)SERVER_LRAND48_MAX;
+    lua_Number r = (lua_Number)(serverLrand48() % SERVER_LRAND48_MAX) / (lua_Number)SERVER_LRAND48_MAX;
     switch (lua_gettop(L)) {  /* check number of arguments */
     case 0: {                 /* no arguments */
         lua_pushnumber(L, r); /* Number between 0 and 1 */
@@ -2025,7 +2003,8 @@ void luaLdbLineHook(lua_State *lua, lua_Debug *ar) {
             reason = "timeout reached, infinite loop?";
         ldbSetStepMode(0);
         ldbSetBreakpointOnNextLine(0);
-        ValkeyModuleString *msg = ValkeyModule_CreateStringPrintf(NULL, "* Stopped at %d, stop reason = %s", ldbGetCurrentLine(), reason);
+        ValkeyModuleString *msg =
+            ValkeyModule_CreateStringPrintf(NULL, "* Stopped at %d, stop reason = %s", ldbGetCurrentLine(), reason);
         ldbLog(msg);
         ldbLogSourceLine(ldbGetCurrentLine());
         ldbSendLogs();
@@ -2138,19 +2117,14 @@ void luaCallFunction(ValkeyModuleCtx *ctx,
             errorInfo err_info = {0};
             luaExtractErrorInformation(lua, &err_info);
             if (err_info.line && err_info.source) {
-                ValkeyModule_ReplyWithCustomErrorFormat(
-                    ctx,
-                    !err_info.ignore_err_stats_update,
-                    "%s script: on %s:%s.",
-                    err_info.msg,
-                    err_info.source,
-                    err_info.line);
+                ValkeyModule_ReplyWithCustomErrorFormat(ctx,
+                                                        !err_info.ignore_err_stats_update,
+                                                        "%s script: on %s:%s.",
+                                                        err_info.msg,
+                                                        err_info.source,
+                                                        err_info.line);
             } else {
-                ValkeyModule_ReplyWithCustomErrorFormat(
-                    ctx,
-                    !err_info.ignore_err_stats_update,
-                    "%s",
-                    err_info.msg);
+                ValkeyModule_ReplyWithCustomErrorFormat(ctx, !err_info.ignore_err_stats_update, "%s", err_info.msg);
             }
             luaErrorInformationDiscard(&err_info);
         }

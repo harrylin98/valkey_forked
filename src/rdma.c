@@ -19,8 +19,8 @@
 #include "connection.h"
 
 #if defined __linux__ && defined USE_RDMA /* currently RDMA is only supported on Linux */
-#if (USE_RDMA == 1 /* BUILD_YES */) || \
-    ((USE_RDMA == 2 /* BUILD_MODULE */) && defined(BUILD_RDMA_MODULE) && (BUILD_RDMA_MODULE == 2))
+#if (USE_RDMA == 1 /* BUILD_YES */)                                                                                    \
+    || ((USE_RDMA == 2 /* BUILD_MODULE */) && defined(BUILD_RDMA_MODULE) && (BUILD_RDMA_MODULE == 2))
 #include "connhelpers.h"
 
 #include <arpa/inet.h>
@@ -357,7 +357,10 @@ static int rdmaCreateResource(RdmaContext *ctx, struct rdma_cm_id *cm_id) {
         comp_vector = abs((int)random());
     }
 
-    cq = ibv_create_cq(cm_id->verbs, VALKEY_RDMA_MAX_WQE * 2, NULL, comp_channel,
+    cq = ibv_create_cq(cm_id->verbs,
+                       VALKEY_RDMA_MAX_WQE * 2,
+                       NULL,
+                       comp_channel,
                        comp_vector % cm_id->verbs->num_comp_vectors);
     if (!cq) {
         serverLog(LL_WARNING, "RDMA: ibv create cq failed");
@@ -626,8 +629,11 @@ pollcq:
 
     if (wc.status != IBV_WC_SUCCESS) {
         if (rdma_conn->c.state == CONN_STATE_CONNECTED) {
-            serverLog(LL_WARNING, "RDMA: CQ handle error status: %s[0x%x], opcode : 0x%x", ibv_wc_status_str(wc.status),
-                      wc.status, wc.opcode);
+            serverLog(LL_WARNING,
+                      "RDMA: CQ handle error status: %s[0x%x], opcode : 0x%x",
+                      ibv_wc_status_str(wc.status),
+                      wc.status,
+                      wc.opcode);
         }
         return C_ERR;
     }
@@ -745,7 +751,8 @@ static void connRdmaEventHandler(struct aeEventLoop *el, int fd, void *clientDat
     }
 
     /* RDMA comp channel has no POLLOUT event, try to send remaining buffer */
-    if (!(rdma_conn->flags & RDMA_CONN_FLAG_POSTPONE_UPDATE_STATE) && ctx->tx.offset < ctx->tx.length && conn->write_handler) {
+    if (!(rdma_conn->flags & RDMA_CONN_FLAG_POSTPONE_UPDATE_STATE) && ctx->tx.offset < ctx->tx.length
+        && conn->write_handler) {
         callHandler(conn, conn->write_handler);
     }
 }
@@ -838,8 +845,14 @@ static rdma_listener *rdmaFdToListener(connListener *listener, int fd) {
  * 1, handle RDMA_CM_EVENT_CONNECT_REQUEST and return CM fd on success
  * 2, handle RDMA_CM_EVENT_ESTABLISHED and return C_OK on success
  */
-static int
-rdmaAccept(aeEventLoop *el, connListener *listener, char *err, int fd, char *ip, size_t ip_len, int *port, void **priv) {
+static int rdmaAccept(aeEventLoop *el,
+                      connListener *listener,
+                      char *err,
+                      int fd,
+                      char *ip,
+                      size_t ip_len,
+                      int *port,
+                      void **priv) {
     struct rdma_cm_event *ev;
     enum rdma_cm_event_type ev_type;
     int ret = C_OK;
@@ -1900,19 +1913,26 @@ int ValkeyModule_OnLoad(void *ctx, ValkeyModuleString **argv, int argc) {
 
     /* Connection modules MUST be part of the same build as valkey. */
     if (strcmp(REDIS_BUILD_ID_RAW, serverBuildIdRaw())) {
-        serverLog(LL_NOTICE, "Connection type %s was not built together with the valkey-server used.", getConnectionTypeName(CONN_TYPE_RDMA));
+        serverLog(LL_NOTICE,
+                  "Connection type %s was not built together with the valkey-server used.",
+                  getConnectionTypeName(CONN_TYPE_RDMA));
         return VALKEYMODULE_ERR;
     }
 
-    if (ValkeyModule_Init(ctx, getConnectionTypeName(CONN_TYPE_RDMA), 1, VALKEYMODULE_APIVER_1) == VALKEYMODULE_ERR) return VALKEYMODULE_ERR;
+    if (ValkeyModule_Init(ctx, getConnectionTypeName(CONN_TYPE_RDMA), 1, VALKEYMODULE_APIVER_1) == VALKEYMODULE_ERR)
+        return VALKEYMODULE_ERR;
 
     /* Connection modules is available only bootup. */
     if ((ValkeyModule_GetContextFlags(ctx) & VALKEYMODULE_CTX_FLAGS_SERVER_STARTUP) == 0) {
-        serverLog(LL_NOTICE, "Connection type %s can be loaded only during bootup", getConnectionTypeName(CONN_TYPE_RDMA));
+        serverLog(LL_NOTICE,
+                  "Connection type %s can be loaded only during bootup",
+                  getConnectionTypeName(CONN_TYPE_RDMA));
         return VALKEYMODULE_ERR;
     }
 
-    ValkeyModule_SetModuleOptions(ctx, VALKEYMODULE_OPTIONS_HANDLE_REPL_ASYNC_LOAD | VALKEYMODULE_OPTIONS_HANDLE_ATOMIC_SLOT_MIGRATION);
+    ValkeyModule_SetModuleOptions(ctx,
+                                  VALKEYMODULE_OPTIONS_HANDLE_REPL_ASYNC_LOAD
+                                      | VALKEYMODULE_OPTIONS_HANDLE_ATOMIC_SLOT_MIGRATION);
 
     if (connTypeRegister(&CT_RDMA) != C_OK) return VALKEYMODULE_ERR;
 

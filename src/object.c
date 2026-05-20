@@ -57,8 +57,7 @@
 static robj *createUnembeddedObjectWithKeyAndExpire(int type, void *val, const_sds key, long long expire) {
     /* Calculate sizes */
     int has_embkey = key != NULL;
-    int has_expire = (expire != EXPIRY_NONE ||
-                      (has_embkey && sdslen(key) >= KEY_SIZE_TO_INCLUDE_EXPIRE_THRESHOLD));
+    int has_expire = (expire != EXPIRY_NONE || (has_embkey && sdslen(key) >= KEY_SIZE_TO_INCLUDE_EXPIRE_THRESHOLD));
     size_t key_sds_len = has_embkey ? sdslen(key) : 0;
     char key_sds_type = has_embkey ? sdsReqType(key_sds_len) : 0;
     size_t key_sds_size = has_embkey ? sdsReqSize(key_sds_len, key_sds_type) : 0;
@@ -853,8 +852,8 @@ void trimStringObjectIfNeeded(robj *o, int trim_small_values) {
      * 2. When utilizing the argument caching mechanism in Lua.
      * 3. When calling from RM_TrimStringAllocation (trim_small_values is true). */
     size_t len = sdslen(o->val_ptr);
-    if (len >= PROTO_MBULK_BIG_ARG || trim_small_values ||
-        (server.executing_client && server.executing_client->flag.script && len < LUA_CMD_OBJCACHE_MAX_LEN)) {
+    if (len >= PROTO_MBULK_BIG_ARG || trim_small_values
+        || (server.executing_client && server.executing_client->flag.script && len < LUA_CMD_OBJCACHE_MAX_LEN)) {
         if (sdsavail(o->val_ptr) > len / 10) {
             o->val_ptr = sdsRemoveFreeSpace(o->val_ptr, 0);
         }
@@ -1005,9 +1004,8 @@ int equalStringObjects(robj *a, robj *b) {
         /* If both strings are integer encoded just check if the stored
          * long is the same. */
         return objectGetVal(a) == objectGetVal(b);
-    } else if (a->encoding != OBJ_ENCODING_INT &&
-               b->encoding != OBJ_ENCODING_INT &&
-               sdslen(objectGetVal(a)) != sdslen(objectGetVal(b))) {
+    } else if (a->encoding != OBJ_ENCODING_INT && b->encoding != OBJ_ENCODING_INT
+               && sdslen(objectGetVal(a)) != sdslen(objectGetVal(b))) {
         return 0;
     } else {
         return compareStringObjects(a, b) == 0;
@@ -1377,9 +1375,9 @@ struct serverMemOverhead *getMemoryOverheadData(void) {
     mh->peak_allocated = server.stat_peak_memory;
     mh->total_frag = (float)server.cron_malloc_stats.process_rss / server.cron_malloc_stats.zmalloc_used;
     mh->total_frag_bytes = server.cron_malloc_stats.process_rss - server.cron_malloc_stats.zmalloc_used;
-    mh->allocator_frag =
-        (float)server.cron_malloc_stats.allocator_frag_smallbins_bytes / server.cron_malloc_stats.allocator_allocated +
-        1;
+    mh->allocator_frag = (float)server.cron_malloc_stats.allocator_frag_smallbins_bytes
+                             / server.cron_malloc_stats.allocator_allocated
+                         + 1;
     mh->allocator_frag_bytes = server.cron_malloc_stats.allocator_frag_smallbins_bytes;
     mh->allocator_rss = (float)server.cron_malloc_stats.allocator_resident / server.cron_malloc_stats.allocator_active;
     mh->allocator_rss_bytes = server.cron_malloc_stats.allocator_resident - server.cron_malloc_stats.allocator_active;
@@ -1401,8 +1399,8 @@ struct serverMemOverhead *getMemoryOverheadData(void) {
     }
     if (server.repl_backlog) {
         /* The approximate memory of rax tree for indexed blocks. */
-        mh->repl_backlog += server.repl_backlog->blocks_index->numnodes * sizeof(raxNode) +
-                            raxSize(server.repl_backlog->blocks_index) * sizeof(void *);
+        mh->repl_backlog += server.repl_backlog->blocks_index->numnodes * sizeof(raxNode)
+                            + raxSize(server.repl_backlog->blocks_index) * sizeof(void *);
     }
     mh->replicas_repl_buffer = server.pending_repl_data.mem;
     mem_total += mh->repl_backlog;
@@ -1412,9 +1410,9 @@ struct serverMemOverhead *getMemoryOverheadData(void) {
     /* Computing the memory used by the clients would be O(N) if done
      * here online. We use our values computed incrementally by
      * updateClientMemoryUsage(). */
-    mh->clients_normal = server.stat_clients_type_memory[CLIENT_TYPE_PRIMARY] +
-                         server.stat_clients_type_memory[CLIENT_TYPE_PUBSUB] +
-                         server.stat_clients_type_memory[CLIENT_TYPE_NORMAL];
+    mh->clients_normal = server.stat_clients_type_memory[CLIENT_TYPE_PRIMARY]
+                         + server.stat_clients_type_memory[CLIENT_TYPE_PUBSUB]
+                         + server.stat_clients_type_memory[CLIENT_TYPE_NORMAL];
     mem_total += mh->clients_normal;
 
     mh->cluster_slot_import = server.stat_clients_type_memory[CLIENT_TYPE_SLOT_IMPORT];
@@ -1593,23 +1591,26 @@ sds getMemoryDoctorReport(void) {
         }
         if (high_alloc_frag) {
             s = sdscatprintf(
-                s, " * High allocator fragmentation: This instance has an allocator external fragmentation greater "
-                   "than 1.1. This problem is usually due either to a large peak memory (check if there is a peak "
-                   "memory entry above in the report) or may result from a workload that causes the allocator to "
-                   "fragment memory a lot. You can try enabling 'activedefrag' config option.\n\n");
+                s,
+                " * High allocator fragmentation: This instance has an allocator external fragmentation greater "
+                "than 1.1. This problem is usually due either to a large peak memory (check if there is a peak "
+                "memory entry above in the report) or may result from a workload that causes the allocator to "
+                "fragment memory a lot. You can try enabling 'activedefrag' config option.\n\n");
         }
         if (high_alloc_rss) {
             s = sdscatprintf(
-                s, " * High allocator RSS overhead: This instance has an RSS memory overhead is greater than 1.1 (this "
-                   "means that the Resident Set Size of the allocator is much larger than the sum what the allocator "
-                   "actually holds). This problem is usually due to a large peak memory (check if there is a peak "
-                   "memory entry above in the report), you can try the MEMORY PURGE command to reclaim it.\n\n");
+                s,
+                " * High allocator RSS overhead: This instance has an RSS memory overhead is greater than 1.1 (this "
+                "means that the Resident Set Size of the allocator is much larger than the sum what the allocator "
+                "actually holds). This problem is usually due to a large peak memory (check if there is a peak "
+                "memory entry above in the report), you can try the MEMORY PURGE command to reclaim it.\n\n");
         }
         if (high_proc_rss) {
             s = sdscatprintf(
-                s, " * High process RSS overhead: This instance has non-allocator RSS memory overhead is greater than "
-                   "1.1 (this means that the Resident Set Size of the Valkey process is much larger than the RSS the "
-                   "allocator holds). This problem may be due to Lua scripts or Modules.\n\n");
+                s,
+                " * High process RSS overhead: This instance has non-allocator RSS memory overhead is greater than "
+                "1.1 (this means that the Resident Set Size of the Valkey process is much larger than the RSS the "
+                "allocator holds). This problem may be due to Lua scripts or Modules.\n\n");
         }
         if (big_replica_buf) {
             s = sdscat(s,
@@ -1621,19 +1622,21 @@ sds getMemoryDoctorReport(void) {
                        "delays and the CLIENT LIST command to check the output buffers of each replica.\n\n");
         }
         if (big_client_buf) {
-            s = sdscat(s, " * Big client buffers: The clients output buffers in this instance are greater than 200K "
-                          "per client (on average). This may result from different causes, like Pub/Sub clients "
-                          "subscribed to channels bot not receiving data fast enough, so that data piles on the Valkey "
-                          "instance output buffer, or clients sending commands with large replies or very large "
-                          "sequences of commands in the same pipeline. Please use the CLIENT LIST command in order to "
-                          "investigate the issue if it causes problems in your instance, or to understand better why "
-                          "certain clients are using a big amount of memory.\n\n");
+            s = sdscat(s,
+                       " * Big client buffers: The clients output buffers in this instance are greater than 200K "
+                       "per client (on average). This may result from different causes, like Pub/Sub clients "
+                       "subscribed to channels bot not receiving data fast enough, so that data piles on the Valkey "
+                       "instance output buffer, or clients sending commands with large replies or very large "
+                       "sequences of commands in the same pipeline. Please use the CLIENT LIST command in order to "
+                       "investigate the issue if it causes problems in your instance, or to understand better why "
+                       "certain clients are using a big amount of memory.\n\n");
         }
         if (many_scripts) {
-            s = sdscat(s, " * Many scripts: There seem to be many cached scripts in this instance (more than 1000). "
-                          "This may be because scripts are generated and `EVAL`ed, instead of being parameterized "
-                          "(with KEYS and ARGV), `SCRIPT LOAD`ed and `EVALSHA`ed. Unless `SCRIPT FLUSH` is called "
-                          "periodically, the scripts' caches may end up consuming most of your memory.\n\n");
+            s = sdscat(s,
+                       " * Many scripts: There seem to be many cached scripts in this instance (more than 1000). "
+                       "This may be because scripts are generated and `EVAL`ed, instead of being parameterized "
+                       "(with KEYS and ARGV), `SCRIPT LOAD`ed and `EVALSHA`ed. Unless `SCRIPT FLUSH` is called "
+                       "periodically, the scripts' caches may end up consuming most of your memory.\n\n");
         }
         s = sdscat(s, "I'm here to keep you safe, Sam. I want to help you.\n");
     }
@@ -1722,8 +1725,9 @@ void objectCommand(client *c) {
     } else if (!strcasecmp(objectGetVal(c->argv[1]), "idletime") && c->argc == 3) {
         if ((o = objectCommandLookupOrReply(c, c->argv[2], shared.null[c->resp])) == NULL) return;
         if (server.maxmemory_policy & MAXMEMORY_FLAG_LFU) {
-            addReplyError(c, "An LFU maxmemory policy is selected, idle time not tracked. Please note that when "
-                             "switching between policies at runtime LRU and LFU data will take some time to adjust.");
+            addReplyError(c,
+                          "An LFU maxmemory policy is selected, idle time not tracked. Please note that when "
+                          "switching between policies at runtime LRU and LFU data will take some time to adjust.");
             return;
         }
         addReplyLongLong(c, lru_getIdleSecs(o->lru));

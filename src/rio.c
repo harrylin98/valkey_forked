@@ -133,17 +133,22 @@ static size_t rioFileWrite(rio *r, const void *buf, size_t len) {
 
 #if defined(HAVE_SYNC_FILE_RANGE) && HAVE_SYNC_FILE_RANGE
             /* Start writeout asynchronously. */
-            if (sync_file_range(fileno(r->io.file.fp), processed - r->io.file.autosync, r->io.file.autosync,
-                                SYNC_FILE_RANGE_WRITE) == -1)
+            if (sync_file_range(fileno(r->io.file.fp),
+                                processed - r->io.file.autosync,
+                                r->io.file.autosync,
+                                SYNC_FILE_RANGE_WRITE)
+                == -1)
                 return 0;
 
             if (processed >= (size_t)r->io.file.autosync * 2) {
                 /* To keep the promise to 'autosync', we should make sure last
                  * asynchronous writeout persists into disk. This call may block
                  * if last writeout is not finished since disk is slow. */
-                if (sync_file_range(fileno(r->io.file.fp), processed - r->io.file.autosync * 2, r->io.file.autosync,
-                                    SYNC_FILE_RANGE_WAIT_BEFORE | SYNC_FILE_RANGE_WRITE | SYNC_FILE_RANGE_WAIT_AFTER) ==
-                    -1)
+                if (sync_file_range(fileno(r->io.file.fp),
+                                    processed - r->io.file.autosync * 2,
+                                    r->io.file.autosync,
+                                    SYNC_FILE_RANGE_WAIT_BEFORE | SYNC_FILE_RANGE_WRITE | SYNC_FILE_RANGE_WAIT_AFTER)
+                    == -1)
                     return 0;
             }
 #else

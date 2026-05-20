@@ -182,8 +182,8 @@ void memtest_fill_value(unsigned long *l, size_t bytes, unsigned long v1, unsign
 #ifdef MEMTEST_32BIT
             *l1 = *l2 = ((unsigned long)v) | (((unsigned long)v) << 16);
 #else
-            *l1 = *l2 = ((unsigned long)v) | (((unsigned long)v) << 16) | (((unsigned long)v) << 32) |
-                        (((unsigned long)v) << 48);
+            *l1 = *l2 = ((unsigned long)v) | (((unsigned long)v) << 16) | (((unsigned long)v) << 32)
+                        | (((unsigned long)v) << 48);
 #endif
             l1 += step;
             l2 += step;

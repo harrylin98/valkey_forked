@@ -473,8 +473,9 @@ void migrateCommand(client *c) {
             redactClientCommandArgument(c, j);
         } else if (!strcasecmp(objectGetVal(c->argv[j]), "keys")) {
             if (sdslen(objectGetVal(c->argv[3])) != 0) {
-                addReplyError(c, "When using MIGRATE KEYS option, the key argument"
-                                 " must be set to the empty string");
+                addReplyError(c,
+                              "When using MIGRATE KEYS option, the key argument"
+                              " must be set to the empty string");
                 return;
             }
             first_key = j + 1;
@@ -487,8 +488,8 @@ void migrateCommand(client *c) {
     }
 
     /* Sanity check */
-    if (getLongFromObjectOrReply(c, c->argv[5], &timeout, NULL) != C_OK ||
-        getLongFromObjectOrReply(c, c->argv[4], &dbid, NULL) != C_OK) {
+    if (getLongFromObjectOrReply(c, c->argv[5], &timeout, NULL) != C_OK
+        || getLongFromObjectOrReply(c, c->argv[4], &dbid, NULL) != C_OK) {
         return;
     }
     if (timeout <= 0) timeout = 1000;
@@ -756,8 +757,10 @@ socket_err:
     /* Cleanup we want to do if no retry is attempted. */
     zfree(ov);
     zfree(kv);
-    addReplyErrorSds(c, sdscatprintf(sdsempty(), "-IOERR error or timeout %s to target instance",
-                                     write_error ? "writing" : "reading"));
+    addReplyErrorSds(c,
+                     sdscatprintf(sdsempty(),
+                                  "-IOERR error or timeout %s to target instance",
+                                  write_error ? "writing" : "reading"));
     return;
 }
 
@@ -945,7 +948,8 @@ void clusterCommand(client *c) {
             addReplyBulkCBuffer(c, sdskey, sdslen(sdskey));
         }
         kvstoreReleaseHashtableIterator(kvs_di);
-    } else if ((!strcasecmp(objectGetVal(c->argv[1]), "slaves") || !strcasecmp(objectGetVal(c->argv[1]), "replicas")) && c->argc == 3) {
+    } else if ((!strcasecmp(objectGetVal(c->argv[1]), "slaves") || !strcasecmp(objectGetVal(c->argv[1]), "replicas"))
+               && c->argc == 3) {
         /* CLUSTER REPLICAS <NODE ID> */
         clusterNode *n = clusterLookupNode(objectGetVal(c->argv[2]), sdslen(objectGetVal(c->argv[2])));
         int j;
@@ -1116,8 +1120,8 @@ clusterNode *getNodeByQuery(client *c, int *error_code) {
     uint64_t cmd_flags = getCommandFlags(c);
 
     /* Only valid for sharded pubsub as regular pubsub can operate on any node and bypasses this layer. */
-    int pubsubshard_included =
-        (cmd_flags & CMD_PUBSUB) || (c->cmd->proc == execCommand && (c->mstate->cmd_flags & CMD_PUBSUB));
+    int pubsubshard_included = (cmd_flags & CMD_PUBSUB)
+                               || (c->cmd->proc == execCommand && (c->mstate->cmd_flags & CMD_PUBSUB));
 
     /* If we're importing or migrating the slot, we need to do some more checks:
      *
@@ -1201,8 +1205,7 @@ clusterNode *getNodeByQuery(client *c, int *error_code) {
             /* Block the COPY command if it's cross-DB to keep the code simple.
              * Allowing cross-DB COPY is possible, but it would require looking up the second key in the target DB.
              * The command should only be allowed if the key exists. We may revisit this decision in the future. */
-            if (mcmd->proc == copyCommand &&
-                margc >= 4 && !strcasecmp(objectGetVal(margv[3]), "db")) {
+            if (mcmd->proc == copyCommand && margc >= 4 && !strcasecmp(objectGetVal(margv[3]), "db")) {
                 long long value;
                 if (getLongLongFromObject(margv[4], &value) != C_OK || value != currentDb->id) {
                     if (error_code) *error_code = CLUSTER_REDIR_UNSTABLE;
@@ -1218,8 +1221,7 @@ clusterNode *getNodeByQuery(client *c, int *error_code) {
              * node until the migration completes with CLUSTER SETSLOT <slot>
              * NODE <node-id>. */
             int flags = LOOKUP_NOTOUCH | LOOKUP_NOSTATS | LOOKUP_NONOTIFY | LOOKUP_NOEXPIRE;
-            if (!pubsubshard_included &&
-                (!c->flag.multi || (c->flag.multi && c->cmd->proc == execCommand))) {
+            if (!pubsubshard_included && (!c->flag.multi || (c->flag.multi && c->cmd->proc == execCommand))) {
                 /* Multi/Exec validation happens on exec */
                 if (lookupKeyReadWithFlags(currentDb, thiskey, flags) == NULL)
                     missing_keys++;
@@ -1292,10 +1294,10 @@ after_checking_each_key:
     /* Handle the read-only client case reading from a replica: if this
      * node is a replica and the request is about a hash slot our primary
      * is serving, we can reply without redirection. */
-    int is_write_command =
-        (cmd_flags & CMD_WRITE) || (c->cmd->proc == execCommand && (c->mstate->cmd_flags & CMD_WRITE));
-    if ((c->flag.readonly || pubsubshard_included) && !is_write_command && clusterNodeIsReplica(myself) &&
-        clusterNodeGetPrimary(myself) == n) {
+    int is_write_command = (cmd_flags & CMD_WRITE)
+                           || (c->cmd->proc == execCommand && (c->mstate->cmd_flags & CMD_WRITE));
+    if ((c->flag.readonly || pubsubshard_included) && !is_write_command && clusterNodeIsReplica(myself)
+        && clusterNodeGetPrimary(myself) == n) {
         return myself;
     }
 
@@ -1330,8 +1332,12 @@ void clusterRedirectClient(client *c, clusterNode *n, int hashslot, int error_co
         /* Report TLS ports to TLS client, and report non-TLS port to non-TLS client. */
         int port = clusterNodeClientPort(n, shouldReturnTlsInfo(), c);
         addReplyErrorSds(c,
-                         sdscatprintf(sdsempty(), "-%s %d %s:%d", (error_code == CLUSTER_REDIR_ASK) ? "ASK" : "MOVED",
-                                      hashslot, clusterNodePreferredEndpoint(n, c), port));
+                         sdscatprintf(sdsempty(),
+                                      "-%s %d %s:%d",
+                                      (error_code == CLUSTER_REDIR_ASK) ? "ASK" : "MOVED",
+                                      hashslot,
+                                      clusterNodePreferredEndpoint(n, c),
+                                      port));
     } else {
         serverPanic("getNodeByQuery() unknown error.");
     }
@@ -1350,8 +1356,9 @@ void clusterRedirectClient(client *c, clusterNode *n, int hashslot, int error_co
  * returns 1. Otherwise 0 is returned and no operation is performed. */
 int clusterRedirectBlockedClientIfNeeded(client *c) {
     clusterNode *myself = getMyClusterNode();
-    if (c->flag.blocked && (c->bstate->btype == BLOCKED_LIST || c->bstate->btype == BLOCKED_ZSET ||
-                            c->bstate->btype == BLOCKED_STREAM || c->bstate->btype == BLOCKED_MODULE)) {
+    if (c->flag.blocked
+        && (c->bstate->btype == BLOCKED_LIST || c->bstate->btype == BLOCKED_ZSET || c->bstate->btype == BLOCKED_STREAM
+            || c->bstate->btype == BLOCKED_MODULE)) {
         dictEntry *de;
         dictIterator *di;
 
@@ -1378,8 +1385,8 @@ int clusterRedirectBlockedClientIfNeeded(client *c) {
 
             /* if the client is read-only and attempting to access key that our
              * replica can handle, allow it. */
-            if (c->flag.readonly && !(c->lastcmd->flags & CMD_WRITE) && clusterNodeIsReplica(myself) &&
-                clusterNodeGetPrimary(myself) == node) {
+            if (c->flag.readonly && !(c->lastcmd->flags & CMD_WRITE) && clusterNodeIsReplica(myself)
+                && clusterNodeGetPrimary(myself) == node) {
                 node = myself;
             }
 
@@ -1430,8 +1437,8 @@ void addNodeToNodeReply(client *c, clusterNode *node) {
     if (server.cluster_preferred_endpoint_type != CLUSTER_ENDPOINT_TYPE_IP) {
         length++;
     }
-    if (server.cluster_preferred_endpoint_type != CLUSTER_ENDPOINT_TYPE_HOSTNAME && hostname != NULL &&
-        hostname[0] != '\0') {
+    if (server.cluster_preferred_endpoint_type != CLUSTER_ENDPOINT_TYPE_HOSTNAME && hostname != NULL
+        && hostname[0] != '\0') {
         length++;
     }
 
@@ -1446,8 +1453,8 @@ void addNodeToNodeReply(client *c, clusterNode *node) {
         addReplyBulkCString(c, clusterNodeIp(node, c));
         length--;
     }
-    if (server.cluster_preferred_endpoint_type != CLUSTER_ENDPOINT_TYPE_HOSTNAME && hostname != NULL &&
-        hostname[0] != '\0') {
+    if (server.cluster_preferred_endpoint_type != CLUSTER_ENDPOINT_TYPE_HOSTNAME && hostname != NULL
+        && hostname[0] != '\0') {
         addReplyBulkCString(c, "hostname");
         addReplyBulkCString(c, hostname);
         length--;

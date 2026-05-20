@@ -94,8 +94,9 @@ static void addReplySlotStat(client *c, int slot) {
     addReplyArrayLen(c, 2); /* Array of size 2, where 0th index represents (int) slot,
                              * and 1st index represents (map) usage statistics. */
     addReplyLongLong(c, slot);
-    addReplyMapLen(c, (server.cluster_slot_stats_enabled) ? SLOT_STAT_COUNT
-                                                          : 1); /* Nested map representing slot usage statistics. */
+    addReplyMapLen(c,
+                   (server.cluster_slot_stats_enabled) ? SLOT_STAT_COUNT
+                                                       : 1); /* Nested map representing slot usage statistics. */
     addReplyBulkCString(c, "key-count");
     addReplyLongLong(c, countKeysInSlot(slot));
 
@@ -213,10 +214,10 @@ void clusterSlotStatResetAll(void) {
  * would equate to repeating the same calculation twice.
  */
 static int canAddCpuDuration(client *c) {
-    return clusterSlotStatsEnabled(c->slot) &&
-           (!server.execution_nesting ||         /* Either; */
-            (server.execution_nesting &&         /* 1) Command should not be nested, or */
-             c->realcmd->flags & CMD_BLOCKING)); /* 2) If command is nested, it must be due to unblocking. */
+    return clusterSlotStatsEnabled(c->slot)
+           && (!server.execution_nesting ||         /* Either; */
+               (server.execution_nesting &&         /* 1) Command should not be nested, or */
+                c->realcmd->flags & CMD_BLOCKING)); /* 2) If command is nested, it must be due to unblocking. */
 }
 
 void clusterSlotStatsAddCpuDuration(client *c, ustime_t duration) {
@@ -262,8 +263,7 @@ void clusterSlotStatsCommand(client *c) {
     if (c->argc == 5 && !strcasecmp(objectGetVal(c->argv[2]), "slotsrange")) {
         /* CLUSTER SLOT-STATS SLOTSRANGE start-slot end-slot */
         int startslot, endslot;
-        if ((startslot = getSlotOrReply(c, c->argv[3])) == -1 ||
-            (endslot = getSlotOrReply(c, c->argv[4])) == -1) {
+        if ((startslot = getSlotOrReply(c, c->argv[3])) == -1 || (endslot = getSlotOrReply(c, c->argv[4])) == -1) {
             return;
         }
         if (startslot > endslot) {
@@ -297,9 +297,14 @@ void clusterSlotStatsCommand(client *c) {
         while (i < c->argc) {
             int moreargs = c->argc > i + 1;
             if (!strcasecmp(objectGetVal(c->argv[i]), "limit") && moreargs) {
-                if (getRangeLongFromObjectOrReply(
-                        c, c->argv[i + 1], 1, CLUSTER_SLOTS, &limit,
-                        "Limit has to lie in between 1 and 16384 (maximum number of slots).") != C_OK) {
+                if (getRangeLongFromObjectOrReply(c,
+                                                  c->argv[i + 1],
+                                                  1,
+                                                  CLUSTER_SLOTS,
+                                                  &limit,
+                                                  "Limit has to lie in between 1 and 16384 (maximum number of "
+                                                  "slots).")
+                    != C_OK) {
                     return;
                 }
                 i++;

@@ -143,7 +143,9 @@ static void monotonicInit_aarch64(void) {
         return;
     }
 
-    snprintf(monotonic_info_string, sizeof(monotonic_info_string), "ARM CNTVCT @ %ld ticks/us",
+    snprintf(monotonic_info_string,
+             sizeof(monotonic_info_string),
+             "ARM CNTVCT @ %ld ticks/us",
              mono_ticksPerMicrosecond);
     getMonotonicUs = getMonotonicUs_aarch64;
 }

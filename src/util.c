@@ -79,7 +79,12 @@ static int stringmatchlen_impl(const char *pattern,
             }
             if (patternLen == 1) return 1; /* match */
             while (stringLen) {
-                if (stringmatchlen_impl(pattern + 1, patternLen - 1, string, stringLen, nocase, skipLongerMatches,
+                if (stringmatchlen_impl(pattern + 1,
+                                        patternLen - 1,
+                                        string,
+                                        stringLen,
+                                        nocase,
+                                        skipLongerMatches,
                                         nesting + 1))
                     return 1;                     /* match */
                 if (*skipLongerMatches) return 0; /* no match */
@@ -510,7 +515,9 @@ static int string2llAVX512(const char *s, size_t slen, long long *value) {
         return 0;
     }
 
+    // clang-format off
     const __m256i mul_1_10 = _mm256_set_epi8(1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10);
+    // clang-format on
     /* Multiply by 10 and horizontally add adjacent pairs of intermediate values. */
     __m256i multiplied_by_10 = _mm256_maddubs_epi16(ascii_digits, mul_1_10);
     __m128i reduced_to_16bit = _mm256_cvtepi16_epi8(multiplied_by_10);
@@ -641,21 +648,16 @@ __attribute__((used)) static int (*string2ll_resolver(void))(const char *, size_
     /* Ifunc resolvers run before ASan initialization and before CPU detection
      * is initialized, so disable ASan and init CPU detection here. */
     __builtin_cpu_init();
-    if (__builtin_cpu_supports("avx512f") &&
-        __builtin_cpu_supports("avx512vl") &&
-        __builtin_cpu_supports("avx512bw"))
+    if (__builtin_cpu_supports("avx512f") && __builtin_cpu_supports("avx512vl") && __builtin_cpu_supports("avx512bw"))
         return string2llAVX512;
     return string2llScalar;
 }
 
-int string2ll(const char *s, size_t slen, long long *value)
-    __attribute__((ifunc("string2ll_resolver")));
+int string2ll(const char *s, size_t slen, long long *value) __attribute__((ifunc("string2ll_resolver")));
 #else
 int string2ll(const char *s, size_t slen, long long *value) {
 #if HAVE_X86_SIMD
-    if (__builtin_cpu_supports("avx512f") &&
-        __builtin_cpu_supports("avx512vl") &&
-        __builtin_cpu_supports("avx512bw"))
+    if (__builtin_cpu_supports("avx512f") && __builtin_cpu_supports("avx512vl") && __builtin_cpu_supports("avx512bw"))
         return string2llAVX512(s, slen, value);
 #endif
     return string2llScalar(s, slen, value);
@@ -749,9 +751,9 @@ int string2ld(const char *s, size_t slen, long double *dp) {
 
     errno = 0;
     value = strtold(buf, &eptr);
-    if (isspace(buf[0]) || eptr[0] != '\0' || (size_t)(eptr - buf) != slen ||
-        (errno == ERANGE && (value == HUGE_VAL || value == -HUGE_VAL || fpclassify(value) == FP_ZERO)) ||
-        errno == EINVAL || isnan(value))
+    if (isspace(buf[0]) || eptr[0] != '\0' || (size_t)(eptr - buf) != slen
+        || (errno == ERANGE && (value == HUGE_VAL || value == -HUGE_VAL || fpclassify(value) == FP_ZERO))
+        || errno == EINVAL || isnan(value))
         return 0;
 
     if (dp) *dp = value;
@@ -769,8 +771,9 @@ int string2d(const char *s, size_t slen, double *dp) {
     errno = 0;
     char *eptr;
     *dp = valkey_strtod_n(s, slen, &eptr);
-    if (slen == 0 || isspace(((const char *)s)[0]) || (size_t)(eptr - (char *)s) != slen ||
-        (errno == ERANGE && (*dp == HUGE_VAL || *dp == -HUGE_VAL || fpclassify(*dp) == FP_ZERO)) || isnan(*dp) || errno == EINVAL) {
+    if (slen == 0 || isspace(((const char *)s)[0]) || (size_t)(eptr - (char *)s) != slen
+        || (errno == ERANGE && (*dp == HUGE_VAL || *dp == -HUGE_VAL || fpclassify(*dp) == FP_ZERO)) || isnan(*dp)
+        || errno == EINVAL) {
         errno = 0;
         return 0;
     }

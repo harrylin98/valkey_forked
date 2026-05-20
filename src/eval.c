@@ -234,11 +234,7 @@ static void evalCalcScriptHash(int evalsha, sds script, char *out_sha) {
  * The err arg is optional, can be used to get a detailed error string.
  * The out_shebang_len arg is optional, can be used to trim the shebang from the script.
  * Returns C_OK on success, and C_ERR on error. */
-int evalExtractShebangFlags(sds body,
-                            char **out_engine,
-                            uint64_t *out_flags,
-                            ssize_t *out_shebang_len,
-                            sds *err) {
+int evalExtractShebangFlags(sds body, char **out_engine, uint64_t *out_flags, ssize_t *out_shebang_len, sds *err) {
     serverAssert(out_flags != NULL);
 
     ssize_t shebang_len = 0;
@@ -316,7 +312,8 @@ uint64_t evalGetCommandFlags(client *c, uint64_t cmd_flags) {
     c->cur_script = dictFind(evalCtx.scripts, sha);
     if (!c->cur_script) {
         if (evalsha) return cmd_flags;
-        if (evalExtractShebangFlags(objectGetVal(c->argv[1]), NULL, &script_flags, NULL, NULL) == C_ERR) return cmd_flags;
+        if (evalExtractShebangFlags(objectGetVal(c->argv[1]), NULL, &script_flags, NULL, NULL) == C_ERR)
+            return cmd_flags;
     } else {
         evalScript *es = dictGetVal(c->cur_script);
         script_flags = es->flags;
@@ -426,14 +423,13 @@ static int evalRegisterNewScript(client *c, robj *body, char **sha) {
 
     robj *_err = NULL;
     size_t num_compiled_functions = 0;
-    compiledFunction **functions =
-        scriptingEngineCallCompileCode(engine,
-                                       VMSE_EVAL,
-                                       (sds)objectGetVal(body) + shebang_len,
-                                       sdslen(objectGetVal(body)) - shebang_len,
-                                       0,
-                                       &num_compiled_functions,
-                                       &_err);
+    compiledFunction **functions = scriptingEngineCallCompileCode(engine,
+                                                                  VMSE_EVAL,
+                                                                  (sds)objectGetVal(body) + shebang_len,
+                                                                  sdslen(objectGetVal(body)) - shebang_len,
+                                                                  0,
+                                                                  &num_compiled_functions,
+                                                                  &_err);
     if (functions == NULL) {
         serverAssert(_err != NULL);
         if (c != NULL) {
@@ -702,10 +698,8 @@ dict *evalScriptsDict(void) {
 }
 
 unsigned long evalScriptsMemory(void) {
-    return evalCtx.scripts_mem +
-           dictMemUsage(evalCtx.scripts) +
-           dictSize(evalCtx.scripts) * sizeof(evalScript) +
-           listLength(evalCtx.scripts_lru_list) * sizeof(listNode);
+    return evalCtx.scripts_mem + dictMemUsage(evalCtx.scripts) + dictSize(evalCtx.scripts) * sizeof(evalScript)
+           + listLength(evalCtx.scripts_lru_list) * sizeof(listNode);
 }
 
 /* Wrapper for EVAL / EVALSHA that enables debugging, and makes sure

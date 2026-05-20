@@ -48,7 +48,12 @@ typedef struct dataset {
 } dataset;
 
 /* Initialize dataset from file - returns NULL on error */
-dataset *datasetInit(const char *filename, int max_documents, int has_field_placeholders, sds *template_argv, int template_argc, int verbose);
+dataset *datasetInit(const char *filename,
+                     int max_documents,
+                     int has_field_placeholders,
+                     sds *template_argv,
+                     int template_argc,
+                     int verbose);
 
 /* Free dataset and all memory */
 void datasetFree(dataset *ds);
@@ -58,7 +63,14 @@ size_t datasetGetRecordCount(dataset *ds);
 
 #ifndef __cplusplus
 /* Generate complete command for given record index (caller must sdsfree) */
-sds datasetGenerateCommand(dataset *ds, int record_index, sds *template_argv, int template_argc, _Atomic uint64_t *seq_key, int replace_placeholders, int keyspacelen, int sequential_replacement);
+sds datasetGenerateCommand(dataset *ds,
+                           int record_index,
+                           sds *template_argv,
+                           int template_argc,
+                           _Atomic uint64_t *seq_key,
+                           int replace_placeholders,
+                           int keyspacelen,
+                           int sequential_replacement);
 #endif
 
 #endif /* VALKEY_BENCHMARK_DATASET_H */

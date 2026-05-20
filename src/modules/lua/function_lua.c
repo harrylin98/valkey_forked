@@ -100,8 +100,7 @@ static void luaEngineLoadHook(lua_State *lua, lua_Debug *ar) {
     }
 }
 
-static void freeCompiledFunc(lua_State *lua,
-                             ValkeyModuleScriptingEngineCompiledFunction *compiled_func) {
+static void freeCompiledFunc(lua_State *lua, ValkeyModuleScriptingEngineCompiledFunction *compiled_func) {
     ValkeyModule_FreeString(NULL, compiled_func->name);
     if (compiled_func->desc) {
         ValkeyModule_FreeString(NULL, compiled_func->desc);
@@ -171,9 +170,8 @@ ValkeyModuleScriptingEngineCompiledFunction **luaFunctionLibraryCreate(lua_State
         goto done;
     }
 
-    compiled_functions =
-        ValkeyModule_Calloc(list_length(load_ctx.functions),
-                            sizeof(ValkeyModuleScriptingEngineCompiledFunction *));
+    compiled_functions = ValkeyModule_Calloc(list_length(load_ctx.functions),
+                                             sizeof(ValkeyModuleScriptingEngineCompiledFunction *));
     ListIter *iter = list_get_iter(load_ctx.functions);
     void *val = NULL;
     *out_num_compiled_functions = 0;
@@ -282,8 +280,7 @@ static ValkeyModuleString *luaGetStringObject(lua_State *lua, int index) {
     return ValkeyModule_CreateString(NULL, str, len);
 }
 
-static int luaRegisterFunctionReadNamedArgs(lua_State *lua,
-                                            ValkeyModuleScriptingEngineCompiledFunction *func) {
+static int luaRegisterFunctionReadNamedArgs(lua_State *lua, ValkeyModuleScriptingEngineCompiledFunction *func) {
     char *err = NULL;
     ValkeyModuleString *name = NULL;
     ValkeyModuleString *desc = NULL;
@@ -353,11 +350,7 @@ static int luaRegisterFunctionReadNamedArgs(lua_State *lua,
         goto error;
     }
 
-    luaRegisterFunctionArgsInitialize(func,
-                                      name,
-                                      desc,
-                                      script,
-                                      flags);
+    luaRegisterFunctionArgsInitialize(func, name, desc, script, flags);
 
     return C_OK;
 
@@ -372,8 +365,7 @@ error:
     return C_ERR;
 }
 
-static int luaRegisterFunctionReadPositionalArgs(lua_State *lua,
-                                                 ValkeyModuleScriptingEngineCompiledFunction *func) {
+static int luaRegisterFunctionReadPositionalArgs(lua_State *lua, ValkeyModuleScriptingEngineCompiledFunction *func) {
     char *err = NULL;
     ValkeyModuleString *name = NULL;
     luaFunction *script = NULL;
@@ -404,8 +396,7 @@ error:
     return C_ERR;
 }
 
-static int luaRegisterFunctionReadArgs(lua_State *lua,
-                                       ValkeyModuleScriptingEngineCompiledFunction *func) {
+static int luaRegisterFunctionReadArgs(lua_State *lua, ValkeyModuleScriptingEngineCompiledFunction *func) {
     int argc = lua_gettop(lua);
     if (argc < 1 || argc > 2) {
         luaPushError(lua, "wrong number of arguments to server.register_function");

@@ -108,6 +108,7 @@ void notifyKeyspaceEvent(int type, char *event, robj *key, int dbid) {
     int len = -1;
     char buf[24];
     client *c = server.executing_client;
+    // clang-format off
     debugServerAssert(moduleNotifyKeyspaceSubscribersCnt() == 0 ||
                       (type & (NOTIFY_GENERIC | NOTIFY_STRING | NOTIFY_LIST | NOTIFY_SET | NOTIFY_HASH | NOTIFY_ZSET | NOTIFY_STREAM)) == 0 ||
                       c == NULL ||
@@ -117,6 +118,7 @@ void notifyKeyspaceEvent(int type, char *event, robj *key, int dbid) {
                       c->flag.keyspace_notified == 1 ||
                       c->id == UINT64_MAX || // AOF client
                       getClientType(c) != CLIENT_TYPE_NORMAL);
+    // clang-format on
     /* If any modules are interested in events, notify the module system now.
      * This bypasses the notifications configuration, but the module engine
      * will only call event subscribers if the event type matches the types

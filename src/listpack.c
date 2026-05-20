@@ -501,8 +501,10 @@ unsigned long lpLength(unsigned char *lp) {
  *
  * Similarly, there is no error returned since the listpack normally can be
  * assumed to be valid, so that would be a very high API cost. */
-static inline unsigned char *
-lpGetWithSize(unsigned char *p, int64_t *count, unsigned char *intbuf, uint64_t *entry_size) {
+static inline unsigned char *lpGetWithSize(unsigned char *p,
+                                           int64_t *count,
+                                           unsigned char *intbuf,
+                                           uint64_t *entry_size) {
     int64_t val;
     uint64_t uval, negstart, negmax;
 
@@ -537,8 +539,8 @@ lpGetWithSize(unsigned char *p, int64_t *count, unsigned char *intbuf, uint64_t 
         negmax = UINT32_MAX;
         if (entry_size) *entry_size = LP_ENCODING_32BIT_INT_ENTRY_SIZE;
     } else if (LP_ENCODING_IS_64BIT_INT(p[0])) {
-        uval = (uint64_t)p[1] | (uint64_t)p[2] << 8 | (uint64_t)p[3] << 16 | (uint64_t)p[4] << 24 |
-               (uint64_t)p[5] << 32 | (uint64_t)p[6] << 40 | (uint64_t)p[7] << 48 | (uint64_t)p[8] << 56;
+        uval = (uint64_t)p[1] | (uint64_t)p[2] << 8 | (uint64_t)p[3] << 16 | (uint64_t)p[4] << 24 | (uint64_t)p[5] << 32
+               | (uint64_t)p[6] << 40 | (uint64_t)p[7] << 48 | (uint64_t)p[8] << 56;
         negstart = (uint64_t)1 << 63;
         negmax = UINT64_MAX;
         if (entry_size) *entry_size = LP_ENCODING_64BIT_INT_ENTRY_SIZE;
@@ -851,8 +853,12 @@ unsigned char *lpInsert(unsigned char *lp,
 }
 
 /* This is just a wrapper for lpInsert() to directly use a string. */
-unsigned char *
-lpInsertString(unsigned char *lp, unsigned char *s, uint32_t slen, unsigned char *p, int where, unsigned char **newp) {
+unsigned char *lpInsertString(unsigned char *lp,
+                              unsigned char *s,
+                              uint32_t slen,
+                              unsigned char *p,
+                              int where,
+                              unsigned char **newp) {
     return lpInsert(lp, s, NULL, slen, p, where, newp);
 }
 
@@ -1496,8 +1502,11 @@ unsigned int lpRandomPairsUnique(unsigned char *lp, unsigned int count, listpack
  *         i++;
  *     }
  */
-unsigned char *
-lpNextRandom(unsigned char *lp, unsigned char *p, unsigned int *index, unsigned int remaining, int even_only) {
+unsigned char *lpNextRandom(unsigned char *lp,
+                            unsigned char *p,
+                            unsigned int *index,
+                            unsigned int remaining,
+                            int even_only) {
     /* To only iterate once, every time we try to pick a member, the probability
      * we pick it is the quotient of the count left we want to pick and the
      * count still we haven't visited. This way, we could make every member be
@@ -1550,7 +1559,12 @@ void lpRepr(unsigned char *lp) {
                "\thdrlen: %3u,\n"
                "\tbacklen: %2lu,\n"
                "\tpayload: %1u\n",
-               (long unsigned)p, index, (unsigned long)(p - lp), encoded_size + back_len, encoded_size_bytes, back_len,
+               (long unsigned)p,
+               index,
+               (unsigned long)(p - lp),
+               encoded_size + back_len,
+               encoded_size_bytes,
+               back_len,
                encoded_size - encoded_size_bytes);
         printf("\tbytes: ");
         for (unsigned int i = 0; i < (encoded_size + back_len); i++) {

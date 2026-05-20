@@ -65,9 +65,7 @@ compiledFunction **scriptingEngineCallCompileCode(scriptingEngine *engine,
                                                   size_t *out_num_compiled_functions,
                                                   robj **err);
 
-void scriptingEngineCallFreeFunction(scriptingEngine *engine,
-                                     subsystemType type,
-                                     compiledFunction *compiled_func);
+void scriptingEngineCallFreeFunction(scriptingEngine *engine, subsystemType type, compiledFunction *compiled_func);
 
 void scriptingEngineCallFunction(scriptingEngine *engine,
                                  serverRuntimeCtx *server_ctx,
@@ -79,30 +77,22 @@ void scriptingEngineCallFunction(scriptingEngine *engine,
                                  robj **args,
                                  size_t nargs);
 
-size_t scriptingEngineCallGetFunctionMemoryOverhead(scriptingEngine *engine,
-                                                    compiledFunction *compiled_function);
+size_t scriptingEngineCallGetFunctionMemoryOverhead(scriptingEngine *engine, compiledFunction *compiled_function);
 
-callableLazyEnvReset *scriptingEngineCallResetEnvFunc(scriptingEngine *engine,
-                                                      subsystemType type,
-                                                      int async);
+callableLazyEnvReset *scriptingEngineCallResetEnvFunc(scriptingEngine *engine, subsystemType type, int async);
 
-engineMemoryInfo scriptingEngineCallGetMemoryInfo(scriptingEngine *engine,
-                                                  subsystemType type);
+engineMemoryInfo scriptingEngineCallGetMemoryInfo(scriptingEngine *engine, subsystemType type);
 
 debuggerEnableRet scriptingEngineCallDebuggerEnable(scriptingEngine *engine,
                                                     subsystemType type,
                                                     const debuggerCommand **commands,
                                                     size_t *commands_len);
 
-void scriptingEngineCallDebuggerDisable(scriptingEngine *engine,
-                                        subsystemType type);
+void scriptingEngineCallDebuggerDisable(scriptingEngine *engine, subsystemType type);
 
-void scriptingEngineCallDebuggerStart(scriptingEngine *engine,
-                                      subsystemType type,
-                                      robj *source);
+void scriptingEngineCallDebuggerStart(scriptingEngine *engine, subsystemType type, robj *source);
 
-void scriptingEngineCallDebuggerEnd(scriptingEngine *engine,
-                                    subsystemType type);
+void scriptingEngineCallDebuggerEnd(scriptingEngine *engine, subsystemType type);
 
 /*
  * API of scripting engine remote debugger.

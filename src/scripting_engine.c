@@ -48,9 +48,9 @@ typedef struct scriptingEngineImpl {
 } scriptingEngineImpl;
 
 typedef struct scriptingEngine {
-    sds name;                                                 /* Name of the engine */
-    ValkeyModule *module;                                     /* the module that implements the scripting engine */
-    scriptingEngineImpl impl;                                 /* engine context and callbacks to interact with the engine */
+    sds name;                 /* Name of the engine */
+    ValkeyModule *module;     /* the module that implements the scripting engine */
+    scriptingEngineImpl impl; /* engine context and callbacks to interact with the engine */
     ValkeyModuleCtx *module_ctx_cache[MODULE_CTX_CACHE_SIZE]; /* Cache of module context objects */
 } scriptingEngine;
 
@@ -106,7 +106,8 @@ size_t scriptingEngineManagerGetMemoryUsage(void) {
 
 static inline void scriptingEngineInitializeEngineMethods(scriptingEngine *engine, engineMethods *methods) {
     if (methods->version < SCRIPTING_ENGINE_ABI_VERSION_4) {
-        serverLog(LL_WARNING, "Registering scripting engine '%s' with ABI version '%lu'",
+        serverLog(LL_WARNING,
+                  "Registering scripting engine '%s' with ABI version '%lu'",
                   engine->name,
                   (unsigned long)methods->version);
         memcpy(&engine->impl.methods, methods, sizeof(engineMethodsV3));
@@ -144,9 +145,10 @@ int scriptingEngineManagerRegister(const char *engine_name,
     *e = (scriptingEngine){
         .name = engine_name_sds,
         .module = engine_module,
-        .impl = {
-            .ctx = engine_ctx,
-        },
+        .impl =
+            {
+                .ctx = engine_ctx,
+            },
         .module_ctx_cache = {0},
     };
     scriptingEngineInitializeEngineMethods(e, engine_methods);
@@ -158,9 +160,7 @@ int scriptingEngineManagerRegister(const char *engine_name,
     dictAdd(engineMgr.engines, engine_name_sds, e);
 
     engineMemoryInfo mem_info = scriptingEngineCallGetMemoryInfo(e, VMSE_ALL);
-    engineMgr.total_memory_overhead += zmalloc_size(e) +
-                                       sdsAllocSize(e->name) +
-                                       mem_info.engine_memory_overhead;
+    engineMgr.total_memory_overhead += zmalloc_size(e) + sdsAllocSize(e->name) + mem_info.engine_memory_overhead;
 
     return C_OK;
 }
@@ -182,9 +182,7 @@ int scriptingEngineManagerUnregister(const char *engine_name) {
     evalRemoveScriptsFromEngine(e);
 
     engineMemoryInfo mem_info = scriptingEngineCallGetMemoryInfo(e, VMSE_ALL);
-    engineMgr.total_memory_overhead -= zmalloc_size(e) +
-                                       sdsAllocSize(e->name) +
-                                       mem_info.engine_memory_overhead;
+    engineMgr.total_memory_overhead -= zmalloc_size(e) + sdsAllocSize(e->name) + mem_info.engine_memory_overhead;
 
     /* We need to ensure that any pending async flush of eval scripts or
      * functions have completed before freeing the engine resources, which
@@ -237,8 +235,7 @@ uint64_t scriptingEngineGetAbiVersion(scriptingEngine *engine) {
  *
  * The `context` pointer is also passed in each callback call.
  */
-void scriptingEngineManagerForEachEngine(engineIterCallback callback,
-                                         void *context) {
+void scriptingEngineManagerForEachEngine(engineIterCallback callback, void *context) {
     dictIterator *iter = dictGetIterator(engineMgr.engines);
     dictEntry *entry = NULL;
     while ((entry = dictNext(iter))) {
@@ -256,10 +253,7 @@ static ValkeyModuleCtx *engineSetupModuleCtx(int module_ctx_cache_index,
     if (e->module == NULL) return NULL;
 
     ValkeyModuleCtx *ctx = e->module_ctx_cache[module_ctx_cache_index];
-    moduleScriptingEngineInitContext(ctx,
-                                     e->module,
-                                     add_script_execution_flag,
-                                     c);
+    moduleScriptingEngineInitContext(ctx, e->module, add_script_execution_flag, c);
     return ctx;
 }
 
@@ -283,25 +277,23 @@ compiledFunction **scriptingEngineCallCompileCode(scriptingEngine *engine,
     ValkeyModuleCtx *module_ctx = engineSetupModuleCtx(COMMON_MODULE_CTX_INDEX, engine, false, NULL);
 
     if (engine->impl.methods.version == SCRIPTING_ENGINE_ABI_VERSION_1) {
-        functions = engine->impl.methods.compile_code_v1(
-            module_ctx,
-            engine->impl.ctx,
-            type,
-            code,
-            timeout,
-            out_num_compiled_functions,
-            err);
+        functions = engine->impl.methods.compile_code_v1(module_ctx,
+                                                         engine->impl.ctx,
+                                                         type,
+                                                         code,
+                                                         timeout,
+                                                         out_num_compiled_functions,
+                                                         err);
     } else {
         /* Assume versions greater than 1 use updated interface. */
-        functions = engine->impl.methods.compile_code(
-            module_ctx,
-            engine->impl.ctx,
-            type,
-            code,
-            code_len,
-            timeout,
-            out_num_compiled_functions,
-            err);
+        functions = engine->impl.methods.compile_code(module_ctx,
+                                                      engine->impl.ctx,
+                                                      type,
+                                                      code,
+                                                      code_len,
+                                                      timeout,
+                                                      out_num_compiled_functions,
+                                                      err);
     }
 
     engineTeardownModuleCtx(COMMON_MODULE_CTX_INDEX, engine);
@@ -309,9 +301,7 @@ compiledFunction **scriptingEngineCallCompileCode(scriptingEngine *engine,
     return functions;
 }
 
-void scriptingEngineCallFreeFunction(scriptingEngine *engine,
-                                     subsystemType type,
-                                     compiledFunction *compiled_func) {
+void scriptingEngineCallFreeFunction(scriptingEngine *engine, subsystemType type, compiledFunction *compiled_func) {
     serverAssert(type == VMSE_EVAL || type == VMSE_FUNCTION);
     int is_async = isCalledFromAsyncThread();
 
@@ -322,11 +312,7 @@ void scriptingEngineCallFreeFunction(scriptingEngine *engine,
     }
 
     ValkeyModuleCtx *module_ctx = engineSetupModuleCtx(FREE_FUNCTION_MODULE_CTX_INDEX, engine, false, NULL);
-    engine->impl.methods.free_function(
-        module_ctx,
-        engine->impl.ctx,
-        type,
-        compiled_func);
+    engine->impl.methods.free_function(module_ctx, engine->impl.ctx, type, compiled_func);
     engineTeardownModuleCtx(FREE_FUNCTION_MODULE_CTX_INDEX, engine);
 
     if (is_async) {
@@ -347,33 +333,20 @@ void scriptingEngineCallFunction(scriptingEngine *engine,
 
     ValkeyModuleCtx *module_ctx = engineSetupModuleCtx(COMMON_MODULE_CTX_INDEX, engine, true, caller);
 
-    engine->impl.methods.call_function(
-        module_ctx,
-        engine->impl.ctx,
-        server_ctx,
-        compiled_function,
-        type,
-        keys,
-        nkeys,
-        args,
-        nargs);
+    engine->impl.methods
+        .call_function(module_ctx, engine->impl.ctx, server_ctx, compiled_function, type, keys, nkeys, args, nargs);
 
     engineTeardownModuleCtx(COMMON_MODULE_CTX_INDEX, engine);
 }
 
-size_t scriptingEngineCallGetFunctionMemoryOverhead(scriptingEngine *engine,
-                                                    compiledFunction *compiled_function) {
+size_t scriptingEngineCallGetFunctionMemoryOverhead(scriptingEngine *engine, compiledFunction *compiled_function) {
     ValkeyModuleCtx *module_ctx = engineSetupModuleCtx(COMMON_MODULE_CTX_INDEX, engine, false, NULL);
-    size_t mem = engine->impl.methods.get_function_memory_overhead(
-        module_ctx,
-        compiled_function);
+    size_t mem = engine->impl.methods.get_function_memory_overhead(module_ctx, compiled_function);
     engineTeardownModuleCtx(COMMON_MODULE_CTX_INDEX, engine);
     return mem;
 }
 
-callableLazyEnvReset *scriptingEngineCallResetEnvFunc(scriptingEngine *engine,
-                                                      subsystemType type,
-                                                      int async) {
+callableLazyEnvReset *scriptingEngineCallResetEnvFunc(scriptingEngine *engine, subsystemType type, int async) {
     ValkeyModuleCtx *module_ctx = engineSetupModuleCtx(COMMON_MODULE_CTX_INDEX, engine, false, NULL);
     callableLazyEnvReset *callback = NULL;
 
@@ -384,10 +357,7 @@ callableLazyEnvReset *scriptingEngineCallResetEnvFunc(scriptingEngine *engine,
          * the EVAL environment.
          */
         if (type == VMSE_EVAL) {
-            callback = engine->impl.methods.reset_eval_env_v2(
-                module_ctx,
-                engine->impl.ctx,
-                async);
+            callback = engine->impl.methods.reset_eval_env_v2(module_ctx, engine->impl.ctx, async);
         } else {
             /* For FUNCTION scripts, the reset_env function is not implemented
              * in version 1 or 2 of the scripting engine ABI, so we just return
@@ -396,24 +366,16 @@ callableLazyEnvReset *scriptingEngineCallResetEnvFunc(scriptingEngine *engine,
             callback = NULL;
         }
     } else {
-        callback = engine->impl.methods.reset_env(
-            module_ctx,
-            engine->impl.ctx,
-            type,
-            async);
+        callback = engine->impl.methods.reset_env(module_ctx, engine->impl.ctx, type, async);
     }
 
     engineTeardownModuleCtx(COMMON_MODULE_CTX_INDEX, engine);
     return callback;
 }
 
-engineMemoryInfo scriptingEngineCallGetMemoryInfo(scriptingEngine *engine,
-                                                  subsystemType type) {
+engineMemoryInfo scriptingEngineCallGetMemoryInfo(scriptingEngine *engine, subsystemType type) {
     ValkeyModuleCtx *module_ctx = engineSetupModuleCtx(GET_MEMORY_MODULE_CTX_INDEX, engine, false, NULL);
-    engineMemoryInfo mem_info = engine->impl.methods.get_memory_info(
-        module_ctx,
-        engine->impl.ctx,
-        type);
+    engineMemoryInfo mem_info = engine->impl.methods.get_memory_info(module_ctx, engine->impl.ctx, type);
     engineTeardownModuleCtx(GET_MEMORY_MODULE_CTX_INDEX, engine);
     return mem_info;
 }
@@ -423,68 +385,49 @@ debuggerEnableRet scriptingEngineCallDebuggerEnable(scriptingEngine *engine,
                                                     const debuggerCommand **commands,
                                                     size_t *commands_len) {
     if (engine->impl.methods.version < SCRIPTING_ENGINE_ABI_VERSION_4) {
-        serverLog(LL_WARNING, "Scripting engine '%s' uses ABI version '%lu', which does not support debugger API",
+        serverLog(LL_WARNING,
+                  "Scripting engine '%s' uses ABI version '%lu', which does not support debugger API",
                   scriptingEngineGetName(engine),
                   (unsigned long)engine->impl.methods.version);
         return VMSE_DEBUG_NOT_SUPPORTED;
     }
 
-    if (engine->impl.methods.debugger_enable == NULL ||
-        engine->impl.methods.debugger_disable == NULL ||
-        engine->impl.methods.debugger_start == NULL ||
-        engine->impl.methods.debugger_end == NULL) {
+    if (engine->impl.methods.debugger_enable == NULL || engine->impl.methods.debugger_disable == NULL
+        || engine->impl.methods.debugger_start == NULL || engine->impl.methods.debugger_end == NULL) {
         return VMSE_DEBUG_NOT_SUPPORTED;
     }
 
     ValkeyModuleCtx *module_ctx = engineSetupModuleCtx(COMMON_MODULE_CTX_INDEX, engine, false, NULL);
-    debuggerEnableRet ret = engine->impl.methods.debugger_enable(
-        module_ctx,
-        engine->impl.ctx,
-        type,
-        commands,
-        commands_len);
+    debuggerEnableRet ret =
+        engine->impl.methods.debugger_enable(module_ctx, engine->impl.ctx, type, commands, commands_len);
     engineTeardownModuleCtx(COMMON_MODULE_CTX_INDEX, engine);
     return ret;
 }
 
-void scriptingEngineCallDebuggerDisable(scriptingEngine *engine,
-                                        subsystemType type) {
+void scriptingEngineCallDebuggerDisable(scriptingEngine *engine, subsystemType type) {
     serverAssert(engine->impl.methods.version >= SCRIPTING_ENGINE_ABI_VERSION_4);
     serverAssert(engine->impl.methods.debugger_disable != NULL);
 
     ValkeyModuleCtx *module_ctx = engineSetupModuleCtx(COMMON_MODULE_CTX_INDEX, engine, false, NULL);
-    engine->impl.methods.debugger_disable(
-        module_ctx,
-        engine->impl.ctx,
-        type);
+    engine->impl.methods.debugger_disable(module_ctx, engine->impl.ctx, type);
     engineTeardownModuleCtx(COMMON_MODULE_CTX_INDEX, engine);
 }
 
-void scriptingEngineCallDebuggerStart(scriptingEngine *engine,
-                                      subsystemType type,
-                                      robj *source) {
+void scriptingEngineCallDebuggerStart(scriptingEngine *engine, subsystemType type, robj *source) {
     serverAssert(engine->impl.methods.version >= SCRIPTING_ENGINE_ABI_VERSION_4);
     serverAssert(engine->impl.methods.debugger_start != NULL);
 
     ValkeyModuleCtx *module_ctx = engineSetupModuleCtx(COMMON_MODULE_CTX_INDEX, engine, false, NULL);
-    engine->impl.methods.debugger_start(
-        module_ctx,
-        engine->impl.ctx,
-        type,
-        source);
+    engine->impl.methods.debugger_start(module_ctx, engine->impl.ctx, type, source);
     engineTeardownModuleCtx(COMMON_MODULE_CTX_INDEX, engine);
 }
 
-void scriptingEngineCallDebuggerEnd(scriptingEngine *engine,
-                                    subsystemType type) {
+void scriptingEngineCallDebuggerEnd(scriptingEngine *engine, subsystemType type) {
     serverAssert(engine->impl.methods.version >= SCRIPTING_ENGINE_ABI_VERSION_4);
     serverAssert(engine->impl.methods.debugger_end != NULL);
 
     ValkeyModuleCtx *module_ctx = engineSetupModuleCtx(COMMON_MODULE_CTX_INDEX, engine, false, NULL);
-    engine->impl.methods.debugger_end(
-        module_ctx,
-        engine->impl.ctx,
-        type);
+    engine->impl.methods.debugger_end(module_ctx, engine->impl.ctx, type);
     engineTeardownModuleCtx(COMMON_MODULE_CTX_INDEX, engine);
 }
 
@@ -531,11 +474,7 @@ void debugScriptFlushLog(list *log) {
 
 /* Enable debug mode of scripts for this client. */
 int scriptingEngineDebuggerEnable(client *c, scriptingEngine *engine, sds *err) {
-    debuggerEnableRet ret = scriptingEngineCallDebuggerEnable(
-        engine,
-        VMSE_EVAL,
-        &ds.commands,
-        &ds.commands_len);
+    debuggerEnableRet ret = scriptingEngineCallDebuggerEnable(engine, VMSE_EVAL, &ds.commands, &ds.commands_len);
 
     if (ret == VMSE_DEBUG_NOT_SUPPORTED) {
         *err = sdscatfmt(sdsempty(),
@@ -595,8 +534,9 @@ void scriptingEngineDebuggerLogWithMaxLen(robj *entry) {
     scriptingEngineDebuggerLog(entry);
     if (trimmed && ds.maxlen_hint_sent == 0) {
         ds.maxlen_hint_sent = 1;
-        scriptingEngineDebuggerLog(
-            createObject(OBJ_STRING, sdsnew("<hint> The above reply was trimmed. Use 'maxlen 0' to disable trimming.")));
+        scriptingEngineDebuggerLog(createObject(OBJ_STRING,
+                                                sdsnew("<hint> The above reply was trimmed. Use 'maxlen 0' to disable "
+                                                       "trimming.")));
     }
 }
 
@@ -845,9 +785,7 @@ static sds *wrapText(const char *text, size_t max_len, size_t *count) {
     return lines;
 }
 
-static void printCommandHelp(const debuggerCommand *command,
-                             int name_width,
-                             int line_width) {
+static void printCommandHelp(const debuggerCommand *command, int name_width, int line_width) {
     sds msg = sdsempty();
 
     /* Format the command name according to the prefix length. */
@@ -942,8 +880,7 @@ static debuggerCommand builtins[] = {
                 "If no <len> is specified, the current value is shown. "
                 "Usage: maxlen [len]",
         .handler = maxlenCommandHandler,
-        .params = (debuggerCommandParam[]){
-            {.name = "len", .optional = 1, .variadic = 0}},
+        .params = (debuggerCommandParam[]){{.name = "len", .optional = 1, .variadic = 0}},
         .params_len = 1,
     }};
 
@@ -1012,9 +949,9 @@ static const debuggerCommand *findCommand(robj **argv, size_t argc) {
     // Check built-in commands first.
     for (size_t i = 0; i < builtins_len; i++) {
         const debuggerCommand *cmd = &builtins[i];
-        if ((sdslen(objectGetVal(argv[0])) == cmd->prefix_len &&
-             strncasecmp(cmd->name, objectGetVal(argv[0]), cmd->prefix_len) == 0) ||
-            strcasecmp(cmd->name, objectGetVal(argv[0])) == 0) {
+        if ((sdslen(objectGetVal(argv[0])) == cmd->prefix_len
+             && strncasecmp(cmd->name, objectGetVal(argv[0]), cmd->prefix_len) == 0)
+            || strcasecmp(cmd->name, objectGetVal(argv[0])) == 0) {
             if (checkCommandParameters(cmd, argc)) {
                 return cmd;
             }
@@ -1024,9 +961,9 @@ static const debuggerCommand *findCommand(robj **argv, size_t argc) {
     // Then check the commands exported by the scripting engine.
     for (size_t i = 0; i < ds.commands_len; i++) {
         const debuggerCommand *cmd = &ds.commands[i];
-        if ((sdslen(objectGetVal(argv[0])) == cmd->prefix_len &&
-             strncasecmp(cmd->name, objectGetVal(argv[0]), cmd->prefix_len) == 0) ||
-            strcasecmp(cmd->name, objectGetVal(argv[0])) == 0) {
+        if ((sdslen(objectGetVal(argv[0])) == cmd->prefix_len
+             && strncasecmp(cmd->name, objectGetVal(argv[0]), cmd->prefix_len) == 0)
+            || strcasecmp(cmd->name, objectGetVal(argv[0])) == 0) {
             if (checkCommandParameters(cmd, argc)) {
                 return cmd;
             }
@@ -1038,9 +975,8 @@ static const debuggerCommand *findCommand(robj **argv, size_t argc) {
 static int findAndExecuteCommand(robj **argv, size_t argc) {
     const debuggerCommand *cmd = findCommand(argv, argc);
     if (cmd == NULL) {
-        scriptingEngineDebuggerLog(createObject(
-            OBJ_STRING,
-            sdsnew("<error> Unknown debugger command or wrong number of arguments.")));
+        scriptingEngineDebuggerLog(
+            createObject(OBJ_STRING, sdsnew("<error> Unknown debugger command or wrong number of arguments.")));
         scriptingEngineDebuggerFlushLogs();
         return CONTINUE_READ_NEXT_COMMAND;
     }

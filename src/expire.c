@@ -50,8 +50,22 @@
 
 /* Constants table from pow(0.98, 1) to pow(0.98, 16).
  * Help calculating the db->avg_ttl. */
-static double avg_ttl_factor[16] = {0.98, 0.9604, 0.941192, 0.922368, 0.903921, 0.885842, 0.868126, 0.850763,
-                                    0.833748, 0.817073, 0.800731, 0.784717, 0.769022, 0.753642, 0.738569, 0.723798};
+static double avg_ttl_factor[16] = {0.98,
+                                    0.9604,
+                                    0.941192,
+                                    0.922368,
+                                    0.903921,
+                                    0.885842,
+                                    0.868126,
+                                    0.850763,
+                                    0.833748,
+                                    0.817073,
+                                    0.800731,
+                                    0.784717,
+                                    0.769022,
+                                    0.753642,
+                                    0.738569,
+                                    0.723798};
 
 /* Helper function for the activeExpireCycle() function.
  * This function will try to expire the key-value entry 'val'.
@@ -200,8 +214,8 @@ static ustime_t activeExpireCycleJob(enum activeExpiryType jobType, int cycleTyp
     if (timelimit_us <= 0) return 0;
 
     unsigned long config_cycle_acceptable_stale = ACTIVE_EXPIRE_CYCLE_ACCEPTABLE_STALE - activeExpireEffort();
-    unsigned long keys_per_loop =
-        ACTIVE_EXPIRE_CYCLE_KEYS_PER_LOOP + ACTIVE_EXPIRE_CYCLE_KEYS_PER_LOOP / 4 * activeExpireEffort();
+    unsigned long keys_per_loop = ACTIVE_EXPIRE_CYCLE_KEYS_PER_LOOP
+                                  + ACTIVE_EXPIRE_CYCLE_KEYS_PER_LOOP / 4 * activeExpireEffort();
 
     /* This function has some global state in order to continue the work
      * incrementally across calls. */
@@ -288,8 +302,7 @@ static ustime_t activeExpireCycleJob(enum activeExpiryType jobType, int cycleTyp
                  * So we just perform more clock checks after each iteration. */
                 time_check_mask = 0x0;
                 break;
-            default:
-                serverPanic("Unknown active expiry job type %d.", jobType);
+            default: serverPanic("Unknown active expiry job type %d.", jobType);
             }
         }
 
@@ -338,8 +351,7 @@ static ustime_t activeExpireCycleJob(enum activeExpiryType jobType, int cycleTyp
 
             while (data.sampled < num && checked_buckets < max_buckets) {
                 unsigned long cursor = db->expiry[jobType].cursor;
-                cursor = kvstoreScan(kvs, cursor, -1, -1, scan_cb,
-                                     expireShouldSkipTableForSamplingCb, &data);
+                cursor = kvstoreScan(kvs, cursor, -1, -1, scan_cb, expireShouldSkipTableForSamplingCb, &data);
                 if (!data.has_more_expired_entries) db->expiry[jobType].cursor = cursor;
                 if (db->expiry[jobType].cursor == 0 && !data.has_more_expired_entries) {
                     db_done = 1;
@@ -363,8 +375,8 @@ static ustime_t activeExpireCycleJob(enum activeExpiryType jobType, int cycleTyp
             /* We can't block forever here even if there are many keys to
              * expire. So after a given amount of microseconds return to the
              * caller waiting for the other active expire cycle. */
-            if ((iteration & 0xf) == 0 ||
-                !repeat) { /* Update the average TTL stats every 16 iterations or about to exit. */
+            if ((iteration & 0xf) == 0
+                || !repeat) { /* Update the average TTL stats every 16 iterations or about to exit. */
                 /* Update the average TTL stats for this database,
                  * because this may reach the time limit. */
                 if (data.ttl_samples && jobType == KEYS) {
@@ -391,7 +403,9 @@ static ustime_t activeExpireCycleJob(enum activeExpiryType jobType, int cycleTyp
                          *             = avg_ttl +  (db->avg_ttl - avg_ttl) * pow(0.98, update_avg_ttl_times)
                          * Notice that update_avg_ttl_times is between 1 and 16, we use a constant table
                          * to accelerate the calculation of pow(0.98, update_avg_ttl_times).*/
-                        db->expiry[jobType].avg_ttl = avg_ttl + (db->expiry[jobType].avg_ttl - avg_ttl) * avg_ttl_factor[update_avg_ttl_times - 1];
+                        db->expiry[jobType].avg_ttl = avg_ttl
+                                                      + (db->expiry[jobType].avg_ttl - avg_ttl)
+                                                            * avg_ttl_factor[update_avg_ttl_times - 1];
                     }
                     update_avg_ttl_times = 0;
                     data.ttl_sum = 0;
@@ -467,7 +481,8 @@ ustime_t activeExpireCycle(int type) {
      * is 10. Also make sure not to run fast cycles back to back. */
     ustime_t timelimit_us;
     if (type == ACTIVE_EXPIRE_CYCLE_FAST) {
-        ustime_t config_cycle_fast_duration = ACTIVE_EXPIRE_CYCLE_FAST_DURATION + ACTIVE_EXPIRE_CYCLE_FAST_DURATION / 4 * activeExpireEffort();
+        ustime_t config_cycle_fast_duration = ACTIVE_EXPIRE_CYCLE_FAST_DURATION
+                                              + ACTIVE_EXPIRE_CYCLE_FAST_DURATION / 4 * activeExpireEffort();
 
         /* Never repeat a fast cycle for the same period
          * as the fast cycle total duration itself. */

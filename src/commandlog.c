@@ -40,17 +40,18 @@ static commandlogEntry *commandlogCreateEntry(client *c, robj **argv, int argc, 
          * at COMMANDLOG_ENTRY_MAX_ARGC, but use the last argument to specify
          * how many remaining arguments there were in the original command. */
         if (ceargc != argc && j == ceargc - 1) {
-            ce->argv[j] =
-                createObject(OBJ_STRING, sdscatprintf(sdsempty(), "... (%d more arguments)", argc - ceargc + 1));
+            ce->argv[j] = createObject(OBJ_STRING,
+                                       sdscatprintf(sdsempty(), "... (%d more arguments)", argc - ceargc + 1));
         } else {
             if (clientCommandArgShouldBeRedacted(c, j)) {
                 ce->argv[j] = shared.redacted;
                 /* Trim too long strings as well... */
-            } else if (argv[j]->type == OBJ_STRING && sdsEncodedObject(argv[j]) &&
-                       sdslen(objectGetVal(argv[j])) > COMMANDLOG_ENTRY_MAX_STRING) {
+            } else if (argv[j]->type == OBJ_STRING && sdsEncodedObject(argv[j])
+                       && sdslen(objectGetVal(argv[j])) > COMMANDLOG_ENTRY_MAX_STRING) {
                 sds s = sdsnewlen(objectGetVal(argv[j]), COMMANDLOG_ENTRY_MAX_STRING);
 
-                s = sdscatprintf(s, "... (%lu more bytes)",
+                s = sdscatprintf(s,
+                                 "... (%lu more bytes)",
                                  (unsigned long)sdslen(objectGetVal(argv[j])) - COMMANDLOG_ENTRY_MAX_STRING);
                 ce->argv[j] = createObject(OBJ_STRING, s);
             } else if (argv[j]->refcount == OBJ_SHARED_REFCOUNT) {
@@ -103,17 +104,20 @@ void commandlogInit(void) {
  * This function will make sure to trim the command log accordingly to the
  * configured max length. */
 static void commandlogPushEntryIfNeeded(client *c, robj **argv, int argc, long long value, int type) {
-    if (server.commandlog[type].threshold < 0 || server.commandlog[type].max_len == 0) return; /* The corresponding commandlog disabled */
+    if (server.commandlog[type].threshold < 0 || server.commandlog[type].max_len == 0)
+        return; /* The corresponding commandlog disabled */
     if (value >= server.commandlog[type].threshold)
         listAddNodeHead(server.commandlog[type].entries, commandlogCreateEntry(c, argv, argc, value, type));
 
     /* Remove old entries if needed. */
-    while (listLength(server.commandlog[type].entries) > server.commandlog[type].max_len) listDelNode(server.commandlog[type].entries, listLast(server.commandlog[type].entries));
+    while (listLength(server.commandlog[type].entries) > server.commandlog[type].max_len)
+        listDelNode(server.commandlog[type].entries, listLast(server.commandlog[type].entries));
 }
 
 /* Remove all the entries from the current command log of the specified type. */
 static void commandlogReset(int type) {
-    while (listLength(server.commandlog[type].entries) > 0) listDelNode(server.commandlog[type].entries, listLast(server.commandlog[type].entries));
+    while (listLength(server.commandlog[type].entries) > 0)
+        listDelNode(server.commandlog[type].entries, listLast(server.commandlog[type].entries));
 }
 
 /* Reply command logs to client. */
@@ -198,8 +202,13 @@ void slowlogCommand(client *c) {
 
         if (c->argc == 3) {
             /* Consume count arg. */
-            if (getRangeLongFromObjectOrReply(c, c->argv[2], -1, LONG_MAX, &count,
-                                              "count should be greater than or equal to -1") != C_OK)
+            if (getRangeLongFromObjectOrReply(c,
+                                              c->argv[2],
+                                              -1,
+                                              LONG_MAX,
+                                              &count,
+                                              "count should be greater than or equal to -1")
+                != C_OK)
                 return;
 
             if (count == -1) {
@@ -256,8 +265,13 @@ void commandlogCommand(client *c) {
         long count;
 
         /* Consume count arg. */
-        if (getRangeLongFromObjectOrReply(c, c->argv[2], -1, LONG_MAX, &count,
-                                          "count should be greater than or equal to -1") != C_OK)
+        if (getRangeLongFromObjectOrReply(c,
+                                          c->argv[2],
+                                          -1,
+                                          LONG_MAX,
+                                          &count,
+                                          "count should be greater than or equal to -1")
+            != C_OK)
             return;
 
         if ((type = commandlogGetTypeOrReply(c, c->argv[3])) == -1) return;

@@ -77,8 +77,14 @@ void PingReceiver(ValkeyModuleCtx *ctx,
                   uint8_t type,
                   const unsigned char *payload,
                   uint32_t len) {
-    ValkeyModule_Log(ctx, "notice", "PING (type %d) RECEIVED from %.*s: '%.*s'", type, VALKEYMODULE_NODE_ID_LEN,
-                     sender_id, (int)len, payload);
+    ValkeyModule_Log(ctx,
+                     "notice",
+                     "PING (type %d) RECEIVED from %.*s: '%.*s'",
+                     type,
+                     VALKEYMODULE_NODE_ID_LEN,
+                     sender_id,
+                     (int)len,
+                     payload);
     ValkeyModule_SendClusterMessage(ctx, NULL, MSGTYPE_PONG, "Ohi!", 4);
     ValkeyModuleCallReply *reply = ValkeyModule_Call(ctx, "INCR", "c", "pings_received");
     ValkeyModule_FreeCallReply(reply);
@@ -90,8 +96,14 @@ void PongReceiver(ValkeyModuleCtx *ctx,
                   uint8_t type,
                   const unsigned char *payload,
                   uint32_t len) {
-    ValkeyModule_Log(ctx, "notice", "PONG (type %d) RECEIVED from %.*s: '%.*s'", type, VALKEYMODULE_NODE_ID_LEN,
-                     sender_id, (int)len, payload);
+    ValkeyModule_Log(ctx,
+                     "notice",
+                     "PONG (type %d) RECEIVED from %.*s: '%.*s'",
+                     type,
+                     VALKEYMODULE_NODE_ID_LEN,
+                     sender_id,
+                     (int)len,
+                     payload);
 }
 
 /* This function must be present on each module. It is used in order to
@@ -102,12 +114,12 @@ int ValkeyModule_OnLoad(ValkeyModuleCtx *ctx, ValkeyModuleString **argv, int arg
 
     if (ValkeyModule_Init(ctx, "hellocluster", 1, VALKEYMODULE_APIVER_1) == VALKEYMODULE_ERR) return VALKEYMODULE_ERR;
 
-    if (ValkeyModule_CreateCommand(ctx, "hellocluster.pingall", PingallCommand_ValkeyCommand, "readonly", 0, 0, 0) ==
-        VALKEYMODULE_ERR)
+    if (ValkeyModule_CreateCommand(ctx, "hellocluster.pingall", PingallCommand_ValkeyCommand, "readonly", 0, 0, 0)
+        == VALKEYMODULE_ERR)
         return VALKEYMODULE_ERR;
 
-    if (ValkeyModule_CreateCommand(ctx, "hellocluster.list", ListCommand_ValkeyCommand, "readonly", 0, 0, 0) ==
-        VALKEYMODULE_ERR)
+    if (ValkeyModule_CreateCommand(ctx, "hellocluster.list", ListCommand_ValkeyCommand, "readonly", 0, 0, 0)
+        == VALKEYMODULE_ERR)
         return VALKEYMODULE_ERR;
 
     /* Disable Cluster sharding and redirections. This way every node

@@ -165,16 +165,16 @@ int ValkeyModule_OnLoad(ValkeyModuleCtx *ctx, ValkeyModuleString **argv, int arg
     if (ValkeyModule_CreateCommand(ctx, "helloacl.reset", ResetCommand_ValkeyCommand, "", 0, 0, 0) == VALKEYMODULE_ERR)
         return VALKEYMODULE_ERR;
 
-    if (ValkeyModule_CreateCommand(ctx, "helloacl.revoke", RevokeCommand_ValkeyCommand, "", 0, 0, 0) ==
-        VALKEYMODULE_ERR)
+    if (ValkeyModule_CreateCommand(ctx, "helloacl.revoke", RevokeCommand_ValkeyCommand, "", 0, 0, 0)
+        == VALKEYMODULE_ERR)
         return VALKEYMODULE_ERR;
 
-    if (ValkeyModule_CreateCommand(ctx, "helloacl.authglobal", AuthGlobalCommand_ValkeyCommand, "no-auth", 0, 0, 0) ==
-        VALKEYMODULE_ERR)
+    if (ValkeyModule_CreateCommand(ctx, "helloacl.authglobal", AuthGlobalCommand_ValkeyCommand, "no-auth", 0, 0, 0)
+        == VALKEYMODULE_ERR)
         return VALKEYMODULE_ERR;
 
-    if (ValkeyModule_CreateCommand(ctx, "helloacl.authasync", AuthAsyncCommand_ValkeyCommand, "no-auth", 0, 0, 0) ==
-        VALKEYMODULE_ERR)
+    if (ValkeyModule_CreateCommand(ctx, "helloacl.authasync", AuthAsyncCommand_ValkeyCommand, "no-auth", 0, 0, 0)
+        == VALKEYMODULE_ERR)
         return VALKEYMODULE_ERR;
 
     global = ValkeyModule_CreateModuleUser("global");

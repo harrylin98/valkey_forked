@@ -262,10 +262,8 @@ int blockedClientMayTimeout(client *c) {
         return moduleBlockedClientMayTimeout(c);
     }
 
-    if (c->bstate->btype == BLOCKED_LIST ||
-        c->bstate->btype == BLOCKED_ZSET ||
-        c->bstate->btype == BLOCKED_STREAM ||
-        c->bstate->btype == BLOCKED_WAIT) {
+    if (c->bstate->btype == BLOCKED_LIST || c->bstate->btype == BLOCKED_ZSET || c->bstate->btype == BLOCKED_STREAM
+        || c->bstate->btype == BLOCKED_WAIT) {
         return 1;
     }
     return 0;
@@ -339,20 +337,25 @@ void disconnectOrRedirectAllBlockedClients(void) {
             if (c->bstate->btype == BLOCKED_POSTPONE) continue;
 
             if (server.cluster_enabled) {
-                if (clusterRedirectBlockedClientIfNeeded(c))
-                    unblockClientOnError(c, NULL);
+                if (clusterRedirectBlockedClientIfNeeded(c)) unblockClientOnError(c, NULL);
             } else {
                 /* if the client is read-only and blocked by a read command, we do not unblock it */
                 if (c->flag.readonly && !(c->lastcmd->flags & CMD_WRITE)) continue;
-                if (clientSupportStandAloneRedirect(c) && (c->bstate->btype == BLOCKED_LIST || c->bstate->btype == BLOCKED_ZSET ||
-                                                           c->bstate->btype == BLOCKED_STREAM || c->bstate->btype == BLOCKED_MODULE)) {
+                if (clientSupportStandAloneRedirect(c)
+                    && (c->bstate->btype == BLOCKED_LIST || c->bstate->btype == BLOCKED_ZSET
+                        || c->bstate->btype == BLOCKED_STREAM || c->bstate->btype == BLOCKED_MODULE)) {
                     if (c->bstate->btype == BLOCKED_MODULE && !moduleClientIsBlockedOnKeys(c)) continue;
                     /* Client has redirect capability and blocked on keys */
-                    addReplyErrorSds(c, sdscatprintf(sdsempty(), "-REDIRECT %s:%d", server.primary_host, server.primary_port));
+                    addReplyErrorSds(c,
+                                     sdscatprintf(sdsempty(),
+                                                  "-REDIRECT %s:%d",
+                                                  server.primary_host,
+                                                  server.primary_port));
                     unblockClientOnError(c, NULL);
                 } else {
-                    unblockClientOnError(c, "-UNBLOCKED force unblock from blocking operation, "
-                                            "instance state changed (master -> replica?)");
+                    unblockClientOnError(c,
+                                         "-UNBLOCKED force unblock from blocking operation, "
+                                         "instance state changed (master -> replica?)");
                     c->flag.close_after_reply = 1;
                 }
             }
@@ -645,8 +648,8 @@ static void handleClientsBlockedOnKey(readyList *rl) {
              *    module is trying to accomplish right now.
              * 3. In case of XREADGROUP call we will want to unblock on any change in object type
              *    or in case the key was deleted, since the group is no longer valid. */
-            if ((o != NULL && (receiver->bstate->btype == getBlockedTypeByType(o->type))) ||
-                (o != NULL && (receiver->bstate->btype == BLOCKED_MODULE)) || (receiver->bstate->unblock_on_nokey)) {
+            if ((o != NULL && (receiver->bstate->btype == getBlockedTypeByType(o->type)))
+                || (o != NULL && (receiver->bstate->btype == BLOCKED_MODULE)) || (receiver->bstate->unblock_on_nokey)) {
                 if (receiver->bstate->btype != BLOCKED_MODULE)
                     unblockClientOnKey(receiver, rl->key);
                 else
@@ -705,8 +708,8 @@ static void unblockClientOnKey(client *c, robj *key) {
 
     /* Only in case of blocking API calls, we might be blocked on several keys.
        however we should force unblock the entire blocking keys */
-    serverAssert(c->bstate->btype == BLOCKED_STREAM || c->bstate->btype == BLOCKED_LIST ||
-                 c->bstate->btype == BLOCKED_ZSET);
+    serverAssert(c->bstate->btype == BLOCKED_STREAM || c->bstate->btype == BLOCKED_LIST
+                 || c->bstate->btype == BLOCKED_ZSET);
 
     /* We need to unblock the client before calling processCommandAndResetClient
      * because it checks the CLIENT_BLOCKED flag */
@@ -758,7 +761,9 @@ static void moduleUnblockClientOnKey(client *c, robj *key) {
     elapsedStart(&replyTimer);
 
     if (moduleTryServeClientBlockedOnKey(c, key)) {
-        updateStatsOnUnblock(c, 0, elapsedUs(replyTimer),
+        updateStatsOnUnblock(c,
+                             0,
+                             elapsedUs(replyTimer),
                              ((server.stat_total_error_replies != prev_error_replies) ? ERROR_COMMAND_FAILED : 0));
         moduleUnblockClient(c);
     }

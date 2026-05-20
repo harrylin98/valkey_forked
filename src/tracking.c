@@ -122,12 +122,16 @@ int checkPrefixCollisionsOrReply(client *c, robj **prefixes, size_t numprefix) {
             raxStart(&ri, c->pubsub_data->client_tracking_prefixes);
             raxSeek(&ri, "^", NULL, 0);
             while (raxNext(&ri)) {
-                if (stringCheckPrefix(ri.key, ri.key_len, objectGetVal(prefixes[i]), sdslen(objectGetVal(prefixes[i])))) {
+                if (stringCheckPrefix(ri.key,
+                                      ri.key_len,
+                                      objectGetVal(prefixes[i]),
+                                      sdslen(objectGetVal(prefixes[i])))) {
                     sds collision = sdsnewlen(ri.key, ri.key_len);
                     addReplyErrorFormat(c,
                                         "Prefix '%s' overlaps with an existing prefix '%s'. "
                                         "Prefixes for a single client must not overlap.",
-                                        (unsigned char *)objectGetVal(prefixes[i]), (unsigned char *)collision);
+                                        (unsigned char *)objectGetVal(prefixes[i]),
+                                        (unsigned char *)collision);
                     sdsfree(collision);
                     raxStop(&ri);
                     return 0;
@@ -137,12 +141,15 @@ int checkPrefixCollisionsOrReply(client *c, robj **prefixes, size_t numprefix) {
         }
         /* Check input has no overlap with itself. */
         for (size_t j = i + 1; j < numprefix; j++) {
-            if (stringCheckPrefix(objectGetVal(prefixes[i]), sdslen(objectGetVal(prefixes[i])), objectGetVal(prefixes[j]),
+            if (stringCheckPrefix(objectGetVal(prefixes[i]),
+                                  sdslen(objectGetVal(prefixes[i])),
+                                  objectGetVal(prefixes[j]),
                                   sdslen(objectGetVal(prefixes[j])))) {
                 addReplyErrorFormat(c,
                                     "Prefix '%s' overlaps with another provided prefix '%s'. "
                                     "Prefixes for a single client must not overlap.",
-                                    (unsigned char *)objectGetVal(prefixes[i]), (unsigned char *)objectGetVal(prefixes[j]));
+                                    (unsigned char *)objectGetVal(prefixes[i]),
+                                    (unsigned char *)objectGetVal(prefixes[j]));
                 return 0;
             }
         }
@@ -442,8 +449,10 @@ void trackingHandlePendingKeyInvalidations(void) {
             if (key != NULL) {
                 sendTrackingMessage(server.current_client, (char *)objectGetVal(key), sdslen(objectGetVal(key)), 0);
             } else {
-                sendTrackingMessage(server.current_client, objectGetVal(shared.null[server.current_client->resp]),
-                                    sdslen(objectGetVal(shared.null[server.current_client->resp])), 1);
+                sendTrackingMessage(server.current_client,
+                                    objectGetVal(shared.null[server.current_client->resp]),
+                                    sdslen(objectGetVal(shared.null[server.current_client->resp])),
+                                    1);
             }
         }
         if (key != NULL) decrRefCount(key);
@@ -479,7 +488,10 @@ void trackingInvalidateKeysOnFlush(int async) {
                     /* We use a special NULL to indicate that we should send null */
                     listAddNodeTail(server.tracking_pending_keys, NULL);
                 } else {
-                    sendTrackingMessage(c, objectGetVal(shared.null[c->resp]), sdslen(objectGetVal(shared.null[c->resp])), 1);
+                    sendTrackingMessage(c,
+                                        objectGetVal(shared.null[c->resp]),
+                                        sdslen(objectGetVal(shared.null[c->resp])),
+                                        1);
                 }
             }
         }

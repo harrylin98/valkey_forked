@@ -111,8 +111,7 @@ static void logMessage(LogLevel level, const char *format, ...) {
     struct tm *tm = localtime(&now);
 
     /* Print timestamp prefix directly */
-    fprintf(output, "[%02d:%02d:%02d] [%s] ",
-            tm->tm_hour, tm->tm_min, tm->tm_sec, level_strs[level]);
+    fprintf(output, "[%02d:%02d:%02d] [%s] ", tm->tm_hour, tm->tm_min, tm->tm_sec, level_strs[level]);
 
     /* Print the main message directly */
     va_list args;
@@ -178,8 +177,7 @@ static void printErrors(int tid, ErrorList *list) {
     logMessage(LOG_ERROR, "[Thread %d] Total errors: %d", tid, list->total_errors);
 
     if (list->total_errors > MAX_ERRORS) {
-        logMessage(LOG_ERROR, "[Thread %d] Showing last %lu errors:",
-                   tid, listLength(list->errors));
+        logMessage(LOG_ERROR, "[Thread %d] Showing last %lu errors:", tid, listLength(list->errors));
     }
 
     listIter *iter = listGetIterator(list->errors, AL_START_HEAD);
@@ -214,21 +212,11 @@ typedef enum {
 
 static void incrCounter(CounterType type) {
     switch (type) {
-    case COUNTER_COMMANDS_SENT:
-        atomic_fetch_add(&global_commands_sent, 1);
-        break;
-    case COUNTER_SUCCESS_REPLIES:
-        atomic_fetch_add(&global_success_replies, 1);
-        break;
-    case COUNTER_ERROR_REPLIES:
-        atomic_fetch_add(&global_err_replies, 1);
-        break;
-    case COUNTER_MALFORMED_REPLIES:
-        atomic_fetch_add(&global_malformed_replies, 1);
-        break;
-    case COUNTER_TOTAL_ERRORS:
-        atomic_fetch_add(&global_total_errors, 1);
-        break;
+    case COUNTER_COMMANDS_SENT: atomic_fetch_add(&global_commands_sent, 1); break;
+    case COUNTER_SUCCESS_REPLIES: atomic_fetch_add(&global_success_replies, 1); break;
+    case COUNTER_ERROR_REPLIES: atomic_fetch_add(&global_err_replies, 1); break;
+    case COUNTER_MALFORMED_REPLIES: atomic_fetch_add(&global_malformed_replies, 1); break;
+    case COUNTER_TOTAL_ERRORS: atomic_fetch_add(&global_total_errors, 1); break;
     }
 }
 
@@ -252,7 +240,8 @@ static void *progressReporterThread(void *arg) {
         /* Report progress */
         if (current_time - last_report_time >= 1) {
             printf("\rProgress: %d/%d commands (%.1f%%), %.1f rps",
-                   current_commands, total_commands_num,
+                   current_commands,
+                   total_commands_num,
                    total_commands_num > 0 ? (current_commands * 100.0) / total_commands_num : 0,
                    commands_per_sec);
             fflush(stdout);
@@ -312,9 +301,8 @@ static void cleanupErrorList(ErrorList *l) {
 }
 
 static int isServerDisconnected(valkeyContext *ctx) {
-    return (ctx->err == VALKEY_ERR_EOF ||
-            (ctx->err == VALKEY_ERR_IO &&
-             (errno == ECONNRESET || errno == EPIPE || errno == ENOTCONN)));
+    return (ctx->err == VALKEY_ERR_EOF
+            || (ctx->err == VALKEY_ERR_IO && (errno == ECONNRESET || errno == EPIPE || errno == ENOTCONN)));
 }
 
 /* Connect to a Valkey server with optional TLS support
@@ -382,8 +370,12 @@ static valkeyContext *reconnectWithBackoff(const char *host, int port, cliSSLcon
     int attempts = 0;
     valkeyContext *ctx = NULL;
 
-    logMessage(LOG_DEBUG, "[Thread %d] Attempting to reconnect to %s:%d%s with backoff...",
-               thread_id, host, port, ssl_config ? " (TLS)" : "");
+    logMessage(LOG_DEBUG,
+               "[Thread %d] Attempting to reconnect to %s:%d%s with backoff...",
+               thread_id,
+               host,
+               port,
+               ssl_config ? " (TLS)" : "");
 
     while (attempts < RECONNECT_MAX_ATTEMPTS) {
         ctx = connectToServer(host, port, ssl_config);
@@ -394,8 +386,11 @@ static valkeyContext *reconnectWithBackoff(const char *host, int port, cliSSLcon
 
         /* Exponential backoff */
         int delay = RECONNECT_BASE_DELAY_MS * (1 << attempts);
-        logMessage(LOG_INFO, "[Thread %d] Reconnection attempt %d failed, retrying in %d ms...",
-                   thread_id, attempts + 1, delay);
+        logMessage(LOG_INFO,
+                   "[Thread %d] Reconnection attempt %d failed, retrying in %d ms...",
+                   thread_id,
+                   attempts + 1,
+                   delay);
         usleep(delay * 1000);
         attempts++;
     }
@@ -445,8 +440,10 @@ static void handleMalformedReply(valkeyContext *ctx, FuzzerCommand *cmd) {
         fprintf(stderr, "\nNo malformed reply data available in context\n");
     }
 
-    logMessage(LOG_ERROR, "[Thread %d] ABORTING ALL THREADS due to malformed reply (pthread_id: %lu)",
-               thread_id, (unsigned long)pthread_self());
+    logMessage(LOG_ERROR,
+               "[Thread %d] ABORTING ALL THREADS due to malformed reply (pthread_id: %lu)",
+               thread_id,
+               (unsigned long)pthread_self());
 
     /* Set global abort flag to stop all threads */
     global_abort_all_threads = 1;
@@ -460,11 +457,16 @@ static void handleCommandTimeout(FuzzerCommand *cmd, time_t start_time) {
     time_t current_time = time(NULL);
     double elapsed_time = difftime(current_time, start_time);
 
-    logMessage(LOG_ERROR, "[Thread %d] TIMEOUT: Command timed out after %.1f seconds (max %d seconds) - Command: ",
-               thread_id, elapsed_time, COMMAND_TIMEOUT_SEC);
+    logMessage(LOG_ERROR,
+               "[Thread %d] TIMEOUT: Command timed out after %.1f seconds (max %d seconds) - Command: ",
+               thread_id,
+               elapsed_time,
+               COMMAND_TIMEOUT_SEC);
     logMessage(LOG_ERROR, "Command: %s", printCommand(cmd));
-    logMessage(LOG_ERROR, "[Thread %d] ABORTING THREAD due to timeout (pthread_id: %lu)",
-               thread_id, (unsigned long)pthread_self());
+    logMessage(LOG_ERROR,
+               "[Thread %d] ABORTING THREAD due to timeout (pthread_id: %lu)",
+               thread_id,
+               (unsigned long)pthread_self());
 }
 
 /* Helper function to handle command errors and update counters */
@@ -483,8 +485,7 @@ static CommandResult handleCommandError(valkeyContext *ctx, FuzzerCommand *cmd, 
     } else {
         sds cmd_str = formatCommandString(cmd);
         char error_msg[512];
-        snprintf(error_msg, sizeof(error_msg), "Error getting reply: %s (errno: %d)",
-                 ctx->errstr, errno);
+        snprintf(error_msg, sizeof(error_msg), "Error getting reply: %s (errno: %d)", ctx->errstr, errno);
         addError(thread_error_list, error_msg, cmd_str);
         incrCounter(COUNTER_TOTAL_ERRORS);
         sdsfree(cmd_str);
@@ -507,17 +508,10 @@ static void logReplyDebug(const char *command, valkeyReply *reply) {
             logMessage(LOG_DEBUG, "%s: -> (empty)", command);
         }
         break;
-    case VALKEY_REPLY_ARRAY:
-        logMessage(LOG_DEBUG, "%s: -> (array of %zu elements)", command, reply->elements);
-        break;
-    case VALKEY_REPLY_INTEGER:
-        logMessage(LOG_DEBUG, "%s: -> %lld", command, reply->integer);
-        break;
-    case VALKEY_REPLY_NIL:
-        logMessage(LOG_DEBUG, "%s: -> (nil)", command);
-        break;
-    default:
-        logMessage(LOG_DEBUG, "%s: -> (unknown reply type)", command);
+    case VALKEY_REPLY_ARRAY: logMessage(LOG_DEBUG, "%s: -> (array of %zu elements)", command, reply->elements); break;
+    case VALKEY_REPLY_INTEGER: logMessage(LOG_DEBUG, "%s: -> %lld", command, reply->integer); break;
+    case VALKEY_REPLY_NIL: logMessage(LOG_DEBUG, "%s: -> (nil)", command); break;
+    default: logMessage(LOG_DEBUG, "%s: -> (unknown reply type)", command);
     }
 }
 
@@ -651,8 +645,7 @@ static void printFinalStatistics(void) {
     logMessage(LOG_INFO, "Error replies: %d", final_errors);
     logMessage(LOG_INFO, "Malformed replies: %d", final_malformed);
     logMessage(LOG_INFO, "Total errors: %d", final_total_errors);
-    logMessage(LOG_INFO, "Success rate: %.2f%%",
-               final_commands > 0 ? (final_success * 100.0) / final_commands : 0);
+    logMessage(LOG_INFO, "Success rate: %.2f%%", final_commands > 0 ? (final_success * 100.0) / final_commands : 0);
 
     if (final_total_errors > 0 && current_log_level < LOG_DEBUG) {
         logMessage(LOG_INFO, "To see full error details, run with --fuzz-loglevel debug");
@@ -670,7 +663,10 @@ static int runClients(const char *host, int port, int commands_num, int clients_
     }
 
     printf("Running fuzzer with %d clients, %d commands per client (%d total commands)%s\n",
-           clients_num, commands_per_client, commands_num, ssl_config ? " (TLS)" : "");
+           clients_num,
+           commands_per_client,
+           commands_num,
+           ssl_config ? " (TLS)" : "");
 
     /* Start progress reporting for all threads combined */
     startProgressReporting(commands_num);
@@ -717,8 +713,7 @@ static int runClients(const char *host, int port, int commands_num, int clients_
 
     stopProgressReporting();
 
-    logMessage(LOG_INFO, "All client threads completed. %d succeeded, %d failed.",
-               clients_num - failed, failed);
+    logMessage(LOG_INFO, "All client threads completed. %d succeeded, %d failed.", clients_num - failed, failed);
 
     free(threads);
     free(thread_data);
@@ -728,7 +723,15 @@ static int runClients(const char *host, int port, int commands_num, int clients_
 
 /* Run fuzzer clients with specified parameters
  * This function is called by valkey-benchmark when fuzz mode is enabled */
-int runFuzzerClients(const char *host, int port, int commands_num, int clients_num, int cluster_mode, int num_keys, cliSSLconfig *ssl_config, const char *log_level, int fuzz_flags) {
+int runFuzzerClients(const char *host,
+                     int port,
+                     int commands_num,
+                     int clients_num,
+                     int cluster_mode,
+                     int num_keys,
+                     cliSSLconfig *ssl_config,
+                     const char *log_level,
+                     int fuzz_flags) {
     /* Set log level from parameter */
     if (log_level) {
         if (strcmp(log_level, "none") == 0) {
@@ -746,8 +749,7 @@ int runFuzzerClients(const char *host, int port, int commands_num, int clients_n
     }
 
     if (clients_num > MAX_CLIENTS_NUM) {
-        logMessage(LOG_ERROR, "Too many parallel clients requested (%d). Maximum is %d.",
-                   clients_num, MAX_CLIENTS_NUM);
+        logMessage(LOG_ERROR, "Too many parallel clients requested (%d). Maximum is %d.", clients_num, MAX_CLIENTS_NUM);
         return 1;
     }
 

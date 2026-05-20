@@ -141,11 +141,7 @@ typedef struct ValkeyModuleIO {
 
 /* Macro to initialize an IO context. Note that the 'ver' field is populated
  * inside rdb.c according to the version of the value to load. */
-static inline void moduleInitIOContext(ValkeyModuleIO *iovar,
-                                       moduleType *mtype,
-                                       rio *rioptr,
-                                       robj *keyptr,
-                                       int db) {
+static inline void moduleInitIOContext(ValkeyModuleIO *iovar, moduleType *mtype, rio *rioptr, robj *keyptr, int db) {
     iovar->rio = rioptr;
     iovar->type = mtype;
     iovar->bytes = 0;
@@ -175,8 +171,7 @@ static inline void moduleInitDigestContext(ValkeyModuleDigest *mdvar) {
 }
 
 void moduleEnqueueLoadModule(sds path, sds *argv, int argc);
-sds moduleLoadQueueEntryToLoadmoduleOptionStr(ValkeyModule *module,
-                                              const char *config_option_str);
+sds moduleLoadQueueEntryToLoadmoduleOptionStr(ValkeyModule *module, const char *config_option_str);
 ValkeyModuleCtx *moduleAllocateContext(void);
 void moduleScriptingEngineInitContext(ValkeyModuleCtx *out_ctx,
                                       ValkeyModule *module,

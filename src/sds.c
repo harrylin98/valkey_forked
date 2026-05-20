@@ -476,8 +476,8 @@ void sdsIncrLen(sds s, ssize_t incr) {
     }
     case SDS_TYPE_32: {
         SDS_HDR_VAR(32, s);
-        assert((incr >= 0 && sh->alloc - sh->len >= (unsigned int)incr) ||
-               (incr < 0 && sh->len >= (unsigned int)(-incr)));
+        assert((incr >= 0 && sh->alloc - sh->len >= (unsigned int)incr)
+               || (incr < 0 && sh->len >= (unsigned int)(-incr)));
         len = (sh->len += incr);
         break;
     }
@@ -960,9 +960,7 @@ sds sdscatrepr(sds s, const char *p, size_t len) {
             case '\t': s = sdscatlen(s, "\\t", 2); break;
             case '\a': s = sdscatlen(s, "\\a", 2); break;
             case '\b': s = sdscatlen(s, "\\b", 2); break;
-            default:
-                s = sdscatprintf(s, "\\x%02x", (unsigned char)*p);
-                break;
+            default: s = sdscatprintf(s, "\\x%02x", (unsigned char)*p); break;
             }
             p++;
             len--;
@@ -983,8 +981,8 @@ int sdsneedsrepr(const_sds s) {
     const char *p = s;
 
     while (len--) {
-        if (*p == '\\' || *p == '"' || *p == '\n' || *p == '\r' || *p == '\t' || *p == '\a' || *p == '\b' ||
-            !isprint(*p) || isspace(*p))
+        if (*p == '\\' || *p == '"' || *p == '\n' || *p == '\r' || *p == '\t' || *p == '\a' || *p == '\b'
+            || !isprint(*p) || isspace(*p))
             return 1;
         p++;
     }
@@ -1057,7 +1055,8 @@ static int sdsparsearg(const char *arg, const char *end, unsigned int *len, char
             if (!*p) {
                 /* unterminated quotes */
                 return 0;
-            } else if (!isPtrExceedingEnd(p, 4, end) && (*p == '\\' && *(p + 1) == 'x' && is_hex_digit(*(p + 2)) && is_hex_digit(*(p + 3)))) {
+            } else if (!isPtrExceedingEnd(p, 4, end)
+                       && (*p == '\\' && *(p + 1) == 'x' && is_hex_digit(*(p + 2)) && is_hex_digit(*(p + 3)))) {
                 new_char = (hex_digit_to_int(*(p + 2)) * 16) + hex_digit_to_int(*(p + 3));
                 p += 4;
             } else if (!isPtrExceedingEnd(p, 2, end) && (*p == '\\' && *(p + 1))) {

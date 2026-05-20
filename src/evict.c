@@ -219,8 +219,8 @@ size_t freeMemoryGetNotCountedMemory(void) {
         /* We use list structure to manage replication buffer blocks, so backlog
          * also occupies some extra memory, we can't know exact blocks numbers,
          * we only get approximate size according to per block size. */
-        size_t extra_approx_size =
-            (server.repl_backlog_size / PROTO_REPLY_CHUNK_BYTES + 1) * (sizeof(replBufBlock) + sizeof(listNode));
+        size_t extra_approx_size = (server.repl_backlog_size / PROTO_REPLY_CHUNK_BYTES + 1)
+                                   * (sizeof(replBufBlock) + sizeof(listNode));
         size_t counted_mem = server.repl_backlog_size + extra_approx_size;
         if (server.repl_buffer_mem > counted_mem) {
             overhead += (server.repl_buffer_mem - counted_mem);
@@ -444,8 +444,8 @@ int performEvictions(void) {
         serverDb *db;
         robj *valkey;
 
-        if (server.maxmemory_policy & (MAXMEMORY_FLAG_LRU | MAXMEMORY_FLAG_LFU) ||
-            server.maxmemory_policy == MAXMEMORY_VOLATILE_TTL) {
+        if (server.maxmemory_policy & (MAXMEMORY_FLAG_LRU | MAXMEMORY_FLAG_LFU)
+            || server.maxmemory_policy == MAXMEMORY_VOLATILE_TTL) {
             struct evictionPoolEntry *pool = EvictionPoolLRU;
             while (bestkey == NULL) {
                 unsigned long total_keys = 0;
@@ -516,8 +516,8 @@ int performEvictions(void) {
         }
 
         /* volatile-random and allkeys-random policy */
-        else if (server.maxmemory_policy == MAXMEMORY_ALLKEYS_RANDOM ||
-                 server.maxmemory_policy == MAXMEMORY_VOLATILE_RANDOM) {
+        else if (server.maxmemory_policy == MAXMEMORY_ALLKEYS_RANDOM
+                 || server.maxmemory_policy == MAXMEMORY_VOLATILE_RANDOM) {
             /* When evicting a random key, we try to evict a key for
              * each DB, so we use the static 'next_db' variable to
              * incrementally visit all DBs. */

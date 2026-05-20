@@ -369,7 +369,9 @@ int pubsubUnsubscribeChannel(client *c, robj *channel, int notify, pubsubtype ty
 void pubsubShardUnsubscribeAllChannelsInSlot(unsigned int slot) {
     if (!kvstoreHashtableSize(server.pubsubshard_channels, slot)) return;
 
-    kvstoreHashtableIterator *kvs_di = kvstoreGetHashtableIterator(server.pubsubshard_channels, slot, HASHTABLE_ITER_SAFE);
+    kvstoreHashtableIterator *kvs_di = kvstoreGetHashtableIterator(server.pubsubshard_channels,
+                                                                   slot,
+                                                                   HASHTABLE_ITER_SAFE);
     void *element;
     while (kvstoreHashtableIteratorNext(kvs_di, &element)) {
         hashtable *clients = element;
@@ -542,8 +544,11 @@ int pubsubPublishMessageInternal(robj *channel, robj *message, pubsubtype type) 
         while ((de = dictNext(di)) != NULL) {
             robj *pattern = dictGetKey(de);
             hashtable *clients = dictGetVal(de);
-            if (!stringmatchlen((char *)objectGetVal(pattern), sdslen(objectGetVal(pattern)),
-                                (char *)objectGetVal(channel), sdslen(objectGetVal(channel)), 0))
+            if (!stringmatchlen((char *)objectGetVal(pattern),
+                                sdslen(objectGetVal(pattern)),
+                                (char *)objectGetVal(channel),
+                                sdslen(objectGetVal(channel)),
+                                0))
                 continue;
 
             hashtableIterator iter;
@@ -791,6 +796,6 @@ size_t pubsubMemOverhead(client *c) {
 }
 
 int pubsubTotalSubscriptions(void) {
-    return dictSize(server.pubsub_patterns) + kvstoreSize(server.pubsub_channels) +
-           kvstoreSize(server.pubsubshard_channels);
+    return dictSize(server.pubsub_patterns) + kvstoreSize(server.pubsub_channels)
+           + kvstoreSize(server.pubsubshard_channels);
 }

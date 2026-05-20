@@ -9,9 +9,7 @@
 #define FFC_DEBUG 0
 #include "ffc.h"
 
-const ffc_parse_options valkey_strtod_options = {
-    FFC_PRESET_GENERAL | FFC_FORMAT_FLAG_ALLOW_LEADING_PLUS,
-    '.'};
+const ffc_parse_options valkey_strtod_options = {FFC_PRESET_GENERAL | FFC_FORMAT_FLAG_ALLOW_LEADING_PLUS, '.'};
 
 /**
  * Converts a null-terminated string to a double-precision floating-point number.

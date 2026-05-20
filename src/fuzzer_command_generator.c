@@ -126,36 +126,35 @@ static int mapFlagType(const sds flagStr) {
     static const struct {
         int flag;
         const char *name;
-    } flagNames[] = {
-        {CMD_WRITE, "write"},
-        {CMD_READONLY, "readonly"},
-        {CMD_DENYOOM, "denyoom"},
-        {CMD_MODULE, "module"},
-        {CMD_ADMIN, "admin"},
-        {CMD_PUBSUB, "pubsub"},
-        {CMD_NOSCRIPT, "noscript"},
-        {CMD_BLOCKING, "blocking"},
-        {CMD_LOADING, "loading"},
-        {CMD_STALE, "stale"},
-        {CMD_SKIP_MONITOR, "skip_monitor"},
-        {CMD_SKIP_COMMANDLOG, "skip_commandlog"},
-        {CMD_ASKING, "asking"},
-        {CMD_FAST, "fast"},
-        {CMD_NO_AUTH, "no_auth"},
-        {CMD_MAY_REPLICATE, "may_replicate"},
-        {CMD_SENTINEL, "sentinel"},
-        {CMD_ONLY_SENTINEL, "only_sentinel"},
-        {CMD_NO_MANDATORY_KEYS, "no_mandatory_keys"},
-        {CMD_PROTECTED, "protected"},
-        {CMD_MODULE_GETKEYS, "module_getkeys"},
-        {CMD_MODULE_NO_CLUSTER, "module_no_cluster"},
-        {CMD_NO_ASYNC_LOADING, "no_async_loading"},
-        {CMD_NO_MULTI, "no_multi"},
-        {CMD_MOVABLE_KEYS, "movablekeys"},
-        {CMD_ALLOW_BUSY, "allow_busy"},
-        {CMD_MODULE_GETCHANNELS, "module_getchannels"},
-        {CMD_TOUCHES_ARBITRARY_KEYS, "touches_arbitrary_keys"},
-        {0, NULL}};
+    } flagNames[] = {{CMD_WRITE, "write"},
+                     {CMD_READONLY, "readonly"},
+                     {CMD_DENYOOM, "denyoom"},
+                     {CMD_MODULE, "module"},
+                     {CMD_ADMIN, "admin"},
+                     {CMD_PUBSUB, "pubsub"},
+                     {CMD_NOSCRIPT, "noscript"},
+                     {CMD_BLOCKING, "blocking"},
+                     {CMD_LOADING, "loading"},
+                     {CMD_STALE, "stale"},
+                     {CMD_SKIP_MONITOR, "skip_monitor"},
+                     {CMD_SKIP_COMMANDLOG, "skip_commandlog"},
+                     {CMD_ASKING, "asking"},
+                     {CMD_FAST, "fast"},
+                     {CMD_NO_AUTH, "no_auth"},
+                     {CMD_MAY_REPLICATE, "may_replicate"},
+                     {CMD_SENTINEL, "sentinel"},
+                     {CMD_ONLY_SENTINEL, "only_sentinel"},
+                     {CMD_NO_MANDATORY_KEYS, "no_mandatory_keys"},
+                     {CMD_PROTECTED, "protected"},
+                     {CMD_MODULE_GETKEYS, "module_getkeys"},
+                     {CMD_MODULE_NO_CLUSTER, "module_no_cluster"},
+                     {CMD_NO_ASYNC_LOADING, "no_async_loading"},
+                     {CMD_NO_MULTI, "no_multi"},
+                     {CMD_MOVABLE_KEYS, "movablekeys"},
+                     {CMD_ALLOW_BUSY, "allow_busy"},
+                     {CMD_MODULE_GETCHANNELS, "module_getchannels"},
+                     {CMD_TOUCHES_ARBITRARY_KEYS, "touches_arbitrary_keys"},
+                     {0, NULL}};
 
     /* Compile-time check: Ensure we have entries for all flags up to bit 28.
      * If this fails, new CMD_* flags were added to server.h - update flagNames array above. */
@@ -178,17 +177,16 @@ static int mapArgumentType(const sds typeStr) {
     static const struct {
         const char *name;
         int type;
-    } typeMap[] = {
-        {"string", ARG_TYPE_STRING},
-        {"integer", ARG_TYPE_INTEGER},
-        {"double", ARG_TYPE_DOUBLE},
-        {"key", ARG_TYPE_KEY},
-        {"pattern", ARG_TYPE_PATTERN},
-        {"unix-time", ARG_TYPE_UNIX_TIME},
-        {"pure-token", ARG_TYPE_PURE_TOKEN},
-        {"oneof", ARG_TYPE_ONEOF},
-        {"block", ARG_TYPE_BLOCK},
-        {NULL, 0}};
+    } typeMap[] = {{"string", ARG_TYPE_STRING},
+                   {"integer", ARG_TYPE_INTEGER},
+                   {"double", ARG_TYPE_DOUBLE},
+                   {"key", ARG_TYPE_KEY},
+                   {"pattern", ARG_TYPE_PATTERN},
+                   {"unix-time", ARG_TYPE_UNIX_TIME},
+                   {"pure-token", ARG_TYPE_PURE_TOKEN},
+                   {"oneof", ARG_TYPE_ONEOF},
+                   {"block", ARG_TYPE_BLOCK},
+                   {NULL, 0}};
 
     for (int i = 0; typeMap[i].name != NULL; i++) {
         if (!strcmp(typeStr, typeMap[i].name)) {
@@ -204,20 +202,19 @@ static CommandGroupType mapGroupType(const sds groupStr) {
     static const struct {
         const char *name;
         CommandGroupType group;
-    } groupMap[] = {
-        {"string", CMD_GROUP_STRING},
-        {"list", CMD_GROUP_LIST},
-        {"set", CMD_GROUP_SET},
-        {"hash", CMD_GROUP_HASH},
-        {"sorted-set", CMD_GROUP_SORTED_SET},
-        {"sorted_set", CMD_GROUP_SORTED_SET},
-        {"stream", CMD_GROUP_STREAM},
-        {"hyperloglog", CMD_GROUP_HYPERLOGLOG},
-        {"geo", CMD_GROUP_GEO},
-        {"bitmap", CMD_GROUP_BITMAP},
-        {"pubsub", CMD_GROUP_PUBSUB},
-        {"generic", CMD_GROUP_GENERIC},
-        {NULL, CMD_GROUP_UNKNOWN}};
+    } groupMap[] = {{"string", CMD_GROUP_STRING},
+                    {"list", CMD_GROUP_LIST},
+                    {"set", CMD_GROUP_SET},
+                    {"hash", CMD_GROUP_HASH},
+                    {"sorted-set", CMD_GROUP_SORTED_SET},
+                    {"sorted_set", CMD_GROUP_SORTED_SET},
+                    {"stream", CMD_GROUP_STREAM},
+                    {"hyperloglog", CMD_GROUP_HYPERLOGLOG},
+                    {"geo", CMD_GROUP_GEO},
+                    {"bitmap", CMD_GROUP_BITMAP},
+                    {"pubsub", CMD_GROUP_PUBSUB},
+                    {"generic", CMD_GROUP_GENERIC},
+                    {NULL, CMD_GROUP_UNKNOWN}};
 
     if (!groupStr) return CMD_GROUP_UNKNOWN;
 
@@ -319,22 +316,21 @@ dict *initConfigDict(void) {
 }
 
 static int isEnumConfig(const char *key) {
-    static const char *enumConfigs[] = {
-        "repl-diskless-load",
-        "loglevel",
-        "maxmemory-policy",
-        "appendfsync",
-        "oom-score-adj",
-        "acl-pubsub-default",
-        "sanitize-dump-payload",
-        "cluster-preferred-endpoint-type",
-        "propagation-error-behavior",
-        "shutdown-on-sigint",
-        "shutdown-on-sigterm",
-        "log-format",
-        "log-timestamp-format",
-        "rdb-version-check",
-        NULL};
+    static const char *enumConfigs[] = {"repl-diskless-load",
+                                        "loglevel",
+                                        "maxmemory-policy",
+                                        "appendfsync",
+                                        "oom-score-adj",
+                                        "acl-pubsub-default",
+                                        "sanitize-dump-payload",
+                                        "cluster-preferred-endpoint-type",
+                                        "propagation-error-behavior",
+                                        "shutdown-on-sigint",
+                                        "shutdown-on-sigterm",
+                                        "log-format",
+                                        "log-timestamp-format",
+                                        "rdb-version-check",
+                                        NULL};
 
     for (int i = 0; enumConfigs[i] != NULL; i++) {
         if (strcasecmp(key, enumConfigs[i]) == 0) {
@@ -345,16 +341,15 @@ static int isEnumConfig(const char *key) {
 }
 
 static int isSpecialConfig(const char *key) {
-    static const char *specialConfigs[] = {
-        "dir",
-        "save",
-        "client-output-buffer-limit",
-        "oom-score-adj-values",
-        "notify-keyspace-events",
-        "bind",
-        "rdma-bind",
-        "latency-tracking-info-percentiles",
-        NULL};
+    static const char *specialConfigs[] = {"dir",
+                                           "save",
+                                           "client-output-buffer-limit",
+                                           "oom-score-adj-values",
+                                           "notify-keyspace-events",
+                                           "bind",
+                                           "rdma-bind",
+                                           "latency-tracking-info-percentiles",
+                                           NULL};
 
     for (int i = 0; specialConfigs[i] != NULL; i++) {
         if (strcasecmp(key, specialConfigs[i]) == 0) {
@@ -383,19 +378,18 @@ ConfigValueType determineConfigValueType(const char *value) {
 
 /* Check if a config should be filtered out to keep the server testable */
 static int shouldFilterConfig(const char *key) {
-    static const char *filteredConfigs[] = {
-        "port",
-        "cluster-port",
-        "requirepass",
-        "bind",
-        "rdma-bind",
-        "min-replicas-to-write",
-        "replicaof",
-        "dir",
-        "save",
-        "shutdown-on-sigint",
-        "shutdown-on-sigterm",
-        NULL};
+    static const char *filteredConfigs[] = {"port",
+                                            "cluster-port",
+                                            "requirepass",
+                                            "bind",
+                                            "rdma-bind",
+                                            "min-replicas-to-write",
+                                            "replicaof",
+                                            "dir",
+                                            "save",
+                                            "shutdown-on-sigint",
+                                            "shutdown-on-sigterm",
+                                            NULL};
 
     if (!key) return 0;
 
@@ -432,9 +426,14 @@ void addConfigEntry(dict *configDict, const char *key, const char *value) {
 
 void generateRandomEnumValue(FuzzerCommand *cmd, ConfigEntry *entry, const char *config_name) {
     if (strcasecmp(config_name, "maxmemory-policy") == 0) {
-        static const char *policies[] = {"volatile-lru", "volatile-lfu", "volatile-random",
-                                         "volatile-ttl", "allkeys-lru", "allkeys-lfu",
-                                         "allkeys-random", "noeviction"};
+        static const char *policies[] = {"volatile-lru",
+                                         "volatile-lfu",
+                                         "volatile-random",
+                                         "volatile-ttl",
+                                         "allkeys-lru",
+                                         "allkeys-lfu",
+                                         "allkeys-random",
+                                         "noeviction"};
         appendArg(cmd, sdsnew(policies[rand() % 8]));
     } else if (strcasecmp(config_name, "loglevel") == 0) {
         static const char *levels[] = {"debug", "verbose", "notice", "warning", "nothing"};
@@ -485,8 +484,7 @@ void generateRandomSpecialValue(FuzzerCommand *cmd, ConfigEntry *entry, const ch
         long hard_limit = (1 + rand() % 10) * 1024 * 1024; /* 1MB to 10MB */
         long soft_limit = hard_limit / 2;                  /* Half of hard limit */
         int soft_seconds = 10 + rand() % 50;               /* 10 to 60 seconds */
-        appendArg(cmd, sdscatprintf(sdsempty(), "%s %ld %ld %d",
-                                    class, hard_limit, soft_limit, soft_seconds));
+        appendArg(cmd, sdscatprintf(sdsempty(), "%s %ld %ld %d", class, hard_limit, soft_limit, soft_seconds));
     } else if (strcasecmp(config_name, "notify-keyspace-events") == 0) {
         /* Generate valid keyspace notification configuration */
         static const char *options[] = {
@@ -524,9 +522,8 @@ void generateRandomSpecialValue(FuzzerCommand *cmd, ConfigEntry *entry, const ch
             }
         }
         appendArg(cmd, percentiles);
-    } else if (strcasecmp(config_name, "rdma-bind") == 0 ||
-               strcasecmp(config_name, "bind") == 0 ||
-               strcasecmp(config_name, "dir") == 0) {
+    } else if (strcasecmp(config_name, "rdma-bind") == 0 || strcasecmp(config_name, "bind") == 0
+               || strcasecmp(config_name, "dir") == 0) {
         /* For these configs, use the current value as we don't want to change them */
         appendArg(cmd, sdsnew(entry->value));
     } else {
@@ -566,12 +563,8 @@ void generateRandomConfigValue(FuzzerCommand *cmd, ConfigEntry *entry) {
         appendArg(cmd, sdscatprintf(sdsempty(), "%ld", min + rand() % (max - min + 1)));
         return;
     }
-    case CONFIG_TYPE_ENUM:
-        generateRandomEnumValue(cmd, entry, config_name);
-        return;
-    case CONFIG_TYPE_SPECIAL:
-        generateRandomSpecialValue(cmd, entry, config_name);
-        return;
+    case CONFIG_TYPE_ENUM: generateRandomEnumValue(cmd, entry, config_name); return;
+    case CONFIG_TYPE_SPECIAL: generateRandomSpecialValue(cmd, entry, config_name); return;
     case CONFIG_TYPE_STRING:
     default:
         /* For strings, generate a random string */
@@ -625,8 +618,8 @@ dict *parseConfigOutput(valkeyReply *reply) {
     for (size_t i = 0; i < reply->elements; i += 2) {
         if (i + 1 >= reply->elements) break;
 
-        if (reply->element[i]->type != VALKEY_REPLY_STRING ||
-            reply->element[i + 1]->type != VALKEY_REPLY_STRING) continue;
+        if (reply->element[i]->type != VALKEY_REPLY_STRING || reply->element[i + 1]->type != VALKEY_REPLY_STRING)
+            continue;
 
         const char *key = reply->element[i]->str;
         const char *value = reply->element[i + 1]->str;
@@ -645,11 +638,10 @@ static void processArgumentFlags(CommandArgument *cmdArg, valkeyReply *flags) {
     static const struct {
         const char *name;
         int flag;
-    } flagMap[] = {
-        {"optional", CMD_ARG_OPTIONAL},
-        {"multiple", CMD_ARG_MULTIPLE},
-        {"multiple_token", CMD_ARG_MULTIPLE_TOKEN},
-        {NULL, 0}};
+    } flagMap[] = {{"optional", CMD_ARG_OPTIONAL},
+                   {"multiple", CMD_ARG_MULTIPLE},
+                   {"multiple_token", CMD_ARG_MULTIPLE_TOKEN},
+                   {NULL, 0}};
 
     for (size_t j = 0; j < flags->elements; j++) {
         char *flagStr = flags->element[j]->str;
@@ -894,8 +886,15 @@ static void initializeCommandRegistry(valkeyReply *commandTable) {
     fuzz_ctx->commandRegistrySize = countTotalCommands(commandTable);
     fuzz_ctx->commandRegistry = zmalloc(sizeof(CommandEntry) * fuzz_ctx->commandRegistrySize);
     /* Commands allowed in subscribe mode */
-    const char *allowedCommands[] = {
-        "SUBSCRIBE", "PSUBSCRIBE", "SSUBSCRIBE", "UNSUBSCRIBE", "PUNSUBSCRIBE", "SUNSUBSCRIBE", "PING", "QUIT", "RESET"};
+    const char *allowedCommands[] = {"SUBSCRIBE",
+                                     "PSUBSCRIBE",
+                                     "SSUBSCRIBE",
+                                     "UNSUBSCRIBE",
+                                     "PUNSUBSCRIBE",
+                                     "SUNSUBSCRIBE",
+                                     "PING",
+                                     "QUIT",
+                                     "RESET"};
     int numAllowedCommands = sizeof(allowedCommands) / sizeof(allowedCommands[0]);
     /* Allocate memory for the subscribe command registry */
     fuzz_ctx->subscribeCommandRegistry = zmalloc(sizeof(CommandEntry) * numAllowedCommands);
@@ -907,8 +906,8 @@ static void initializeCommandRegistry(valkeyReply *commandTable) {
         assert(commandTable->element[i]->type == VALKEY_REPLY_STRING);
         sds cmdName = commandTable->element[i]->str;
 
-        assert(commandTable->element[i + 1]->type == VALKEY_REPLY_MAP ||
-               commandTable->element[i + 1]->type == VALKEY_REPLY_ARRAY);
+        assert(commandTable->element[i + 1]->type == VALKEY_REPLY_MAP
+               || commandTable->element[i + 1]->type == VALKEY_REPLY_ARRAY);
         valkeyReply *cmdSpecs = commandTable->element[i + 1];
         next = initializeCommandEntry(cmdName, NULL, next, cmdSpecs);
     }
@@ -970,30 +969,10 @@ static void freeCommandEntry(CommandEntry *command) {
 /* Check if a command should be filtered out from the command registry as they may make the server untestable */
 static int shouldFilterCommand(const sds cmdName, int fuzz_flags) {
     static const char *filteredCommands[] = {
-        "SHUTDOWN",
-        "FLUSHDB",
-        "FLUSHALL",
-        "REPLICAOF",
-        "SLAVEOF",
-        "FAILOVER",
-        "CLUSTER REPLICATE",
-        "SCRIPT DEBUG",
-        "CLIENT PAUSE",
-        "SAVE",
-        "BGSAVE",
-        "BGREWRITEAOF",
-        "SYNC",
-        "PSYNC",
-        "MULTI",
-        "EXEC",
-        "EVAL",
-        "CLIENT REPLY",
-        "MONITOR",
-        "DEBUG",
-        "PFSELFTEST",
-        "CONFIG REWRITE",
-        "ACL LOAD",
-        NULL};
+        "SHUTDOWN",       "FLUSHDB",      "FLUSHALL", "REPLICAOF",    "SLAVEOF",      "FAILOVER", "CLUSTER REPLICATE",
+        "SCRIPT DEBUG",   "CLIENT PAUSE", "SAVE",     "BGSAVE",       "BGREWRITEAOF", "SYNC",     "PSYNC",
+        "MULTI",          "EXEC",         "EVAL",     "CLIENT REPLY", "MONITOR",      "DEBUG",    "PFSELFTEST",
+        "CONFIG REWRITE", "ACL LOAD",     NULL};
 
     if (!cmdName) return 0;
 
@@ -1027,7 +1006,8 @@ static void removeInvalidCommands(int fuzz_flags) {
             /* First delete from subscribeCommandRegistry */
             for (size_t j = 0; j < fuzz_ctx->subscribeCommandRegistrySize; j++) {
                 if (strcasecmp(fuzz_ctx->subscribeCommandRegistry[j].fullname, cmd->fullname) == 0) {
-                    fuzz_ctx->subscribeCommandRegistry[j] = fuzz_ctx->subscribeCommandRegistry[fuzz_ctx->subscribeCommandRegistrySize - 1];
+                    fuzz_ctx->subscribeCommandRegistry[j] =
+                        fuzz_ctx->subscribeCommandRegistry[fuzz_ctx->subscribeCommandRegistrySize - 1];
                     fuzz_ctx->subscribeCommandRegistrySize--;
                     break;
                 }
@@ -1067,24 +1047,21 @@ int initFuzzer(valkeyContext *ctx, int num_keys, int cluster_mode, int fuzz_flag
     /* Execute COMMAND DOCS to get command documentation */
     commandDocs = valkeyCommand(ctx, "COMMAND DOCS");
     if (!commandDocs || commandDocs->type == VALKEY_REPLY_ERROR) {
-        printf("Error: Failed to execute COMMAND DOCS. %s\n",
-               commandDocs ? commandDocs->str : "No reply received");
+        printf("Error: Failed to execute COMMAND DOCS. %s\n", commandDocs ? commandDocs->str : "No reply received");
         goto cleanup;
     }
 
     /* Execute COMMAND to get command flags */
     commandInfo = valkeyCommand(ctx, "COMMAND");
     if (!commandInfo || commandInfo->type == VALKEY_REPLY_ERROR) {
-        printf("Error: Failed to execute COMMAND. %s\n",
-               commandInfo ? commandInfo->str : "No reply received");
+        printf("Error: Failed to execute COMMAND. %s\n", commandInfo ? commandInfo->str : "No reply received");
         goto cleanup;
     }
 
     /* Execute CONFIG GET * to get configuration parameters */
     configOutput = valkeyCommand(ctx, "CONFIG GET *");
     if (!configOutput || configOutput->type == VALKEY_REPLY_ERROR) {
-        printf("Error: Failed to execute CONFIG GET *. %s\n",
-               configOutput ? configOutput->str : "No reply received");
+        printf("Error: Failed to execute CONFIG GET *. %s\n", configOutput ? configOutput->str : "No reply received");
         goto cleanup;
     }
 
@@ -1150,45 +1127,24 @@ static void addKeysToCommand(FuzzerCommand *cmd, int numkeys, CommandArgument *a
         CommandGroupType groupType = arg->parent->group;
 
         switch (groupType) {
-        case CMD_GROUP_STRING:
-            keyPrefix = "string";
-            break;
-        case CMD_GROUP_LIST:
-            keyPrefix = "list";
-            break;
-        case CMD_GROUP_SET:
-            keyPrefix = "set";
-            break;
-        case CMD_GROUP_HASH:
-            keyPrefix = "hash";
-            break;
-        case CMD_GROUP_SORTED_SET:
-            keyPrefix = "zset";
-            break;
-        case CMD_GROUP_STREAM:
-            keyPrefix = "stream";
-            break;
-        case CMD_GROUP_HYPERLOGLOG:
-            keyPrefix = "hll";
-            break;
-        case CMD_GROUP_GEO:
-            keyPrefix = "geo";
-            break;
-        case CMD_GROUP_BITMAP:
-            keyPrefix = "bitmap";
-            break;
-        case CMD_GROUP_PUBSUB:
-            keyPrefix = "channel";
-            break;
+        case CMD_GROUP_STRING: keyPrefix = "string"; break;
+        case CMD_GROUP_LIST: keyPrefix = "list"; break;
+        case CMD_GROUP_SET: keyPrefix = "set"; break;
+        case CMD_GROUP_HASH: keyPrefix = "hash"; break;
+        case CMD_GROUP_SORTED_SET: keyPrefix = "zset"; break;
+        case CMD_GROUP_STREAM: keyPrefix = "stream"; break;
+        case CMD_GROUP_HYPERLOGLOG: keyPrefix = "hll"; break;
+        case CMD_GROUP_GEO: keyPrefix = "geo"; break;
+        case CMD_GROUP_BITMAP: keyPrefix = "bitmap"; break;
+        case CMD_GROUP_PUBSUB: keyPrefix = "channel"; break;
         case CMD_GROUP_GENERIC: {
             /* For generic commands, randomly select one of the key types */
-            static const char *keyTypes[] = {
-                "string", "list", "set", "hash", "zset", "stream", "hll", "geo", "bitmap", "key"};
+            static const char *keyTypes[] =
+                {"string", "list", "set", "hash", "zset", "stream", "hll", "geo", "bitmap", "key"};
             int randomTypeIndex = rand() % (sizeof(keyTypes) / sizeof(keyTypes[0]));
             keyPrefix = keyTypes[randomTypeIndex];
         } break;
-        default:
-            break;
+        default: break;
         }
     }
 
@@ -1243,12 +1199,10 @@ static void generateLexRangeValue(FuzzerCommand *cmd, const char *argName) {
         appendArg(cmd, sdsnew("+"));
     } else if (choice < 6) {
         /* Inclusive range with a string value */
-        appendArg(cmd, sdscatprintf(sdsempty(), "[%s%d",
-                                    strcmp(argName, "min") == 0 ? "a" : "z", rand() % 100));
+        appendArg(cmd, sdscatprintf(sdsempty(), "[%s%d", strcmp(argName, "min") == 0 ? "a" : "z", rand() % 100));
     } else {
         /* Exclusive range with a string value */
-        appendArg(cmd, sdscatprintf(sdsempty(), "(%s%d",
-                                    strcmp(argName, "min") == 0 ? "a" : "z", rand() % 100));
+        appendArg(cmd, sdscatprintf(sdsempty(), "(%s%d", strcmp(argName, "min") == 0 ? "a" : "z", rand() % 100));
     }
 }
 
@@ -1258,7 +1212,8 @@ static void generateAclRule(FuzzerCommand *cmd) {
     int rule_type = rand() % 10;
 
     switch (rule_type) {
-    case 0: /* User state rules */
+    case 0:
+        /* User state rules */
         appendArg(cmd, sdsnew(rand() % 2 ? "on" : "off"));
         break;
     case 1: /* Password rules */
@@ -1305,15 +1260,14 @@ static void generateAclRule(FuzzerCommand *cmd) {
         break;
     case 5: /* Specific command allow rules */
     {
-        static const char *commands[] = {"get", "set", "del", "exists", "ping",
-                                         "info", "keys", "scan", "type", "ttl"};
+        static const char *commands[] = {"get", "set", "del", "exists", "ping", "info", "keys", "scan", "type", "ttl"};
         int cmd_idx = rand() % (sizeof(commands) / sizeof(commands[0]));
         appendArg(cmd, sdscatprintf(sdsempty(), "+%s", commands[cmd_idx]));
     } break;
     case 6: /* Specific command deny rules */
     {
-        static const char *commands[] = {"flushdb", "flushall", "shutdown", "debug",
-                                         "config", "eval", "script", "client"};
+        static const char *commands[] =
+            {"flushdb", "flushall", "shutdown", "debug", "config", "eval", "script", "client"};
         int cmd_idx = rand() % (sizeof(commands) / sizeof(commands[0]));
         appendArg(cmd, sdscatprintf(sdsempty(), "-%s", commands[cmd_idx]));
     } break;
@@ -1328,7 +1282,8 @@ static void generateAclRule(FuzzerCommand *cmd) {
             appendArg(cmd, sdscatprintf(sdsempty(), "&channel:%d:*", rand() % 5));
         }
     } break;
-    case 8: /* Reset rules */
+    case 8:
+        /* Reset rules */
         appendArg(cmd, sdsnew("reset"));
         break;
     default: /* Simple combination rules */
@@ -1349,12 +1304,10 @@ static sds generateRandomAddress(void) {
     /* 50% chance to generate IPv4, 50% chance to generate hostname */
     if (rand() % 2 == 0) {
         /* Generate IPv4 address */
-        return sdscatprintf(sdsempty(), "192.168.%d.%d:%d",
-                            rand() % 256, rand() % 256, port);
+        return sdscatprintf(sdsempty(), "192.168.%d.%d:%d", rand() % 256, rand() % 256, port);
     } else {
         /* Generate hostname */
-        return sdscatprintf(sdsempty(), "host-%d.example.com:%d",
-                            rand() % 10, port);
+        return sdscatprintf(sdsempty(), "host-%d.example.com:%d", rand() % 10, port);
     }
 }
 
@@ -1423,15 +1376,12 @@ static void generateStringArgValue(FuzzerCommand *cmd, const char *argName, Comm
         appendArg(cmd, value);
     } else if (strcmp(argName, "serialized-value") == 0) {
         /* Generate a serialized value for restore command */
-        static const char *serialized_values[] = {
-            /* String value value-534 with proper RDB format */
-            "\x00\x09value-534\x0b\x00\xc9\x88\x82M\xfb{\x0e1",
-            /* Integer value 537 with proper RDB format */
-            "\x00\xc1\x19\x02\x0b\x00\x03Uh3\xba\xdc\xde\xac"};
+        static const char *serialized_values[] = {/* String value value-534 with proper RDB format */
+                                                  "\x00\x09value-534\x0b\x00\xc9\x88\x82M\xfb{\x0e1",
+                                                  /* Integer value 537 with proper RDB format */
+                                                  "\x00\xc1\x19\x02\x0b\x00\x03Uh3\xba\xdc\xde\xac"};
         appendArg(cmd, sdscatprintf(sdsempty(), "\"%s\"", serialized_values[rand() % 2]));
-    } else if (strcmp(argName, "member") == 0 ||
-               strcmp(argName, "member1") == 0 ||
-               strcmp(argName, "member2") == 0) {
+    } else if (strcmp(argName, "member") == 0 || strcmp(argName, "member1") == 0 || strcmp(argName, "member2") == 0) {
         appendArg(cmd, sdscatprintf(sdsempty(), "member:%d", rand() % 50));
     } else if (strcmp(argName, "host") == 0) {
         appendArg(cmd, sdscatprintf(sdsempty(), "host-%d.example.com", rand() % 5));
@@ -1485,32 +1435,34 @@ static void generateStringArgValue(FuzzerCommand *cmd, const char *argName, Comm
     } else if (strcmp(argName, "function") == 0) {
         appendArg(cmd, sdscatprintf(sdsempty(), "myfunc%d", rand() % 5));
     } else if (strcmp(argName, "function-code") == 0) {
-        appendArg(cmd, sdscatprintf(sdsempty(), "\"#!lua name=myfunc%d \nserver.register_function('test', function(keys, args) return args[1] end) \"", rand() % 5));
-    } else if (strcmp(argName, "library-name") == 0 || strcmp(argName, "library-name-pattern") == 0 ||
-               strcmp(argName, "lib-name") == 0 || strcmp(argName, "libname") == 0) {
+        appendArg(cmd,
+                  sdscatprintf(sdsempty(),
+                               "\"#!lua name=myfunc%d \nserver.register_function('test', function(keys, args) return "
+                               "args[1] end) \"",
+                               rand() % 5));
+    } else if (strcmp(argName, "library-name") == 0 || strcmp(argName, "library-name-pattern") == 0
+               || strcmp(argName, "lib-name") == 0 || strcmp(argName, "libname") == 0) {
         appendArg(cmd, sdscatprintf(sdsempty(), "lib%d", rand() % 5));
     } else if (strcmp(argName, "libver") == 0 || strcmp(argName, "lib-ver") == 0) {
         appendArg(cmd, sdscatprintf(sdsempty(), "%d.%d.%d", rand() % 10, rand() % 10, rand() % 10));
-    } else if (strcmp(argName, "node-id") == 0 || strcmp(argName, "nodename") == 0 ||
-               strcmp(argName, "importing") == 0 || strcmp(argName, "migrating") == 0 ||
-               strcmp(argName, "node") == 0) {
-        appendArg(cmd, sdscatprintf(sdsempty(), "%08x%08x%08x%08x%08x",
-                                    rand(), rand(), rand(), rand(), rand()));
+    } else if (strcmp(argName, "node-id") == 0 || strcmp(argName, "nodename") == 0 || strcmp(argName, "importing") == 0
+               || strcmp(argName, "migrating") == 0 || strcmp(argName, "node") == 0) {
+        appendArg(cmd, sdscatprintf(sdsempty(), "%08x%08x%08x%08x%08x", rand(), rand(), rand(), rand(), rand()));
     } else if (strcmp(argName, "encoding") == 0) {
         /* For BITFIELD command, encoding should be i<bits> or u<bits> format */
         static const char *signs[] = {"i", "u"};
         static const int bits[] = {1, 2, 4, 8, 16, 32, 64};
-        appendArg(cmd, sdscatprintf(sdsempty(), "%s%d", signs[rand() % 2], bits[rand() % (sizeof(bits) / sizeof(bits[0]))]));
+        appendArg(cmd,
+                  sdscatprintf(sdsempty(), "%s%d", signs[rand() % 2], bits[rand() % (sizeof(bits) / sizeof(bits[0]))]));
     } else if (strcmp(argName, "old-format") == 0) {
-        appendArg(cmd, sdscatprintf(sdsempty(), "192.168.%d.%d:%d", rand() % 256, rand() % 256, 6379 + (rand() % 1000)));
+        appendArg(cmd,
+                  sdscatprintf(sdsempty(), "192.168.%d.%d:%d", rand() % 256, rand() % 256, 6379 + (rand() % 1000)));
     } else if (strcmp(argName, "runid") == 0 || strcmp(argName, "replicationid") == 0) {
-        appendArg(cmd, sdscatprintf(sdsempty(), "%08x%08x%08x%08x%08x",
-                                    rand(), rand(), rand(), rand(), rand()));
+        appendArg(cmd, sdscatprintf(sdsempty(), "%08x%08x%08x%08x%08x", rand(), rand(), rand(), rand(), rand()));
     } else if (strcmp(argName, "sha1") == 0) {
-        appendArg(cmd, sdscatprintf(sdsempty(), "%08x%08x%08x%08x%08x",
-                                    rand(), rand(), rand(), rand(), rand()));
-    } else if (strcmp(argName, "last-id") == 0 || strcmp(argName, "lastid") == 0 ||
-               strcmp(argName, "max-deleted-id") == 0) {
+        appendArg(cmd, sdscatprintf(sdsempty(), "%08x%08x%08x%08x%08x", rand(), rand(), rand(), rand(), rand()));
+    } else if (strcmp(argName, "last-id") == 0 || strcmp(argName, "lastid") == 0
+               || strcmp(argName, "max-deleted-id") == 0) {
         appendArg(cmd, sdscatprintf(sdsempty(), "%d-%d", rand() % 1000, rand() % 1000));
     } else if (strcmp(argName, "min-idle-time") == 0) {
         appendArg(cmd, sdscatprintf(sdsempty(), "%d", rand() % 10000));
@@ -1519,12 +1471,20 @@ static void generateStringArgValue(FuzzerCommand *cmd, const char *argName, Comm
     } else if (strcmp(argName, "primary-name") == 0) {
         appendArg(cmd, sdscatprintf(sdsempty(), "primary-%d", rand() % 5));
     } else if (strcmp(argName, "category") == 0) {
-        static const char *categories[] = {"connection", "generic", "string", "list", "set",
-                                           "sorted_set", "hash", "pubsub", "transactions", "scripting"};
+        static const char *categories[] = {"connection",
+                                           "generic",
+                                           "string",
+                                           "list",
+                                           "set",
+                                           "sorted_set",
+                                           "hash",
+                                           "pubsub",
+                                           "transactions",
+                                           "scripting"};
         appendArg(cmd, sdsnew(categories[rand() % (sizeof(categories) / sizeof(categories[0]))]));
     } else if (strcmp(argName, "flags") == 0) {
-        static const char *client_flags[] = {"A", "b", "c", "d", "e", "i", "M", "N",
-                                             "O", "P", "r", "S", "u", "U", "x", "t", "T", "R", "B", "I"};
+        static const char *client_flags[] = {"A", "b", "c", "d", "e", "i", "M", "N", "O", "P",
+                                             "r", "S", "u", "U", "x", "t", "T", "R", "B", "I"};
         appendArg(cmd, sdsnew(client_flags[rand() % (sizeof(client_flags) / sizeof(client_flags[0]))]));
     } else if (strcmp(argName, "element") == 0) {
         appendArg(cmd, sdscatprintf(sdsempty(), "elem-%d", rand() % 30));
@@ -1689,10 +1649,10 @@ static CommandEntry *handlePubSubCommandSelection(void) {
     selectedCommand = &fuzz_ctx->subscribeCommandRegistry[randomIndex];
 
     /* Check if this command puts the client in unsubscribe mode */
-    if ((strcasecmp(selectedCommand->fullname, "UNSUBSCRIBE") == 0 && client_ctx->subscribe_type == 0) ||
-        (strcasecmp(selectedCommand->fullname, "PUNSUBSCRIBE") == 0 && client_ctx->subscribe_type == 1) ||
-        (strcasecmp(selectedCommand->fullname, "SUNSUBSCRIBE") == 0 && client_ctx->subscribe_type == 2) ||
-        (strcasecmp(selectedCommand->fullname, "RESET") == 0)) {
+    if ((strcasecmp(selectedCommand->fullname, "UNSUBSCRIBE") == 0 && client_ctx->subscribe_type == 0)
+        || (strcasecmp(selectedCommand->fullname, "PUNSUBSCRIBE") == 0 && client_ctx->subscribe_type == 1)
+        || (strcasecmp(selectedCommand->fullname, "SUNSUBSCRIBE") == 0 && client_ctx->subscribe_type == 2)
+        || (strcasecmp(selectedCommand->fullname, "RESET") == 0)) {
         client_ctx->in_subscribe_mode = 0;
         client_ctx->subscribe_type = 0;
     }
@@ -1740,7 +1700,8 @@ void generateSingleCmd(FuzzerCommand *cmd) {
     if (strstr(selectedCommand->fullname, " ")) {
         /* Add the command name */
         sds commandName = sdsnewlen(selectedCommand->fullname, strcspn(selectedCommand->fullname, " "));
-        sds subCommand = sdsnewlen(strchr(selectedCommand->fullname, ' ') + 1, strlen(selectedCommand->fullname) - strcspn(selectedCommand->fullname, " "));
+        sds subCommand = sdsnewlen(strchr(selectedCommand->fullname, ' ') + 1,
+                                   strlen(selectedCommand->fullname) - strcspn(selectedCommand->fullname, " "));
         appendArg(cmd, commandName);
         appendArg(cmd, subCommand);
     } else {
@@ -1820,8 +1781,7 @@ static sds createCorruptedArg(void) {
     {
         int len = rand() % 16 + 10;
         sds arg = sdsnewlen(NULL, len);
-        for (int k = 0; k < len - 1; k++)
-            ((char *)arg)[k] = rand() % 256;
+        for (int k = 0; k < len - 1; k++) ((char *)arg)[k] = rand() % 256;
         return arg;
     }
     case 1: /* Random Long string */
@@ -1831,9 +1791,11 @@ static sds createCorruptedArg(void) {
         memset(arg, 'A' + (rand() % 26), len - 1);
         return arg;
     }
-    case 2: /* Empty string */
+    case 2:
+        /* Empty string */
         return sdsnew("");
-    case 3: /* Special characters */
+    case 3:
+        /* Special characters */
         return sdsnew("\n\r\t\"\\'$%^&*(){}[]<>");
     case 4: /* Invalid number */
     default: {
@@ -1861,8 +1823,7 @@ static void removeArgument(FuzzerCommand *cmd) {
     sdsfree(cmd->argv[idx]);
 
     /* Shift remaining arguments */
-    for (int k = idx; k < cmd->argc - 1; k++)
-        cmd->argv[k] = cmd->argv[k + 1];
+    for (int k = idx; k < cmd->argc - 1; k++) cmd->argv[k] = cmd->argv[k + 1];
 
     cmd->argc--;
 }
@@ -1872,21 +1833,20 @@ static void addRandomArgument(FuzzerCommand *cmd) {
 
     sds new_arg = NULL;
     switch (rand() % 3) {
-    case 0: /* Random string */
+    case 0:
+        /* Random string */
         new_arg = sdsnew("random_value");
         break;
-    case 1: /* Random number */
+    case 1:
+        /* Random number */
         new_arg = sdsfromlonglong(rand() % 1000);
         break;
-    case 2:
-        new_arg = sdsnew("\n\r\t\"\\'$%^&*(){}[]<>");
-        break;
+    case 2: new_arg = sdsnew("\n\r\t\"\\'$%^&*(){}[]<>"); break;
     }
 
     /* Insert at random position */
     int pos = rand() % (cmd->argc + 1);
-    for (int k = cmd->argc; k > pos; k--)
-        cmd->argv[k] = cmd->argv[k - 1];
+    for (int k = cmd->argc; k > pos; k--) cmd->argv[k] = cmd->argv[k - 1];
 
     cmd->argv[pos] = new_arg;
     cmd->argc++;

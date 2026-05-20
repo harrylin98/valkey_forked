@@ -48,8 +48,10 @@
 
 #ifdef HAVE_DEFRAG
 
-typedef enum { DEFRAG_NOT_DONE = 0,
-               DEFRAG_DONE = 1 } doneStatus;
+typedef enum {
+    DEFRAG_NOT_DONE = 0,
+    DEFRAG_DONE = 1
+} doneStatus;
 
 /*
  * Defragmentation is performed in stages.  Each stage is serviced by a stage function
@@ -277,9 +279,7 @@ static void activeDefragZsetNode(void *privdata, void *entry_ref) {
          * when scores are equal, we MUST compare elements lexicographically to maintain correct skip list ordering.
          * Otherwise we might miss locating the entry. */
         zskiplistNode *next = x->level[i].forward;
-        while (next &&
-               (next->score < score ||
-                (next->score == score && sdscmp(zslGetNodeElement(next), ele) < 0))) {
+        while (next && (next->score < score || (next->score == score && sdscmp(zslGetNodeElement(next), ele) < 0))) {
             x = next;
             next = x->level[i].forward;
         }
@@ -341,8 +341,12 @@ static void activeDefragSdsDict(dict *d, int val_type) {
                       : val_type == DEFRAG_SDS_DICT_VAL_LUA_SCRIPT ? (dictDefragAllocFunction *)evalActiveDefragScript
                                                                    : NULL)};
     do {
-        cursor = hashtableScanDefrag(d, cursor, activeDefragDictCallback,
-                                     &defragfns, activeDefragAlloc, HASHTABLE_SCAN_EMIT_REF);
+        cursor = hashtableScanDefrag(d,
+                                     cursor,
+                                     activeDefragDictCallback,
+                                     &defragfns,
+                                     activeDefragAlloc,
+                                     HASHTABLE_SCAN_EMIT_REF);
     } while (cursor != 0);
 }
 
@@ -441,7 +445,12 @@ static void scanLaterZsetCallback(void *privdata, void *element_ref) {
 static void scanLaterZset(robj *ob, unsigned long *cursor) {
     serverAssert(ob->type == OBJ_ZSET && ob->encoding == OBJ_ENCODING_SKIPLIST);
     zset *zs = (zset *)objectGetVal(ob);
-    *cursor = hashtableScanDefrag(zs->ht, *cursor, scanLaterZsetCallback, zs->zsl, activeDefragAlloc, HASHTABLE_SCAN_EMIT_REF);
+    *cursor = hashtableScanDefrag(zs->ht,
+                                  *cursor,
+                                  scanLaterZsetCallback,
+                                  zs->zsl,
+                                  activeDefragAlloc,
+                                  HASHTABLE_SCAN_EMIT_REF);
 }
 
 /* Used as hashtable scan callback when all we need is to defrag the hashtable
@@ -455,7 +464,12 @@ static void scanHashtableCallbackCountScanned(void *privdata, void *elemref) {
 static void scanLaterSet(robj *ob, unsigned long *cursor) {
     serverAssert(ob->type == OBJ_SET && ob->encoding == OBJ_ENCODING_HASHTABLE);
     hashtable *ht = objectGetVal(ob);
-    *cursor = hashtableScanDefrag(ht, *cursor, activeDefragSdsHashtableCallback, NULL, activeDefragAlloc, HASHTABLE_SCAN_EMIT_REF);
+    *cursor = hashtableScanDefrag(ht,
+                                  *cursor,
+                                  activeDefragSdsHashtableCallback,
+                                  NULL,
+                                  activeDefragAlloc,
+                                  HASHTABLE_SCAN_EMIT_REF);
 }
 
 static void scanLaterHash(robj *ob, unsigned long *cursor) {
@@ -496,7 +510,12 @@ static void defragZsetSkiplist(robj *ob) {
     else {
         unsigned long cursor = 0;
         do {
-            cursor = hashtableScanDefrag(zs->ht, cursor, activeDefragZsetNode, zs->zsl, activeDefragAlloc, HASHTABLE_SCAN_EMIT_REF);
+            cursor = hashtableScanDefrag(zs->ht,
+                                         cursor,
+                                         activeDefragZsetNode,
+                                         zs->zsl,
+                                         activeDefragAlloc,
+                                         HASHTABLE_SCAN_EMIT_REF);
         } while (cursor != 0);
     }
 }
@@ -529,7 +548,12 @@ static void defragSet(robj *ob) {
     } else {
         unsigned long cursor = 0;
         do {
-            cursor = hashtableScanDefrag(ht, cursor, activeDefragSdsHashtableCallback, NULL, activeDefragAlloc, HASHTABLE_SCAN_EMIT_REF);
+            cursor = hashtableScanDefrag(ht,
+                                         cursor,
+                                         activeDefragSdsHashtableCallback,
+                                         NULL,
+                                         activeDefragAlloc,
+                                         HASHTABLE_SCAN_EMIT_REF);
         } while (cursor != 0);
     }
     /* defrag the hashtable struct and tables */
@@ -805,8 +829,7 @@ static void defragPubsubScanCallback(void *privdata, void *elemref) {
     }
 
     /* Try to defrag the dictionary of clients that is stored as the value part. */
-    if ((newclients = hashtableDefragTables(clients, activeDefragAlloc)))
-        *clients_ref = newclients;
+    if ((newclients = hashtableDefragTables(clients, activeDefragAlloc))) *clients_ref = newclients;
 
     server.stat_active_defrag_scanned++;
 }
@@ -873,8 +896,8 @@ static doneStatus defragLaterStep(monotime endtime, void *privdata) {
             listDelNode(defrag_later, head);
         }
 
-        if (++iterations > 16 || server.stat_active_defrag_hits > prev_defragged ||
-            server.stat_active_defrag_scanned - prev_scanned > 64) {
+        if (++iterations > 16 || server.stat_active_defrag_hits > prev_defragged
+            || server.stat_active_defrag_scanned - prev_scanned > 64) {
             if (getMonotonicUs() > endtime) break;
             iterations = 0;
             prev_defragged = server.stat_active_defrag_hits;
@@ -921,7 +944,8 @@ static doneStatus defragStageKvstoreHelper(monotime endtime,
     }
 
     while (true) {
-        if (++iterations > 16 || server.stat_active_defrag_hits > prev_defragged || server.stat_active_defrag_scanned - prev_scanned > 64) {
+        if (++iterations > 16 || server.stat_active_defrag_hits > prev_defragged
+            || server.stat_active_defrag_scanned - prev_scanned > 64) {
             if (getMonotonicUs() >= endtime) break;
             iterations = 0;
             prev_defragged = server.stat_active_defrag_hits;
@@ -946,8 +970,12 @@ static doneStatus defragStageKvstoreHelper(monotime endtime,
 
         // Whatever privdata's actual type, this function requires that it begins with kvstoreIterState.
         if (privdata) *(kvstoreIterState *)privdata = state;
-        state.cursor = kvstoreHashtableScanDefrag(kvs, state.slot, state.cursor,
-                                                  scan_fn, privdata, activeDefragAlloc,
+        state.cursor = kvstoreHashtableScanDefrag(kvs,
+                                                  state.slot,
+                                                  state.cursor,
+                                                  scan_fn,
+                                                  privdata,
+                                                  activeDefragAlloc,
                                                   HASHTABLE_SCAN_EMIT_REF);
     }
 
@@ -968,8 +996,7 @@ static doneStatus defragStageDbKeys(monotime endtime, void *target, void *privda
     }
     serverAssert(ctx.dbid == dbid);
 
-    return defragStageKvstoreHelper(endtime, db->keys,
-                                    dbKeysScanCallback, defragLaterStep, &ctx);
+    return defragStageKvstoreHelper(endtime, db->keys, dbKeysScanCallback, defragLaterStep, &ctx);
 }
 
 
@@ -978,8 +1005,7 @@ static doneStatus defragStageExpiresKvstore(monotime endtime, void *target, void
     UNUSED(privdata);
     int dbid = (uintptr_t)target;
     serverDb *db = server.db[dbid];
-    return defragStageKvstoreHelper(endtime, db->expires,
-                                    scanHashtableCallbackCountScanned, NULL, NULL);
+    return defragStageKvstoreHelper(endtime, db->expires, scanHashtableCallbackCountScanned, NULL, NULL);
 }
 
 // Target is a DBID
@@ -987,8 +1013,11 @@ static doneStatus defragStageKeysWithvolaItemsKvstore(monotime endtime, void *ta
     UNUSED(privdata);
     int dbid = (uintptr_t)target;
     serverDb *db = server.db[dbid];
-    return defragStageKvstoreHelper(endtime, db->keys_with_volatile_items,
-                                    scanHashtableCallbackCountScanned, NULL, NULL);
+    return defragStageKvstoreHelper(endtime,
+                                    db->keys_with_volatile_items,
+                                    scanHashtableCallbackCountScanned,
+                                    NULL,
+                                    NULL);
 }
 
 
@@ -997,8 +1026,7 @@ static doneStatus defragStagePubsubKvstore(monotime endtime, void *target, void 
     getClientChannelsFnWrapper *fnWrapper = privdata;
     defragPubSubCtx ctx;
     ctx.getPubSubChannels = fnWrapper->fn;
-    return defragStageKvstoreHelper(endtime, (kvstore *)target,
-                                    defragPubsubScanCallback, NULL, &ctx);
+    return defragStageKvstoreHelper(endtime, (kvstore *)target, defragPubsubScanCallback, NULL, &ctx);
 }
 
 
@@ -1068,9 +1096,12 @@ static void endDefragCycle(bool normal_termination) {
 
     size_t frag_bytes;
     float frag_pct = getAllocatorFragmentation(&frag_bytes);
-    serverLog(LL_VERBOSE, "Active defrag done in %dms, reallocated=%d, frag=%.0f%%, frag_bytes=%zu",
-              (int)elapsedMs(defrag.start_cycle), (int)(server.stat_active_defrag_hits - defrag.start_defrag_hits),
-              frag_pct, frag_bytes);
+    serverLog(LL_VERBOSE,
+              "Active defrag done in %dms, reallocated=%d, frag=%.0f%%, frag_bytes=%zu",
+              (int)elapsedMs(defrag.start_cycle),
+              (int)(server.stat_active_defrag_hits - defrag.start_defrag_hits),
+              frag_pct,
+              frag_bytes);
 
     server.stat_total_active_defrag_time += elapsedUs(server.stat_last_active_defrag_time);
     server.stat_last_active_defrag_time = 0;
@@ -1197,11 +1228,15 @@ static long long activeDefragTimeProc(struct aeEventLoop *eventLoop, long long i
             defrag.current_stage = listNodeValue(listFirst(defrag.remaining_stages));
             listDelNode(defrag.remaining_stages, listFirst(defrag.remaining_stages));
             // Initialize the stage with endtime==0
-            doneStatus status = defrag.current_stage->stage_fn(0, defrag.current_stage->target, defrag.current_stage->privdata);
+            doneStatus status = defrag.current_stage->stage_fn(0,
+                                                               defrag.current_stage->target,
+                                                               defrag.current_stage->privdata);
             serverAssert(status == DEFRAG_NOT_DONE); // Initialization should always return DEFRAG_NOT_DONE
         }
 
-        doneStatus status = defrag.current_stage->stage_fn(endtime, defrag.current_stage->target, defrag.current_stage->privdata);
+        doneStatus status = defrag.current_stage->stage_fn(endtime,
+                                                           defrag.current_stage->target,
+                                                           defrag.current_stage->privdata);
         if (status == DEFRAG_DONE) {
             zfree(defrag.current_stage);
             defrag.current_stage = NULL;
@@ -1292,14 +1327,16 @@ static void updateDefragCpuPercent(void) {
     size_t frag_bytes;
     float frag_pct = getAllocatorFragmentation(&frag_bytes);
     if (server.active_defrag_cpu_percent == 0) {
-        if (frag_pct < server.active_defrag_threshold_lower ||
-            frag_bytes < server.active_defrag_ignore_bytes) return;
+        if (frag_pct < server.active_defrag_threshold_lower || frag_bytes < server.active_defrag_ignore_bytes) return;
     }
 
     /* Calculate the adaptive aggressiveness of the defrag based on the current
      * fragmentation and configurations. */
-    int cpu_pct = INTERPOLATE(frag_pct, server.active_defrag_threshold_lower, server.active_defrag_threshold_upper,
-                              server.active_defrag_cpu_min, server.active_defrag_cpu_max);
+    int cpu_pct = INTERPOLATE(frag_pct,
+                              server.active_defrag_threshold_lower,
+                              server.active_defrag_threshold_upper,
+                              server.active_defrag_cpu_min,
+                              server.active_defrag_cpu_max);
     cpu_pct = LIMIT(cpu_pct, server.active_defrag_cpu_min, server.active_defrag_cpu_max);
 
     /* Normally we allow increasing the aggressiveness during a scan, but don't
@@ -1308,11 +1345,17 @@ static void updateDefragCpuPercent(void) {
     if (cpu_pct > server.active_defrag_cpu_percent || server.active_defrag_configuration_changed) {
         server.active_defrag_configuration_changed = 0;
         if (defragIsRunning()) {
-            serverLog(LL_VERBOSE, "Changing active defrag CPU, frag=%.0f%%, frag_bytes=%zu, cpu=%d%%",
-                      frag_pct, frag_bytes, cpu_pct);
+            serverLog(LL_VERBOSE,
+                      "Changing active defrag CPU, frag=%.0f%%, frag_bytes=%zu, cpu=%d%%",
+                      frag_pct,
+                      frag_bytes,
+                      cpu_pct);
         } else {
-            serverLog(LL_VERBOSE, "Starting active defrag, frag=%.0f%%, frag_bytes=%zu, cpu=%d%%",
-                      frag_pct, frag_bytes, cpu_pct);
+            serverLog(LL_VERBOSE,
+                      "Starting active defrag, frag=%.0f%%, frag_bytes=%zu, cpu=%d%%",
+                      frag_pct,
+                      frag_bytes,
+                      cpu_pct);
         }
         server.active_defrag_cpu_percent = cpu_pct;
     }

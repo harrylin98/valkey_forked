@@ -87,20 +87,17 @@ static inline unsigned long zslGetNodeSpanAtLevel(const zskiplistNode *x, int le
 
 static inline void zslSetNodeSpanAtLevel(zskiplistNode *x, int level, unsigned long span) {
     /* We use the level 0 span in order to hold the node height, so we avoid overriding it. */
-    if (level > 0)
-        x->level[level].span = span;
+    if (level > 0) x->level[level].span = span;
 }
 
 static inline void zslIncrNodeSpanAtLevel(zskiplistNode *x, int level, unsigned long incr) {
     /* We use the level 0 span in order to hold the node height, so we avoid overriding it. */
-    if (level > 0)
-        x->level[level].span += incr;
+    if (level > 0) x->level[level].span += incr;
 }
 
 static inline void zslDecrNodeSpanAtLevel(zskiplistNode *x, int level, unsigned long decr) {
     /* We use the level 0 span in order to hold the node height, so we avoid overriding it. */
-    if (level > 0)
-        x->level[level].span -= decr;
+    if (level > 0) x->level[level].span -= decr;
 }
 
 static inline unsigned long zslGetNodeHeight(const zskiplistNode *x) {
@@ -366,8 +363,8 @@ static zskiplistNode *zslUpdateScore(zskiplist *zsl, zskiplistNode *node, double
     /* If the node, after the score update, would be still exactly
      * at the same position, we can just update the score without
      * actually removing and re-inserting the element in the skiplist. */
-    if ((node->backward == NULL || node->backward->score < newscore) &&
-        (node->level[0].forward == NULL || node->level[0].forward->score > newscore)) {
+    if ((node->backward == NULL || node->backward->score < newscore)
+        && (node->level[0].forward == NULL || node->level[0].forward->score > newscore)) {
         node->score = newscore;
         return NULL;
     }
@@ -529,8 +526,7 @@ static unsigned long zslDeleteRangeByLex(zskiplist *zsl, zlexrangespec *range, h
 
     x = zslGetHeader(zsl);
     for (i = zslGetHeight(zsl) - 1; i >= 0; i--) {
-        while (x->level[i].forward &&
-               !zslLexValueGteMin(zslGetNodeElement(x->level[i].forward), range)) {
+        while (x->level[i].forward && !zslLexValueGteMin(zslGetNodeElement(x->level[i].forward), range)) {
             x = x->level[i].forward;
         }
         update[i] = x;
@@ -719,8 +715,8 @@ int zsetParseLexRange(robj *min, robj *max, zlexrangespec *spec) {
     if (min->encoding == OBJ_ENCODING_INT || max->encoding == OBJ_ENCODING_INT) return C_ERR;
 
     spec->min = spec->max = NULL;
-    if (zslParseLexRangeItem(min, &spec->min, &spec->minex) == C_ERR ||
-        zslParseLexRangeItem(max, &spec->max, &spec->maxex) == C_ERR) {
+    if (zslParseLexRangeItem(min, &spec->min, &spec->minex) == C_ERR
+        || zslParseLexRangeItem(max, &spec->max, &spec->maxex) == C_ERR) {
         zsetFreeLexRange(spec);
         return C_ERR;
     } else {
@@ -1294,8 +1290,8 @@ robj *zsetTypeCreate(size_t size_hint, size_t val_len_hint) {
 /* Check if the existing zset should be converted to another encoding based off the
  * the size hint. */
 void zsetTypeMaybeConvert(robj *zobj, size_t size_hint, size_t value_len_hint) {
-    if (zobj->encoding == OBJ_ENCODING_LISTPACK &&
-        (size_hint > server.zset_max_listpack_entries || value_len_hint > server.zset_max_listpack_value)) {
+    if (zobj->encoding == OBJ_ENCODING_LISTPACK
+        && (size_hint > server.zset_max_listpack_entries || value_len_hint > server.zset_max_listpack_value)) {
         zsetConvertAndExpand(zobj, OBJ_ENCODING_SKIPLIST, size_hint);
     }
 }
@@ -1389,8 +1385,8 @@ void zsetConvertToListpackIfNeeded(robj *zobj, size_t maxelelen, size_t totelele
     if (zobj->encoding == OBJ_ENCODING_LISTPACK) return;
     zset *zset = objectGetVal(zobj);
 
-    if (zslGetLength(zset->zsl) <= server.zset_max_listpack_entries &&
-        maxelelen <= server.zset_max_listpack_value && lpSafeToAdd(NULL, totelelen)) {
+    if (zslGetLength(zset->zsl) <= server.zset_max_listpack_entries && maxelelen <= server.zset_max_listpack_value
+        && lpSafeToAdd(NULL, totelelen)) {
         zsetConvert(zobj, OBJ_ENCODING_LISTPACK);
     }
 }
@@ -1515,8 +1511,8 @@ int zsetAdd(robj *zobj, double score, sds ele, int in_flags, int *out_flags, dou
         } else if (!xx) {
             /* check if the element is too large or the list
              * becomes too long *before* executing zzlInsert. */
-            if (zzlLength(objectGetVal(zobj)) + 1 > server.zset_max_listpack_entries ||
-                sdslen(ele) > server.zset_max_listpack_value || !lpSafeToAdd(objectGetVal(zobj), sdslen(ele))) {
+            if (zzlLength(objectGetVal(zobj)) + 1 > server.zset_max_listpack_entries
+                || sdslen(ele) > server.zset_max_listpack_value || !lpSafeToAdd(objectGetVal(zobj), sdslen(ele))) {
                 zsetConvertAndExpand(zobj, OBJ_ENCODING_SKIPLIST, zsetLength(zobj) + 1);
             } else {
                 objectSetVal(zobj, zzlInsert(objectGetVal(zobj), ele, score));
@@ -1943,7 +1939,8 @@ void zremCommand(client *c) {
             break;
         }
     }
-    if (!keyremoved && zobj->encoding == OBJ_ENCODING_SKIPLIST) hashtableResumeAutoShrink(((zset *)objectGetVal(zobj))->ht);
+    if (!keyremoved && zobj->encoding == OBJ_ENCODING_SKIPLIST)
+        hashtableResumeAutoShrink(((zset *)objectGetVal(zobj))->ht);
 
     if (deleted) {
         notifyKeyspaceEvent(NOTIFY_ZSET, "zrem", key, c->db->id);
@@ -1975,8 +1972,8 @@ void zremrangeGenericCommand(client *c, zrange_type rangetype) {
     /* Step 1: Parse the range. */
     if (rangetype == ZRANGE_RANK) {
         notify_type = "zremrangebyrank";
-        if ((getLongFromObjectOrReply(c, c->argv[2], &start, NULL) != C_OK) ||
-            (getLongFromObjectOrReply(c, c->argv[3], &end, NULL) != C_OK))
+        if ((getLongFromObjectOrReply(c, c->argv[2], &start, NULL) != C_OK)
+            || (getLongFromObjectOrReply(c, c->argv[3], &end, NULL) != C_OK))
             return;
     } else if (rangetype == ZRANGE_SCORE) {
         notify_type = "zremrangebyscore";
@@ -2017,7 +2014,9 @@ void zremrangeGenericCommand(client *c, zrange_type rangetype) {
     if (zobj->encoding == OBJ_ENCODING_LISTPACK) {
         switch (rangetype) {
         case ZRANGE_AUTO:
-        case ZRANGE_RANK: objectSetVal(zobj, zzlDeleteRangeByRank(objectGetVal(zobj), start + 1, end + 1, &deleted)); break;
+        case ZRANGE_RANK:
+            objectSetVal(zobj, zzlDeleteRangeByRank(objectGetVal(zobj), start + 1, end + 1, &deleted));
+            break;
         case ZRANGE_SCORE: objectSetVal(zobj, zzlDeleteRangeByScore(objectGetVal(zobj), &range, &deleted)); break;
         case ZRANGE_LEX: objectSetVal(zobj, zzlDeleteRangeByLex(objectGetVal(zobj), &lexrange, &deleted)); break;
         }
@@ -2649,19 +2648,19 @@ static void zunionInterDiffGenericCommand(client *c, robj *dstkey, int numkeysIn
         int remaining = c->argc - j;
 
         while (remaining) {
-            if (op != SET_OP_DIFF && !cardinality_only && remaining >= (setnum + 1) &&
-                !strcasecmp(objectGetVal(c->argv[j]), "weights")) {
+            if (op != SET_OP_DIFF && !cardinality_only && remaining >= (setnum + 1)
+                && !strcasecmp(objectGetVal(c->argv[j]), "weights")) {
                 j++;
                 remaining--;
                 for (i = 0; i < setnum; i++, j++, remaining--) {
-                    if (getDoubleFromObjectOrReply(c, c->argv[j], &src[i].weight, "weight value is not a float") !=
-                        C_OK) {
+                    if (getDoubleFromObjectOrReply(c, c->argv[j], &src[i].weight, "weight value is not a float")
+                        != C_OK) {
                         zfree(src);
                         return;
                     }
                 }
-            } else if (op != SET_OP_DIFF && !cardinality_only && remaining >= 2 &&
-                       !strcasecmp(objectGetVal(c->argv[j]), "aggregate")) {
+            } else if (op != SET_OP_DIFF && !cardinality_only && remaining >= 2
+                       && !strcasecmp(objectGetVal(c->argv[j]), "aggregate")) {
                 j++;
                 remaining--;
                 if (!strcasecmp(objectGetVal(c->argv[j]), "sum")) {
@@ -2677,7 +2676,8 @@ static void zunionInterDiffGenericCommand(client *c, robj *dstkey, int numkeysIn
                 }
                 j++;
                 remaining--;
-            } else if (remaining >= 1 && !dstkey && !cardinality_only && !strcasecmp(objectGetVal(c->argv[j]), "withscores")) {
+            } else if (remaining >= 1 && !dstkey && !cardinality_only
+                       && !strcasecmp(objectGetVal(c->argv[j]), "withscores")) {
                 j++;
                 remaining--;
                 withscores = 1;
@@ -2827,8 +2827,11 @@ static void zunionInterDiffGenericCommand(client *c, robj *dstkey, int numkeysIn
         if (zslGetLength(dstzset->zsl)) {
             zsetConvertToListpackIfNeeded(dstobj, maxelelen, totelelen);
             setKey(c, c->db, dstkey, &dstobj, 0);
-            notifyKeyspaceEvent(NOTIFY_ZSET, (op == SET_OP_UNION) ? "zunionstore" : (op == SET_OP_INTER ? "zinterstore" : "zdiffstore"),
-                                dstkey, c->db->id);
+            notifyKeyspaceEvent(NOTIFY_ZSET,
+                                (op == SET_OP_UNION) ? "zunionstore"
+                                                     : (op == SET_OP_INTER ? "zinterstore" : "zdiffstore"),
+                                dstkey,
+                                c->db->id);
             addReplyLongLong(c, zsetLength(dstobj));
             server.dirty++;
         } else {
@@ -3620,8 +3623,8 @@ void zrangeGenericCommand(zrange_result_handler *handler,
         if (!store && !strcasecmp(objectGetVal(c->argv[j]), "withscores")) {
             opt_withscores = 1;
         } else if (!strcasecmp(objectGetVal(c->argv[j]), "limit") && leftargs >= 2) {
-            if ((getLongFromObjectOrReply(c, c->argv[j + 1], &opt_offset, NULL) != C_OK) ||
-                (getLongFromObjectOrReply(c, c->argv[j + 2], &opt_limit, NULL) != C_OK)) {
+            if ((getLongFromObjectOrReply(c, c->argv[j + 1], &opt_offset, NULL) != C_OK)
+                || (getLongFromObjectOrReply(c, c->argv[j + 2], &opt_limit, NULL) != C_OK)) {
                 return;
             }
             j += 2;
@@ -3663,8 +3666,8 @@ void zrangeGenericCommand(zrange_result_handler *handler,
     case ZRANGE_AUTO:
     case ZRANGE_RANK:
         /* Z[REV]RANGE, ZRANGESTORE [REV]RANGE */
-        if ((getLongFromObjectOrReply(c, c->argv[minidx], &opt_start, NULL) != C_OK) ||
-            (getLongFromObjectOrReply(c, c->argv[maxidx], &opt_end, NULL) != C_OK)) {
+        if ((getLongFromObjectOrReply(c, c->argv[minidx], &opt_start, NULL) != C_OK)
+            || (getLongFromObjectOrReply(c, c->argv[maxidx], &opt_end, NULL) != C_OK)) {
             return;
         }
         break;
@@ -3708,17 +3711,30 @@ void zrangeGenericCommand(zrange_result_handler *handler,
     switch (rangetype) {
     case ZRANGE_AUTO:
     case ZRANGE_RANK:
-        genericZrangebyrankCommand(handler, zobj, opt_start, opt_end, opt_withscores || store,
+        genericZrangebyrankCommand(handler,
+                                   zobj,
+                                   opt_start,
+                                   opt_end,
+                                   opt_withscores || store,
                                    direction == ZRANGE_DIRECTION_REVERSE);
         break;
 
     case ZRANGE_SCORE:
-        genericZrangebyscoreCommand(handler, &range, zobj, opt_offset, opt_limit,
+        genericZrangebyscoreCommand(handler,
+                                    &range,
+                                    zobj,
+                                    opt_offset,
+                                    opt_limit,
                                     direction == ZRANGE_DIRECTION_REVERSE);
         break;
 
     case ZRANGE_LEX:
-        genericZrangebylexCommand(handler, &lexrange, zobj, opt_withscores || store, opt_offset, opt_limit,
+        genericZrangebylexCommand(handler,
+                                  &lexrange,
+                                  zobj,
+                                  opt_withscores || store,
+                                  opt_offset,
+                                  opt_limit,
                                   direction == ZRANGE_DIRECTION_REVERSE);
         break;
     }
@@ -4366,8 +4382,13 @@ void zmpopGenericCommand(client *c, int numkeys_idx, int is_block) {
     long count = -1;  /* Reply will consist of up to count elements, depending on the zset's length. */
 
     /* Parse the numkeys. */
-    if (getRangeLongFromObjectOrReply(c, c->argv[numkeys_idx], 1, LONG_MAX, &numkeys,
-                                      "numkeys should be greater than 0") != C_OK)
+    if (getRangeLongFromObjectOrReply(c,
+                                      c->argv[numkeys_idx],
+                                      1,
+                                      LONG_MAX,
+                                      &numkeys,
+                                      "numkeys should be greater than 0")
+        != C_OK)
         return;
 
     /* Parse the where. where_idx: the index of where in the c->argv. */
@@ -4392,8 +4413,8 @@ void zmpopGenericCommand(client *c, int numkeys_idx, int is_block) {
 
         if (count == -1 && !strcasecmp(opt, "COUNT") && moreargs) {
             j++;
-            if (getRangeLongFromObjectOrReply(c, c->argv[j], 1, LONG_MAX, &count, "count should be greater than 0") !=
-                C_OK)
+            if (getRangeLongFromObjectOrReply(c, c->argv[j], 1, LONG_MAX, &count, "count should be greater than 0")
+                != C_OK)
                 return;
         } else {
             addReplyErrorObject(c, shared.syntaxerr);

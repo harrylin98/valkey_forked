@@ -78,9 +78,16 @@
 
 #define PLACEHOLDER_COUNT 10
 static const size_t PLACEHOLDER_LEN = 12; // length of BENCHMARK_PLACEHOLDERS strings
-static const char *PLACEHOLDERS[PLACEHOLDER_COUNT] = {
-    "__rand_int__", "__rand_1st__", "__rand_2nd__", "__rand_3rd__", "__rand_4th__",
-    "__rand_5th__", "__rand_6th__", "__rand_7th__", "__rand_8th__", "__rand_9th__"};
+static const char *PLACEHOLDERS[PLACEHOLDER_COUNT] = {"__rand_int__",
+                                                      "__rand_1st__",
+                                                      "__rand_2nd__",
+                                                      "__rand_3rd__",
+                                                      "__rand_4th__",
+                                                      "__rand_5th__",
+                                                      "__rand_6th__",
+                                                      "__rand_7th__",
+                                                      "__rand_8th__",
+                                                      "__rand_9th__"};
 
 struct benchmarkThread;
 struct clusterNode;
@@ -261,7 +268,15 @@ static void freeServerConfig(serverConfig *cfg);
 static int fetchClusterSlotsConfiguration(client c);
 static void updateClusterSlotsConfiguration(void);
 static long long showThroughput(struct aeEventLoop *eventLoop, long long id, void *clientData);
-int runFuzzerClients(const char *host, int port, int max_commands, int parallel_clients, int cluster_mode, int num_keys, cliSSLconfig *ssl_config, const char *log_level, int fuzz_flags);
+int runFuzzerClients(const char *host,
+                     int port,
+                     int max_commands,
+                     int parallel_clients,
+                     int cluster_mode,
+                     int num_keys,
+                     cliSSLconfig *ssl_config,
+                     const char *log_level,
+                     int fuzz_flags);
 static int parseCommandTemplate(int argc, char **argv);
 
 /* Dict callbacks */
@@ -430,8 +445,7 @@ static void freeServerConfig(serverConfig *cfg) {
 }
 
 void resetPlaceholders(void) {
-    if (placeholders.index_data)
-        zfree(placeholders.index_data); /* indices are a single contiguous allocation */
+    if (placeholders.index_data) zfree(placeholders.index_data); /* indices are a single contiguous allocation */
     memset(&placeholders, 0, sizeof(placeholders));
 }
 
@@ -470,8 +484,7 @@ void initPlaceholders(const char *cmd, size_t cmd_len) {
         placeholders.indices[placeholder] = placeholders.index_data + overall_index;
 
         const size_t count = placeholders.count[placeholder];
-        memcpy(placeholders.indices[placeholder], temp_indices[placeholder],
-               sizeof(size_t) * count);
+        memcpy(placeholders.indices[placeholder], temp_indices[placeholder], sizeof(size_t) * count);
         overall_index += count;
 
         zfree(temp_indices[placeholder]);
@@ -681,12 +694,11 @@ static long long acquireTokenOrWait(int tokens) {
             last_time_ns = new_time;
         }
 
-        if (atomic_compare_exchange_weak_explicit(
-                &config.last_time_ns,
-                &old_last_time_ns,
-                last_time_ns,
-                memory_order_release,
-                memory_order_relaxed)) {
+        if (atomic_compare_exchange_weak_explicit(&config.last_time_ns,
+                                                  &old_last_time_ns,
+                                                  last_time_ns,
+                                                  memory_order_release,
+                                                  memory_order_relaxed)) {
             break;
         }
     }
@@ -756,14 +768,20 @@ static void readHandler(aeEventLoop *el, int fd, void *privdata, int mask) {
                              * before requesting the new configuration. */
                             fetch_slots = 1;
                             do_wait = 1;
-                            fprintf(stderr, "Error from server %s:%d: %s.\n", c->cluster_node->ip,
-                                    c->cluster_node->port, r->str);
+                            fprintf(stderr,
+                                    "Error from server %s:%d: %s.\n",
+                                    c->cluster_node->ip,
+                                    c->cluster_node->port,
+                                    r->str);
                         }
                         if (do_wait) sleep(1);
                         if (fetch_slots && !fetchClusterSlotsConfiguration(c)) exit(1);
                     } else {
                         if (c->cluster_node) {
-                            fprintf(stderr, "Error from server %s:%d: %s\n", c->cluster_node->ip, c->cluster_node->port,
+                            fprintf(stderr,
+                                    "Error from server %s:%d: %s\n",
+                                    c->cluster_node->ip,
+                                    c->cluster_node->port,
                                     r->str);
                         } else
                             fprintf(stderr, "Error from server: %s\n", r->str);
@@ -916,11 +934,16 @@ static void writeHandler(aeEventLoop *el, int fd, void *privdata, int mask) {
             /* Generate complete pipeline commands for dataset placeholders */
             sdssetlen(c->obuf, c->prefixlen);
             for (int p = 0; p < config.pipeline; p++) {
-                uint64_t record_index = atomic_fetch_add_explicit(&record_counter, 1, memory_order_relaxed) % config.current_dataset->record_count;
-                sds complete_cmd = datasetGenerateCommand(config.current_dataset, record_index,
-                                                          config.template_argv, config.template_argc,
-                                                          dataset_seq_key, config.replace_placeholders,
-                                                          config.keyspacelen, config.sequential_replacement);
+                uint64_t record_index = atomic_fetch_add_explicit(&record_counter, 1, memory_order_relaxed)
+                                        % config.current_dataset->record_count;
+                sds complete_cmd = datasetGenerateCommand(config.current_dataset,
+                                                          record_index,
+                                                          config.template_argv,
+                                                          config.template_argc,
+                                                          dataset_seq_key,
+                                                          config.replace_placeholders,
+                                                          config.keyspacelen,
+                                                          config.sequential_replacement);
                 c->obuf = sdscatlen(c->obuf, complete_cmd, sdslen(complete_cmd));
                 sdsfree(complete_cmd);
             }
@@ -1068,7 +1091,9 @@ static client createClient(char *cmd, int len, int seqlen, client from, int thre
      * time the replies are received, so if the client is reused the
      * SELECT command will not be used again. */
     if (config.conn_info.input_dbnum) {
-        c->obuf = sdscatprintf(c->obuf, "*2\r\n$6\r\nSELECT\r\n$%d\r\n%s\r\n", (int)sdslen(config.input_dbnumstr),
+        c->obuf = sdscatprintf(c->obuf,
+                               "*2\r\n$6\r\nSELECT\r\n$%d\r\n%s\r\n",
+                               (int)sdslen(config.input_dbnumstr),
                                config.input_dbnumstr);
         c->prefix_pending++;
     }
@@ -1081,7 +1106,8 @@ static client createClient(char *cmd, int len, int seqlen, client from, int thre
         c->prefix_pending++;
     }
 
-    if (config.cluster_mode && (config.read_from_replica == FROM_REPLICA_ONLY || config.read_from_replica == FROM_ALL)) {
+    if (config.cluster_mode
+        && (config.read_from_replica == FROM_REPLICA_ONLY || config.read_from_replica == FROM_ALL)) {
         char *buf = NULL;
         int len;
         len = valkeyFormatCommand(&buf, "READONLY");
@@ -1264,8 +1290,15 @@ static void showReport(void) {
         printf("    %9s %9s %9s %9s %9s %9s\n", "avg", "min", "p50", "p95", "p99", "max");
         printf("    %9.3f %9.3f %9.3f %9.3f %9.3f %9.3f\n", avg, p0, p50, p95, p99, p100);
     } else if (config.csv) {
-        printf("\"%s\",\"%.2f\",\"%.3f\",\"%.3f\",\"%.3f\",\"%.3f\",\"%.3f\",\"%.3f\"\n", config.title, reqpersec, avg,
-               p0, p50, p95, p99, p100);
+        printf("\"%s\",\"%.2f\",\"%.3f\",\"%.3f\",\"%.3f\",\"%.3f\",\"%.3f\",\"%.3f\"\n",
+               config.title,
+               reqpersec,
+               avg,
+               p0,
+               p50,
+               p95,
+               p99,
+               p100);
     } else {
         printf("%*s\r", config.last_printed_bytes, " "); // ensure there is a clean line
         printf("%s: %.2f requests per second, p50=%.3f msec\n", config.title, reqpersec, p50);
@@ -1315,10 +1348,7 @@ static void benchmarkSequence(const char *title, char *cmd, int len, int seqlen)
              &config.current_sec_latency_histogram);     // Pointer to initialise
 
     if (config.rps > 0) {
-        hdr_init(1,
-                 config.rps * 2,
-                 config.precision,
-                 &config.rps_histogram);
+        hdr_init(1, config.rps * 2, config.precision, &config.rps_histogram);
     }
 
     initPlaceholders(cmd, len);
@@ -1469,7 +1499,9 @@ static int fetchClusterConfiguration(void) {
             int is_primary = (j == 2);
             if (is_primary) primary = sdsnew(nr->element[2]->str);
             int is_cluster_option_only = (config.read_from_replica == FROM_PRIMARY_ONLY);
-            if ((config.read_from_replica == FROM_REPLICA_ONLY && is_primary) || (is_cluster_option_only && !is_primary)) continue;
+            if ((config.read_from_replica == FROM_REPLICA_ONLY && is_primary)
+                || (is_cluster_option_only && !is_primary))
+                continue;
 
             sds ip = sdsnew(nr->element[0]->str);
             sds name = sdsnew(nr->element[2]->str);
@@ -1605,7 +1637,8 @@ static int fetchClusterSlotsConfiguration(client c) {
                 fprintf(stderr,
                         "%s: could not find node with ID %s in current "
                         "configuration.\n",
-                        errmsg, name);
+                        errmsg,
+                        name);
                 if (name) sdsfree(name);
                 goto cleanup;
             }
@@ -1655,7 +1688,13 @@ static void cleanupDataset(void) {
 }
 
 /* Add RESP command to sequence with repeat count */
-static void addRespCommandToSequence(sds *sds_args, size_t *argvlen, int start, int end, int repeat, sds *cmd_seq, int *seq_len) {
+static void addRespCommandToSequence(sds *sds_args,
+                                     size_t *argvlen,
+                                     int start,
+                                     int end,
+                                     int repeat,
+                                     sds *cmd_seq,
+                                     int *seq_len) {
     char *cmd = NULL;
     int len = valkeyFormatCommandArgv(&cmd, end - start, (const char **)sds_args + start, argvlen + start);
     for (int j = 0; j < repeat; j++) {
@@ -1812,8 +1851,9 @@ int parseOptions(int argc, char **argv) {
         } else if (!strcmp(argv[i], "-I")) {
             config.idlemode = 1;
         } else if (!strcmp(argv[i], "-e")) {
-            fprintf(stderr, "WARNING: -e option has no effect. "
-                            "We now immediately exit on error to avoid false results.\n");
+            fprintf(stderr,
+                    "WARNING: -e option has no effect. "
+                    "We now immediately exit on error to avoid false results.\n");
         } else if (!strcmp(argv[i], "--seed")) {
             if (lastarg) goto invalid;
             int rand_seed = atoi(argv[++i]);
@@ -1989,143 +2029,143 @@ usage:
         "";
 
 
-    printf(
-        "%s%s%s%s%s%s", /* Split to avoid strings longer than 4095 (-Woverlength-strings). */
-        "Usage: valkey-benchmark [OPTIONS] [--] [COMMAND ARGS...]\n\n"
-        "Simulates sending commands using multiple clients. The utility provides a\n"
-        "default set of tests. You can run a subset of the tests using the -t option or\n"
-        "supply one or more custom commands on the command line.\n\n"
-        "To supply multiple commands on the command line, separate them with ';' as in\n"
-        "`SET foo bar ';' GET foo`. You can also prefix a command in the sequence with\n"
-        "a number N to repeat the command N times. In command arguments, the following\n"
-        "placeholders are substituted:\n\n"
-        " __rand_int__       Replaced with a zero-padded random integer in the range\n"
-        "                    selected using the -r option. Multiple occurrences within the\n"
-        "                    command will have different values.\n"
-        "__rand_1st__        Like __rand_int__ but multiple occurrences will have the same\n"
-        "                    value. __rand_2nd__ through __rand_9th__ are also available.\n"
-        " __data__           Replaced with data of the size specified by the -d option.\n"
-        " __field:name__     Replaced with data from the specified field/column in the\n"
-        "                    dataset. Requires --dataset option.\n"
-        " {tag}              Replaced with a tag that routes the command to each node in\n"
-        "                    a cluster. Include this in key names when running in cluster\n"
-        "                    mode.\n"
-        "\n",
-        "Options:\n"
-        "\n"
-        " -h <hostname>      Server hostname (default 127.0.0.1)\n"
-        " -p <port>          Server port (default 6379)\n"
-        " -s <socket>        Server socket (overrides host and port)\n"
-        " -a <password>      Password for Valkey Auth\n"
-        " --user <username>  Used to send ACL style 'AUTH username pass'. Needs -a.\n"
-        " -u <uri>           Server URI on format valkey://user:password@host:port/dbnum\n"
-        "                    User, password and dbnum are optional. For authentication\n"
-        "                    without a username, use username 'default'. For TLS, use\n"
-        "                    the scheme 'valkeys'.\n"
-        " -c <clients>       Number of parallel connections (default 50).\n"
-        "                    Note: If --cluster is used then number of clients has to be\n"
-        "                    the same or higher than the number of nodes.\n"
-        " -n <requests>      Total number of requests (default 100000)\n"
-        " --duration <seconds>\n"
-        "                    Run benchmark for specified number of seconds\n"
-        "                    (mutually exclusive with -n)\n"
-        " --warmup <seconds> Run benchmark for specified warmup period before\n"
-        "                    recording data\n"
-        " -d <size>          Data size of SET/GET value in bytes (default 3)\n"
-        " --dbnum <db>       SELECT the specified db number (default 0)\n"
-        " -3                 Start session in RESP3 protocol mode.\n"
-        " --threads <num>    Enable multi-thread mode.\n"
-        " --cluster          Enable cluster mode.\n"
-        "                    If the command is supplied on the command line in cluster\n"
-        "                    mode, the key must contain \"{tag}\". Otherwise, the\n"
-        "                    command will not be sent to the right cluster node.\n"
-        " --rfr <mode>       Enable read from replicas in cluster mode.\n"
-        "                    This command must be used with the --cluster option.\n"
-        "                    There are three modes for reading from replicas:\n"
-        "                    'no' - sends read requests to primaries only (default) \n"
-        "                    'yes' - sends read requests to replicas only.\n"
-        "                    'all' - sends read requests to all nodes.\n"
-        "                    Since write commands will not be accepted by replicas,\n"
-        "                    it is recommended to enable read from replicas only for read\n"
-        "                    command tests.\n"
-        " --enable-tracking  Send CLIENT TRACKING on before starting benchmark.\n"
-        " -k <boolean>       1=keep alive 0=reconnect (default 1)\n"
-        " -r <keyspacelen>   Use random keys for SET/GET/INCR, random values for SADD,\n"
-        "                    random members and scores for ZADD.\n"
-        "                    Using this option the benchmark will replace the string\n"
-        "                    __rand_int__ inside an argument with a random 12 digit\n"
-        "                    number in the specified range from 0 to keyspacelen-1. The\n"
-        "                    substitution changes every time a command is executed.\n"
-        "                    Default tests use this to hit random keys in the specified\n"
-        "                    range.\n"
-        "                    Note: If -r is omitted, all commands in a benchmark will\n"
-        "                    use the same key.\n"
-        " --sequential       Modifies the -r argument to replace the string __rand_int__\n"
-        "                    with 12 digit numbers sequentially instead of randomly.\n"
-        "                    __rand_1st__ through __rand_9th__ are available with\n"
-        "                    independent counters. Used to create expected number of\n"
-        "                    elements with multiple replacements.\n"
-        "                    example: ZADD myzset __rand_int__ element:__rand_1st__\n"
-        " -P <numreq>        Pipeline <numreq> requests. That is, send multiple requests\n"
-        "                    before waiting for the replies. Default 1 (no pipeline).\n"
-        "                    When multiple commands are specified on the command line,\n"
-        "                    then the full command sequence counts as one and -P controls\n"
-        "                    the number of times the command sequence is sent in each\n"
-        "                    pipeline.\n",
-        " -q                 Quiet. Just show query/sec values\n"
-        " --precision        Number of decimal places to display in latency output\n"
-        "                    (default 0)\n"
-        " --csv              Output in CSV format\n"
-        " -l                 Loop. Run the tests forever\n"
-        " -t <tests>         Only run the comma separated list of tests. The test\n"
-        "                    names are the same as the ones produced as output.\n"
-        "                    The -t option is ignored if a specific command is supplied\n"
-        "                    on the command line.\n"
-        " -I                 Idle mode. Just open N idle connections and wait.\n"
-        " -x                 Read last argument from STDIN.\n"
-        " --rps <requests>   Limit the total number of requests per second.\n"
-        "                    Default 0 (no limit)\n"
-        " --seed <num>       Set the seed for random number generator.\n"
-        "                    Default seed is based on time.\n"
-        " --num-functions <num>\n"
-        "                    Sets the number of functions present in the Lua lib that is\n"
-        "                    loaded when running the 'function_load' test. (default 10).\n"
-        " --num-keys-in-fcall <num>\n"
-        "                    Sets the number of keys passed to FCALL command when running\n"
-        "                    the 'fcall' test. (default 1)\n"
-        " --dataset <file>   Path to CSV/TSV dataset file for field placeholder replacement.\n"
-        "                    All fields auto-detected with natural content lengths.\n"
-        " --maxdocs <num>    Maximum number of documents to load from dataset file.\n"
-        "                    Default: unlimited.\n",
-        tls_usage,
-        rdma_usage,
-        " --mptcp            Enable an MPTCP connection.\n"
-        " --fuzz             Enable fuzzy mode to generate random commands. WARNING: Recommended for testing only, not for use with production data.\n"
-        " --fuzz-mode <modes> Set fuzzing modes (comma-separated): malformed-commands, config-commands.\n"
-        "                    malformed-commands: Generates also malformed commands.\n"
-        "                    config-commands: Allows CONFIG SET commands.\n"
-        "                    Default: valid commands only.\n"
-        " --fuzz-loglevel <level>\n"
-        "                    Set log level for fuzzer (none, error, info, debug).\n"
-        "                    Default is 'info'.\n"
-        " --help             Output this help and exit.\n"
-        " --version          Output version and exit.\n\n"
-        "Examples:\n\n"
-        " Run the benchmark with the default configuration against 127.0.0.1:6379:\n"
-        "   $ valkey-benchmark\n\n"
-        " Use 20 parallel clients, for a total of 100k requests, against 192.168.1.1:\n"
-        "   $ valkey-benchmark -h 192.168.1.1 -p 6379 -n 100000 -c 20\n\n"
-        " Fill 127.0.0.1:6379 with about 1 million keys only using the SET test:\n"
-        "   $ valkey-benchmark -t set -n 1000000 -r 100000000\n\n"
-        " Benchmark 127.0.0.1:6379 for a few commands producing CSV output:\n"
-        "   $ valkey-benchmark -t ping,set,get -n 100000 --csv\n\n"
-        " Benchmark a specific command line:\n"
-        "   $ valkey-benchmark -r 10000 -n 10000 eval 'return server.call(\"ping\")' 0\n\n"
-        " Fill a list with 10000 random elements:\n"
-        "   $ valkey-benchmark -r 10000 -n 10000 lpush mylist __rand_int__\n\n"
-        " Benchmark a specific transaction:\n"
-        "   $ valkey-benchmark -- multi ';' set key:__rand_int__ __data__ ';' \\\n"
-        "                         incr counter ';' exec\n\n");
+    printf("%s%s%s%s%s%s", /* Split to avoid strings longer than 4095 (-Woverlength-strings). */
+           "Usage: valkey-benchmark [OPTIONS] [--] [COMMAND ARGS...]\n\n"
+           "Simulates sending commands using multiple clients. The utility provides a\n"
+           "default set of tests. You can run a subset of the tests using the -t option or\n"
+           "supply one or more custom commands on the command line.\n\n"
+           "To supply multiple commands on the command line, separate them with ';' as in\n"
+           "`SET foo bar ';' GET foo`. You can also prefix a command in the sequence with\n"
+           "a number N to repeat the command N times. In command arguments, the following\n"
+           "placeholders are substituted:\n\n"
+           " __rand_int__       Replaced with a zero-padded random integer in the range\n"
+           "                    selected using the -r option. Multiple occurrences within the\n"
+           "                    command will have different values.\n"
+           "__rand_1st__        Like __rand_int__ but multiple occurrences will have the same\n"
+           "                    value. __rand_2nd__ through __rand_9th__ are also available.\n"
+           " __data__           Replaced with data of the size specified by the -d option.\n"
+           " __field:name__     Replaced with data from the specified field/column in the\n"
+           "                    dataset. Requires --dataset option.\n"
+           " {tag}              Replaced with a tag that routes the command to each node in\n"
+           "                    a cluster. Include this in key names when running in cluster\n"
+           "                    mode.\n"
+           "\n",
+           "Options:\n"
+           "\n"
+           " -h <hostname>      Server hostname (default 127.0.0.1)\n"
+           " -p <port>          Server port (default 6379)\n"
+           " -s <socket>        Server socket (overrides host and port)\n"
+           " -a <password>      Password for Valkey Auth\n"
+           " --user <username>  Used to send ACL style 'AUTH username pass'. Needs -a.\n"
+           " -u <uri>           Server URI on format valkey://user:password@host:port/dbnum\n"
+           "                    User, password and dbnum are optional. For authentication\n"
+           "                    without a username, use username 'default'. For TLS, use\n"
+           "                    the scheme 'valkeys'.\n"
+           " -c <clients>       Number of parallel connections (default 50).\n"
+           "                    Note: If --cluster is used then number of clients has to be\n"
+           "                    the same or higher than the number of nodes.\n"
+           " -n <requests>      Total number of requests (default 100000)\n"
+           " --duration <seconds>\n"
+           "                    Run benchmark for specified number of seconds\n"
+           "                    (mutually exclusive with -n)\n"
+           " --warmup <seconds> Run benchmark for specified warmup period before\n"
+           "                    recording data\n"
+           " -d <size>          Data size of SET/GET value in bytes (default 3)\n"
+           " --dbnum <db>       SELECT the specified db number (default 0)\n"
+           " -3                 Start session in RESP3 protocol mode.\n"
+           " --threads <num>    Enable multi-thread mode.\n"
+           " --cluster          Enable cluster mode.\n"
+           "                    If the command is supplied on the command line in cluster\n"
+           "                    mode, the key must contain \"{tag}\". Otherwise, the\n"
+           "                    command will not be sent to the right cluster node.\n"
+           " --rfr <mode>       Enable read from replicas in cluster mode.\n"
+           "                    This command must be used with the --cluster option.\n"
+           "                    There are three modes for reading from replicas:\n"
+           "                    'no' - sends read requests to primaries only (default) \n"
+           "                    'yes' - sends read requests to replicas only.\n"
+           "                    'all' - sends read requests to all nodes.\n"
+           "                    Since write commands will not be accepted by replicas,\n"
+           "                    it is recommended to enable read from replicas only for read\n"
+           "                    command tests.\n"
+           " --enable-tracking  Send CLIENT TRACKING on before starting benchmark.\n"
+           " -k <boolean>       1=keep alive 0=reconnect (default 1)\n"
+           " -r <keyspacelen>   Use random keys for SET/GET/INCR, random values for SADD,\n"
+           "                    random members and scores for ZADD.\n"
+           "                    Using this option the benchmark will replace the string\n"
+           "                    __rand_int__ inside an argument with a random 12 digit\n"
+           "                    number in the specified range from 0 to keyspacelen-1. The\n"
+           "                    substitution changes every time a command is executed.\n"
+           "                    Default tests use this to hit random keys in the specified\n"
+           "                    range.\n"
+           "                    Note: If -r is omitted, all commands in a benchmark will\n"
+           "                    use the same key.\n"
+           " --sequential       Modifies the -r argument to replace the string __rand_int__\n"
+           "                    with 12 digit numbers sequentially instead of randomly.\n"
+           "                    __rand_1st__ through __rand_9th__ are available with\n"
+           "                    independent counters. Used to create expected number of\n"
+           "                    elements with multiple replacements.\n"
+           "                    example: ZADD myzset __rand_int__ element:__rand_1st__\n"
+           " -P <numreq>        Pipeline <numreq> requests. That is, send multiple requests\n"
+           "                    before waiting for the replies. Default 1 (no pipeline).\n"
+           "                    When multiple commands are specified on the command line,\n"
+           "                    then the full command sequence counts as one and -P controls\n"
+           "                    the number of times the command sequence is sent in each\n"
+           "                    pipeline.\n",
+           " -q                 Quiet. Just show query/sec values\n"
+           " --precision        Number of decimal places to display in latency output\n"
+           "                    (default 0)\n"
+           " --csv              Output in CSV format\n"
+           " -l                 Loop. Run the tests forever\n"
+           " -t <tests>         Only run the comma separated list of tests. The test\n"
+           "                    names are the same as the ones produced as output.\n"
+           "                    The -t option is ignored if a specific command is supplied\n"
+           "                    on the command line.\n"
+           " -I                 Idle mode. Just open N idle connections and wait.\n"
+           " -x                 Read last argument from STDIN.\n"
+           " --rps <requests>   Limit the total number of requests per second.\n"
+           "                    Default 0 (no limit)\n"
+           " --seed <num>       Set the seed for random number generator.\n"
+           "                    Default seed is based on time.\n"
+           " --num-functions <num>\n"
+           "                    Sets the number of functions present in the Lua lib that is\n"
+           "                    loaded when running the 'function_load' test. (default 10).\n"
+           " --num-keys-in-fcall <num>\n"
+           "                    Sets the number of keys passed to FCALL command when running\n"
+           "                    the 'fcall' test. (default 1)\n"
+           " --dataset <file>   Path to CSV/TSV dataset file for field placeholder replacement.\n"
+           "                    All fields auto-detected with natural content lengths.\n"
+           " --maxdocs <num>    Maximum number of documents to load from dataset file.\n"
+           "                    Default: unlimited.\n",
+           tls_usage,
+           rdma_usage,
+           " --mptcp            Enable an MPTCP connection.\n"
+           " --fuzz             Enable fuzzy mode to generate random commands. WARNING: Recommended for testing only, "
+           "not for use with production data.\n"
+           " --fuzz-mode <modes> Set fuzzing modes (comma-separated): malformed-commands, config-commands.\n"
+           "                    malformed-commands: Generates also malformed commands.\n"
+           "                    config-commands: Allows CONFIG SET commands.\n"
+           "                    Default: valid commands only.\n"
+           " --fuzz-loglevel <level>\n"
+           "                    Set log level for fuzzer (none, error, info, debug).\n"
+           "                    Default is 'info'.\n"
+           " --help             Output this help and exit.\n"
+           " --version          Output version and exit.\n\n"
+           "Examples:\n\n"
+           " Run the benchmark with the default configuration against 127.0.0.1:6379:\n"
+           "   $ valkey-benchmark\n\n"
+           " Use 20 parallel clients, for a total of 100k requests, against 192.168.1.1:\n"
+           "   $ valkey-benchmark -h 192.168.1.1 -p 6379 -n 100000 -c 20\n\n"
+           " Fill 127.0.0.1:6379 with about 1 million keys only using the SET test:\n"
+           "   $ valkey-benchmark -t set -n 1000000 -r 100000000\n\n"
+           " Benchmark 127.0.0.1:6379 for a few commands producing CSV output:\n"
+           "   $ valkey-benchmark -t ping,set,get -n 100000 --csv\n\n"
+           " Benchmark a specific command line:\n"
+           "   $ valkey-benchmark -r 10000 -n 10000 eval 'return server.call(\"ping\")' 0\n\n"
+           " Fill a list with 10000 random elements:\n"
+           "   $ valkey-benchmark -r 10000 -n 10000 lpush mylist __rand_int__\n\n"
+           " Benchmark a specific transaction:\n"
+           "   $ valkey-benchmark -- multi ';' set key:__rand_int__ __data__ ';' \\\n"
+           "                         incr counter ';' exec\n\n");
     exit(exit_status);
 }
 
@@ -2190,9 +2230,12 @@ long long showThroughput(struct aeEventLoop *eventLoop, long long id, void *clie
     if (warmup_duration > 0) {
         config.last_printed_bytes += printf("Warming up ");
     }
-    config.last_printed_bytes +=
-        printf("%s: rps=%.1f (overall: %.1f) avg_msec=%.3f (overall: %.3f)", config.title, instantaneous_rps, rps,
-               hdr_mean(config.current_sec_latency_histogram) / 1000.0f, hdr_mean(config.latency_histogram) / 1000.0f);
+    config.last_printed_bytes += printf("%s: rps=%.1f (overall: %.1f) avg_msec=%.3f (overall: %.3f)",
+                                        config.title,
+                                        instantaneous_rps,
+                                        rps,
+                                        hdr_mean(config.current_sec_latency_histogram) / 1000.0f,
+                                        hdr_mean(config.latency_histogram) / 1000.0f);
     if (warmup_duration > 0 || config.duration > 0) {
         config.last_printed_bytes += printf(" %.1f seconds\r", dt);
     } else {
@@ -2215,11 +2258,13 @@ char *generateFunctionScript(uint32_t num_functions, int with_keys) {
         assert(buffer_len - written > 0);
         int n = 0;
         if (with_keys) {
-            n = snprintf(buffer + written, buffer_len - written,
+            n = snprintf(buffer + written,
+                         buffer_len - written,
                          "local function foo%u(keys, args)\nreturn keys[0]\nend\n",
                          num_functions);
         } else {
-            n = snprintf(buffer + written, buffer_len - written,
+            n = snprintf(buffer + written,
+                         buffer_len - written,
                          "local function foo%u()\nreturn 0\nend\n",
                          num_functions);
         }
@@ -2229,7 +2274,8 @@ char *generateFunctionScript(uint32_t num_functions, int with_keys) {
         }
         written += n;
 
-        n = snprintf(buffer + written, buffer_len - written,
+        n = snprintf(buffer + written,
+                     buffer_len - written,
                      "server.register_function('foo%u', foo%u)\n",
                      num_functions,
                      num_functions);
@@ -2343,10 +2389,8 @@ int main(int argc, char **argv) {
          * template. Without it, the dataset would be initialized and reported
          * but never used for command generation. */
         if (!config.has_field_placeholders) {
-            fprintf(stderr,
-                    "Error: Dataset mode requires at least one field placeholder\n");
-            fprintf(stderr,
-                    "Example: SET doc:__rand_int__ \"__field:content__\"\n");
+            fprintf(stderr, "Error: Dataset mode requires at least one field placeholder\n");
+            fprintf(stderr, "Example: SET doc:__rand_int__ \"__field:content__\"\n");
             exit(1);
         }
 
@@ -2355,7 +2399,8 @@ int main(int argc, char **argv) {
         config.current_dataset = datasetInit(config.dataset_file,
                                              config.max_documents,
                                              config.has_field_placeholders,
-                                             config.template_argv, config.template_argc,
+                                             config.template_argv,
+                                             config.template_argc,
                                              verbose);
         if (!config.current_dataset) {
             fprintf(stderr, "Failed to initialize dataset\n");
@@ -2388,7 +2433,8 @@ int main(int argc, char **argv) {
                 fprintf(stderr,
                         "Failed to fetch cluster configuration from "
                         "%s:%d\n",
-                        config.conn_info.hostip, config.conn_info.hostport);
+                        config.conn_info.hostip,
+                        config.conn_info.hostport);
             } else {
                 fprintf(stderr,
                         "Failed to fetch cluster configuration from "
@@ -2442,10 +2488,11 @@ int main(int argc, char **argv) {
     }
 
     if (config.keepalive == 0) {
-        fprintf(stderr, "WARNING: Keepalive disabled. You probably need "
-                        "'echo 1 > /proc/sys/net/ipv4/tcp_tw_reuse' for Linux and "
-                        "'sudo sysctl -w net.inet.tcp.msl=1000' for Mac OS X in order "
-                        "to use a lot of clients/requests\n");
+        fprintf(stderr,
+                "WARNING: Keepalive disabled. You probably need "
+                "'echo 1 > /proc/sys/net/ipv4/tcp_tw_reuse' for Linux and "
+                "'sudo sysctl -w net.inet.tcp.msl=1000' for Mac OS X in order "
+                "to use a lot of clients/requests\n");
     }
     if (argc > 0 && config.tests != NULL) {
         fprintf(stderr, "WARNING: Option -t is ignored.\n");
@@ -2472,16 +2519,15 @@ int main(int argc, char **argv) {
     }
 
     if (config.fuzz_mode) {
-        return runFuzzerClients(
-            config.conn_info.hostip,
-            config.conn_info.hostport,
-            config.requests,
-            config.numclients,
-            config.cluster_mode,
-            config.keyspacelen,
-            config.tls ? &config.sslconfig : NULL,
-            config.fuzz_log_level,
-            config.fuzz_flags);
+        return runFuzzerClients(config.conn_info.hostip,
+                                config.conn_info.hostport,
+                                config.requests,
+                                config.numclients,
+                                config.cluster_mode,
+                                config.keyspacelen,
+                                config.tls ? &config.sslconfig : NULL,
+                                config.fuzz_log_level,
+                                config.fuzz_flags);
     }
 
     /* Run benchmark with command in the remainder of the arguments. */
@@ -2531,9 +2577,7 @@ int main(int argc, char **argv) {
                 }
                 /* Replace data placeholders with data of length given by -d. */
                 int num_parts;
-                sds *parts = sdssplitlen(sds_args[i], sdslen(sds_args[i]),
-                                         "__data__", strlen("__data__"),
-                                         &num_parts);
+                sds *parts = sdssplitlen(sds_args[i], sdslen(sds_args[i]), "__data__", strlen("__data__"), &num_parts);
                 sds newarg = parts[0];
                 parts[0] = NULL; /* prevent it from being freed below */
                 for (int j = 1; j < num_parts; j++) {
@@ -2652,8 +2696,8 @@ int main(int argc, char **argv) {
             free(cmd);
         }
 
-        if (test_is_selected("lrange") || test_is_selected("lrange_100") || test_is_selected("lrange_300") ||
-            test_is_selected("lrange_500") || test_is_selected("lrange_600")) {
+        if (test_is_selected("lrange") || test_is_selected("lrange_100") || test_is_selected("lrange_300")
+            || test_is_selected("lrange_500") || test_is_selected("lrange_600")) {
             len = valkeyFormatCommand(&cmd, "LPUSH mylist%s %s", tag, data);
             benchmark("LPUSH (needed to benchmark LRANGE)", cmd, len);
             free(cmd);

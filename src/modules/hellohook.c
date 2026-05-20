@@ -44,7 +44,9 @@ void clientChangeCallback(ValkeyModuleCtx *ctx, ValkeyModuleEvent e, uint64_t su
     ValkeyModuleClientInfo *ci = data;
     printf("Client %s event for client #%llu %s:%d\n",
            (sub == VALKEYMODULE_SUBEVENT_CLIENT_CHANGE_CONNECTED) ? "connection" : "disconnection",
-           (unsigned long long)ci->id, ci->addr, ci->port);
+           (unsigned long long)ci->id,
+           ci->addr,
+           ci->port);
 }
 
 void flushdbCallback(ValkeyModuleCtx *ctx, ValkeyModuleEvent e, uint64_t sub, void *data) {
@@ -77,7 +79,10 @@ void authenticationAttemptCallback(ValkeyModuleCtx *ctx, ValkeyModuleEvent e, ui
 
     ValkeyModuleAuthenticationInfo *ai = data;
     printf("Authentication attempt for client #%llu with username=%s module=%s success=%d\n",
-           (unsigned long long)ai->client_id, ai->username, ai->module_name, ai->result == VALKEYMODULE_AUTH_RESULT_GRANTED);
+           (unsigned long long)ai->client_id,
+           ai->username,
+           ai->module_name,
+           ai->result == VALKEYMODULE_AUTH_RESULT_GRANTED);
 }
 
 /* This function must be present on each module. It is used in order to

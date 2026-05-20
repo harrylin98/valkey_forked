@@ -79,7 +79,12 @@ typedef uint8_t vsetIterator[600];
 
 bool vsetAddEntry(vset *set, vsetGetExpiryFunc getExpiry, void *entry);
 bool vsetRemoveEntry(vset *set, vsetGetExpiryFunc getExpiry, void *entry);
-bool vsetUpdateEntry(vset *set, vsetGetExpiryFunc getExpiry, void *old_entry, void *new_entry, long long old_expiry, long long new_expiry);
+bool vsetUpdateEntry(vset *set,
+                     vsetGetExpiryFunc getExpiry,
+                     void *old_entry,
+                     void *new_entry,
+                     long long old_expiry,
+                     long long new_expiry);
 bool vsetIsEmpty(vset *set);
 void vsetInitIterator(vset *set, vsetIterator *it);
 bool vsetNext(vsetIterator *it, void **entryptr);
@@ -89,7 +94,12 @@ void vsetClear(vset *set);
 void vsetRelease(vset *set);
 bool vsetIsValid(vset *set);
 long long vsetEstimatedEarliestExpiry(vset *set, vsetGetExpiryFunc getExpiry);
-size_t vsetRemoveExpired(vset *set, vsetGetExpiryFunc getExpiry, vsetExpiryFunc expiryFunc, mstime_t now, size_t max_count, void *ctx);
+size_t vsetRemoveExpired(vset *set,
+                         vsetGetExpiryFunc getExpiry,
+                         vsetExpiryFunc expiryFunc,
+                         mstime_t now,
+                         size_t max_count,
+                         void *ctx);
 size_t vsetMemUsage(vset *set);
 size_t vsetScanDefrag(vset *set, size_t cursor, void *(*defragfn)(void *));
 

@@ -260,7 +260,8 @@ void freeEvalScriptsAsync(dict *scripts, list *scripts_lru_list, list *engine_ca
 /* Free functions ctx, if the functions ctx contains enough functions, free it in async way. */
 void freeFunctionsAsync(functionsLibCtx *functions_lib_ctx, list *engine_callbacks) {
     if (functionsLibCtxFunctionsLen(functions_lib_ctx) > LAZYFREE_THRESHOLD) {
-        atomic_fetch_add_explicit(&lazyfree_objects, functionsLibCtxFunctionsLen(functions_lib_ctx),
+        atomic_fetch_add_explicit(&lazyfree_objects,
+                                  functionsLibCtxFunctionsLen(functions_lib_ctx),
                                   memory_order_relaxed);
         bioCreateLazyFreeJob(lazyFreeFunctionsCtx, 2, functions_lib_ctx, engine_callbacks);
     } else {

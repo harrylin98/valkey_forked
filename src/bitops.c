@@ -177,12 +177,12 @@ long long popcountScalar(void *s, long count) {
         aux6 = (aux6 & 0x33333333) + ((aux6 >> 2) & 0x33333333);
         aux7 = aux7 - ((aux7 >> 1) & 0x55555555);
         aux7 = (aux7 & 0x33333333) + ((aux7 >> 2) & 0x33333333);
-        bits += ((((aux1 + (aux1 >> 4)) & 0x0F0F0F0F) + ((aux2 + (aux2 >> 4)) & 0x0F0F0F0F) +
-                  ((aux3 + (aux3 >> 4)) & 0x0F0F0F0F) + ((aux4 + (aux4 >> 4)) & 0x0F0F0F0F) +
-                  ((aux5 + (aux5 >> 4)) & 0x0F0F0F0F) + ((aux6 + (aux6 >> 4)) & 0x0F0F0F0F) +
-                  ((aux7 + (aux7 >> 4)) & 0x0F0F0F0F)) *
-                 0x01010101) >>
-                24;
+        bits += ((((aux1 + (aux1 >> 4)) & 0x0F0F0F0F) + ((aux2 + (aux2 >> 4)) & 0x0F0F0F0F)
+                  + ((aux3 + (aux3 >> 4)) & 0x0F0F0F0F) + ((aux4 + (aux4 >> 4)) & 0x0F0F0F0F)
+                  + ((aux5 + (aux5 >> 4)) & 0x0F0F0F0F) + ((aux6 + (aux6 >> 4)) & 0x0F0F0F0F)
+                  + ((aux7 + (aux7 >> 4)) & 0x0F0F0F0F))
+                 * 0x01010101)
+                >> 24;
     }
     /* Count the remaining bytes. */
     p = (unsigned char *)p4;
@@ -621,8 +621,8 @@ int getBitfieldTypeFromArgument(client *c, robj *o, int *sign, int *bits) {
         return C_ERR;
     }
 
-    if ((string2ll(p + 1, plen - 1, &llbits)) == 0 || llbits < 1 || (*sign == 1 && llbits > 64) ||
-        (*sign == 0 && llbits > 63)) {
+    if ((string2ll(p + 1, plen - 1, &llbits)) == 0 || llbits < 1 || (*sign == 1 && llbits > 64)
+        || (*sign == 0 && llbits > 63)) {
         addReplyError(c, err);
         return C_ERR;
     }

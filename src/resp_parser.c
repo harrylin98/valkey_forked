@@ -125,8 +125,8 @@ static int parseVerbatimString(ReplyParser *parser, void *p_ctx) {
     const char *format = parser->curr_location;
     parser->curr_location += bulklen;
     parser->curr_location += 2; /* for \r\n */
-    parser->callbacks.verbatim_string_callback(p_ctx, format, format + 4, bulklen - 4, proto,
-                                               parser->curr_location - proto);
+    parser->callbacks
+        .verbatim_string_callback(p_ctx, format, format + 4, bulklen - 4, proto, parser->curr_location - proto);
     return C_OK;
 }
 

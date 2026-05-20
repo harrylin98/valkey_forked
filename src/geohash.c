@@ -50,8 +50,11 @@
  * From:  https://graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN
  */
 static inline uint64_t interleave64(uint32_t xlo, uint32_t ylo) {
-    static const uint64_t B[] = {0x5555555555555555ULL, 0x3333333333333333ULL, 0x0F0F0F0F0F0F0F0FULL,
-                                 0x00FF00FF00FF00FFULL, 0x0000FFFF0000FFFFULL};
+    static const uint64_t B[] = {0x5555555555555555ULL,
+                                 0x3333333333333333ULL,
+                                 0x0F0F0F0F0F0F0F0FULL,
+                                 0x00FF00FF00FF00FFULL,
+                                 0x0000FFFF0000FFFFULL};
     static const unsigned int S[] = {1, 2, 4, 8, 16};
 
     uint64_t x = xlo;
@@ -79,8 +82,12 @@ static inline uint64_t interleave64(uint32_t xlo, uint32_t ylo) {
  * derived from http://stackoverflow.com/questions/4909263
  */
 static inline uint64_t deinterleave64(uint64_t interleaved) {
-    static const uint64_t B[] = {0x5555555555555555ULL, 0x3333333333333333ULL, 0x0F0F0F0F0F0F0F0FULL,
-                                 0x00FF00FF00FF00FFULL, 0x0000FFFF0000FFFFULL, 0x00000000FFFFFFFFULL};
+    static const uint64_t B[] = {0x5555555555555555ULL,
+                                 0x3333333333333333ULL,
+                                 0x0F0F0F0F0F0F0F0FULL,
+                                 0x00FF00FF00FF00FFULL,
+                                 0x0000FFFF0000FFFFULL,
+                                 0x00000000FFFFFFFFULL};
     static const unsigned int S[] = {0, 1, 2, 4, 8, 16};
 
     uint64_t x = interleaved;
@@ -133,8 +140,8 @@ int geohashEncode(const GeoHashRange *long_range,
     hash->bits = 0;
     hash->step = step;
 
-    if (latitude < lat_range->min || latitude > lat_range->max || longitude < long_range->min ||
-        longitude > long_range->max) {
+    if (latitude < lat_range->min || latitude > lat_range->max || longitude < long_range->min
+        || longitude > long_range->max) {
         return 0;
     }
 

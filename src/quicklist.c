@@ -224,8 +224,8 @@ static int __quicklistCompressNode(quicklistNode *node) {
     quicklistLZF *lzf = zmalloc(sizeof(*lzf) + node->sz);
 
     /* Cancel if compression fails or doesn't compress small enough */
-    if (((lzf->sz = lzf_compress(node->entry, node->sz, lzf->compressed, node->sz)) == 0) ||
-        lzf->sz + MIN_COMPRESS_IMPROVE >= node->sz) {
+    if (((lzf->sz = lzf_compress(node->entry, node->sz, lzf->compressed, node->sz)) == 0)
+        || lzf->sz + MIN_COMPRESS_IMPROVE >= node->sz) {
         /* lzf_compress aborts/rejects compression if value not compressible. */
         zfree(lzf);
         return 0;
@@ -533,8 +533,11 @@ static quicklistNode *__quicklistCreateNode(int container, void *value, size_t s
     return new_node;
 }
 
-static void
-__quicklistInsertPlainNode(quicklist *quicklist, quicklistNode *old_node, void *value, size_t sz, int after) {
+static void __quicklistInsertPlainNode(quicklist *quicklist,
+                                       quicklistNode *old_node,
+                                       void *value,
+                                       size_t sz,
+                                       int after) {
     quicklistNode *new_node = __quicklistCreateNode(QUICKLIST_NODE_CONTAINER_PLAIN, value, sz);
     __quicklistInsertNode(quicklist, old_node, new_node, after);
     quicklist->count++;
@@ -729,8 +732,8 @@ void quicklistReplaceEntry(quicklistIter *iter, quicklistEntry *entry, void *dat
     quicklistNode *node = entry->node;
     unsigned char *newentry;
 
-    if (likely(!QL_NODE_IS_PLAIN(entry->node) && !isLargeElement(sz, quicklist->fill) &&
-               (newentry = lpReplace(entry->node->entry, &entry->zi, data, sz)) != NULL)) {
+    if (likely(!QL_NODE_IS_PLAIN(entry->node) && !isLargeElement(sz, quicklist->fill)
+               && (newentry = lpReplace(entry->node->entry, &entry->zi, data, sz)) != NULL)) {
         entry->node->entry = newentry;
         quicklistNodeUpdateSz(entry->node);
         /* quicklistNext() and quicklistGetIteratorEntryAtIdx() provide an uncompressed node */
@@ -758,7 +761,8 @@ void quicklistReplaceEntry(quicklistIter *iter, quicklistEntry *entry, void *dat
          * If the original node was split, insert the split node after the new node. */
         new_node = __quicklistCreateNode(isLargeElement(sz, quicklist->fill) ? QUICKLIST_NODE_CONTAINER_PLAIN
                                                                              : QUICKLIST_NODE_CONTAINER_PACKED,
-                                         data, sz);
+                                         data,
+                                         sz);
         __quicklistInsertNode(quicklist, node, new_node, 1);
         if (split_node) __quicklistInsertNode(quicklist, new_node, split_node, 1);
         quicklist->count++;
@@ -1152,7 +1156,11 @@ int quicklistDelRange(quicklist *quicklist, const long start, const long count) 
 
         D("[%ld]: asking to del: %ld because offset: %d; (ENTIRE NODE: %d), "
           "node count: %u",
-          extent, del, offset, delete_entire_node, node->count);
+          extent,
+          del,
+          offset,
+          delete_entire_node,
+          node->count);
 
         if (delete_entire_node || QL_NODE_IS_PLAIN(node)) {
             __quicklistDelNode(quicklist, node);
@@ -1241,7 +1249,11 @@ quicklistIter *quicklistGetIteratorAtIdx(quicklist *quicklist, const int directi
     /* Fix accum so it looks like we seeked in the other direction. */
     if (seek_forward != forward) accum = quicklist->count - n->count - accum;
 
-    D("Found node: %p at accum %llu, idx %llu, sub+ %llu, sub- %llu", (void *)n, accum, index, index - accum,
+    D("Found node: %p at accum %llu, idx %llu, sub+ %llu, sub- %llu",
+      (void *)n,
+      accum,
+      index,
+      index - accum,
       (-index) - 1 + accum);
 
     quicklistIter *iter = quicklistGetIterator(quicklist, direction);
@@ -1591,7 +1603,10 @@ void quicklistRepr(unsigned char *ql, int full) {
         printf("{quicklist node(%d)\n", i++);
         printf("{container : %s, encoding: %s, size: %zu, count: %d, recompress: %d, attempted_compress: %d}\n",
                QL_NODE_IS_PLAIN(node) ? "PLAIN" : "PACKED",
-               (node->encoding == QUICKLIST_NODE_ENCODING_RAW) ? "RAW" : "LZF", node->sz, node->count, node->recompress,
+               (node->encoding == QUICKLIST_NODE_ENCODING_RAW) ? "RAW" : "LZF",
+               node->sz,
+               node->count,
+               node->recompress,
                node->attempted_compress);
 
         if (full) {

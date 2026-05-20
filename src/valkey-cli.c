@@ -176,8 +176,8 @@
 
 /* --latency-dist palettes. */
 int spectrum_palette_color_size = 19;
-int spectrum_palette_color[] = {0, 233, 234, 235, 237, 239, 241, 243, 245, 247,
-                                144, 143, 142, 184, 226, 214, 208, 202, 196};
+int spectrum_palette_color[] =
+    {0, 233, 234, 235, 237, 239, 241, 243, 245, 247, 144, 143, 142, 184, 226, 214, 208, 202, 196};
 
 int spectrum_palette_mono_size = 13;
 int spectrum_palette_mono[] = {0, 233, 234, 235, 237, 239, 241, 243, 245, 247, 249, 251, 253};
@@ -448,8 +448,8 @@ static void cliLegacyIntegrateHelp(void) {
      * don't already match what we have. */
     for (size_t j = 0; j < reply->elements; j++) {
         valkeyReply *entry = reply->element[j];
-        if (entry->type != VALKEY_REPLY_ARRAY || entry->elements < 4 || entry->element[0]->type != VALKEY_REPLY_STRING ||
-            entry->element[1]->type != VALKEY_REPLY_INTEGER || entry->element[3]->type != VALKEY_REPLY_INTEGER)
+        if (entry->type != VALKEY_REPLY_ARRAY || entry->elements < 4 || entry->element[0]->type != VALKEY_REPLY_STRING
+            || entry->element[1]->type != VALKEY_REPLY_INTEGER || entry->element[3]->type != VALKEY_REPLY_INTEGER)
             return;
         char *cmdname = entry->element[0]->str;
         int i;
@@ -607,8 +607,11 @@ static void cliFillInCommandHelpEntry(helpEntry *help, char *cmdname, char *subc
  * Returns a pointer to the next available position in the help entries table.
  * If the command has subcommands, this is called recursively for the subcommands.
  */
-static helpEntry *
-cliInitCommandHelpEntry(char *cmdname, char *subcommandname, helpEntry *next, valkeyReply *specs, dict *groups) {
+static helpEntry *cliInitCommandHelpEntry(char *cmdname,
+                                          char *subcommandname,
+                                          helpEntry *next,
+                                          valkeyReply *specs,
+                                          dict *groups) {
     helpEntry *help = next++;
     cliFillInCommandHelpEntry(help, cmdname, subcommandname);
 
@@ -661,8 +664,8 @@ static size_t cliCountCommands(valkeyReply *commandTable) {
     /* The command docs table maps command names to a map of their specs. */
     for (size_t i = 0; i < commandTable->elements; i += 2) {
         assert(commandTable->element[i]->type == VALKEY_REPLY_STRING); /* Command name. */
-        assert(commandTable->element[i + 1]->type == VALKEY_REPLY_MAP ||
-               commandTable->element[i + 1]->type == VALKEY_REPLY_ARRAY);
+        assert(commandTable->element[i + 1]->type == VALKEY_REPLY_MAP
+               || commandTable->element[i + 1]->type == VALKEY_REPLY_ARRAY);
         valkeyReply *map = commandTable->element[i + 1];
         for (size_t j = 0; j < map->elements; j += 2) {
             assert(map->element[j]->type == VALKEY_REPLY_STRING);
@@ -723,8 +726,8 @@ void cliInitCommandHelpEntries(valkeyReply *commandTable, dict *groups) {
         assert(commandTable->element[i]->type == VALKEY_REPLY_STRING);
         char *cmdname = commandTable->element[i]->str;
 
-        assert(commandTable->element[i + 1]->type == VALKEY_REPLY_MAP ||
-               commandTable->element[i + 1]->type == VALKEY_REPLY_ARRAY);
+        assert(commandTable->element[i + 1]->type == VALKEY_REPLY_MAP
+               || commandTable->element[i + 1]->type == VALKEY_REPLY_ARRAY);
         valkeyReply *cmdspecs = commandTable->element[i + 1];
         next = cliInitCommandHelpEntry(cmdname, NULL, next, cmdspecs, groups);
     }
@@ -808,7 +811,11 @@ static helpEntry *cliLegacyInitCommandHelpEntry(char *cmdname,
         for (size_t i = 0; command->subcommands[i].name != NULL; i++) {
             if (!version || versionIsSupported(version, command->subcommands[i].since)) {
                 char *subcommandname = command->subcommands[i].name;
-                next = cliLegacyInitCommandHelpEntry(cmdname, subcommandname, next, &command->subcommands[i], groups,
+                next = cliLegacyInitCommandHelpEntry(cmdname,
+                                                     subcommandname,
+                                                     next,
+                                                     &command->subcommands[i],
+                                                     groups,
                                                      version);
             }
         }
@@ -1648,7 +1655,12 @@ static int cliConnect(int flags) {
             cliRefreshPrompt();
         }
 
-        context = valkeyConnectWrapper(config.ct, config.conn_info.hostip, config.conn_info.hostport, config.connect_timeout, 0, config.mptcp);
+        context = valkeyConnectWrapper(config.ct,
+                                       config.conn_info.hostip,
+                                       config.conn_info.hostport,
+                                       config.connect_timeout,
+                                       0,
+                                       config.mptcp);
 
         if (!context->err && config.tls) {
             const char *err = NULL;
@@ -1727,8 +1739,8 @@ static void cliPrintContextError(void) {
 }
 
 static int isInvalidateReply(valkeyReply *reply) {
-    return reply->type == VALKEY_REPLY_PUSH && reply->elements == 2 && reply->element[0]->type == VALKEY_REPLY_STRING &&
-           !strncmp(reply->element[0]->str, "invalidate", 10) && reply->element[1]->type == VALKEY_REPLY_ARRAY;
+    return reply->type == VALKEY_REPLY_PUSH && reply->elements == 2 && reply->element[0]->type == VALKEY_REPLY_STRING
+           && !strncmp(reply->element[0]->str, "invalidate", 10) && reply->element[1]->type == VALKEY_REPLY_ARRAY;
 }
 
 /* Special display handler for RESP3 'invalidate' messages.
@@ -1875,16 +1887,16 @@ static sds cliFormatReplyTTY(valkeyReply *r, char *prefix) {
 
 /* Returns 1 if the reply is a pubsub pushed reply. */
 int isPubsubPush(valkeyReply *r) {
-    if (r == NULL || r->type != (config.current_resp3 ? VALKEY_REPLY_PUSH : VALKEY_REPLY_ARRAY) || r->elements < 3 ||
-        r->element[0]->type != VALKEY_REPLY_STRING) {
+    if (r == NULL || r->type != (config.current_resp3 ? VALKEY_REPLY_PUSH : VALKEY_REPLY_ARRAY) || r->elements < 3
+        || r->element[0]->type != VALKEY_REPLY_STRING) {
         return 0;
     }
     char *str = r->element[0]->str;
     size_t len = r->element[0]->len;
     /* Check if it is [p|s][un]subscribe or [p|s]message, but even simpler, we
      * just check that it ends with "message" or "subscribe". */
-    return ((len >= strlen("message") && !strcmp(str + len - strlen("message"), "message")) ||
-            (len >= strlen("subscribe") && !strcmp(str + len - strlen("subscribe"), "subscribe")));
+    return ((len >= strlen("message") && !strcmp(str + len - strlen("message"), "message"))
+            || (len >= strlen("subscribe") && !strcmp(str + len - strlen("subscribe"), "subscribe")));
 }
 
 int isColorTerm(void) {
@@ -2094,8 +2106,8 @@ static sds cliFormatReplyJson(sds out, valkeyReply *r, int mode) {
         out = sdscat(out, "{");
         for (i = 0; i < r->elements; i += 2) {
             valkeyReply *key = r->element[i];
-            if (key->type == VALKEY_REPLY_ERROR || key->type == VALKEY_REPLY_STATUS || key->type == VALKEY_REPLY_STRING ||
-                key->type == VALKEY_REPLY_VERB) {
+            if (key->type == VALKEY_REPLY_ERROR || key->type == VALKEY_REPLY_STATUS || key->type == VALKEY_REPLY_STRING
+                || key->type == VALKEY_REPLY_VERB) {
                 out = cliFormatReplyJson(out, key, mode);
             } else {
                 /* According to JSON spec, JSON map keys must be strings,
@@ -2203,8 +2215,8 @@ static int cliReadReply(int output_raw_strings) {
 
     /* Check if we need to connect to a different node and reissue the
      * request. */
-    if (config.cluster_mode && reply->type == VALKEY_REPLY_ERROR &&
-        (!strncmp(reply->str, "MOVED ", 6) || !strncmp(reply->str, "ASK ", 4))) {
+    if (config.cluster_mode && reply->type == VALKEY_REPLY_ERROR
+        && (!strncmp(reply->str, "MOVED ", 6) || !strncmp(reply->str, "ASK ", 4))) {
         char *p = reply->str, *s;
         int slot;
 
@@ -2228,7 +2240,9 @@ static int cliReadReply(int output_raw_strings) {
         }
         config.conn_info.hostport = atoi(s + 1);
         if (config.interactive)
-            printf("-> Redirected to slot [%d] located at %s:%d\n", slot, config.conn_info.hostip,
+            printf("-> Redirected to slot [%d] located at %s:%d\n",
+                   slot,
+                   config.conn_info.hostip,
                    config.conn_info.hostport);
         config.cluster_reissue_command = 1;
         if (!strncmp(reply->str, "ASK ", 4)) {
@@ -2256,7 +2270,8 @@ static void handlePubSubMode(valkeyReply *reply) {
     int count = reply->element[2]->integer;
 
     /* Update counts based on the command type */
-    if (strcmp(cmd, "subscribe") == 0 || strcmp(cmd, "psubscribe") == 0 || strcmp(cmd, "unsubscribe") == 0 || strcmp(cmd, "punsubscribe") == 0) {
+    if (strcmp(cmd, "subscribe") == 0 || strcmp(cmd, "psubscribe") == 0 || strcmp(cmd, "unsubscribe") == 0
+        || strcmp(cmd, "punsubscribe") == 0) {
         config.pubsub_unsharded_count = count;
     } else if (strcmp(cmd, "ssubscribe") == 0 || strcmp(cmd, "sunsubscribe") == 0) {
         config.pubsub_sharded_count = count;
@@ -2352,18 +2367,18 @@ static int cliSendCommand(int argc, char **argv, long repeat) {
     if (context == NULL) return VALKEY_ERR;
 
     output_raw = 0;
-    if (!strcasecmp(command, "info") || !strcasecmp(command, "lolwut") ||
-        (argc >= 2 && !strcasecmp(command, "debug") && !strcasecmp(argv[1], "htstats")) ||
-        (argc >= 2 && !strcasecmp(command, "debug") && !strcasecmp(argv[1], "htstats-key")) ||
-        (argc >= 2 && !strcasecmp(command, "debug") && !strcasecmp(argv[1], "client-eviction")) ||
-        (argc >= 2 && !strcasecmp(command, "memory") &&
-         (!strcasecmp(argv[1], "malloc-stats") || !strcasecmp(argv[1], "doctor"))) ||
-        (argc == 2 && !strcasecmp(command, "cluster") &&
-         (!strcasecmp(argv[1], "nodes") || !strcasecmp(argv[1], "info"))) ||
-        (argc >= 2 && !strcasecmp(command, "client") &&
-         (!strcasecmp(argv[1], "list") || !strcasecmp(argv[1], "info"))) ||
-        (argc == 3 && !strcasecmp(command, "latency") && !strcasecmp(argv[1], "graph")) ||
-        (argc == 2 && !strcasecmp(command, "latency") && !strcasecmp(argv[1], "doctor")) ||
+    if (!strcasecmp(command, "info") || !strcasecmp(command, "lolwut")
+        || (argc >= 2 && !strcasecmp(command, "debug") && !strcasecmp(argv[1], "htstats"))
+        || (argc >= 2 && !strcasecmp(command, "debug") && !strcasecmp(argv[1], "htstats-key"))
+        || (argc >= 2 && !strcasecmp(command, "debug") && !strcasecmp(argv[1], "client-eviction"))
+        || (argc >= 2 && !strcasecmp(command, "memory")
+            && (!strcasecmp(argv[1], "malloc-stats") || !strcasecmp(argv[1], "doctor")))
+        || (argc == 2 && !strcasecmp(command, "cluster")
+            && (!strcasecmp(argv[1], "nodes") || !strcasecmp(argv[1], "info")))
+        || (argc >= 2 && !strcasecmp(command, "client")
+            && (!strcasecmp(argv[1], "list") || !strcasecmp(argv[1], "info")))
+        || (argc == 3 && !strcasecmp(command, "latency") && !strcasecmp(argv[1], "graph"))
+        || (argc == 2 && !strcasecmp(command, "latency") && !strcasecmp(argv[1], "doctor")) ||
         /* Format PROXY INFO command for Cluster Proxy:
          * https://github.com/artix75/redis-cluster-proxy */
         (argc >= 2 && !strcasecmp(command, "proxy") && !strcasecmp(argv[1], "info"))) {
@@ -2375,10 +2390,10 @@ static int cliSendCommand(int argc, char **argv, long repeat) {
 
     if (!strcasecmp(command, "shutdown")) config.shutdown = 1;
     if (!strcasecmp(command, "monitor")) config.monitor_mode = 1;
-    int is_subscribe =
-        (!strcasecmp(command, "subscribe") || !strcasecmp(command, "psubscribe") || !strcasecmp(command, "ssubscribe"));
-    int is_unsubscribe = (!strcasecmp(command, "unsubscribe") || !strcasecmp(command, "punsubscribe") ||
-                          !strcasecmp(command, "sunsubscribe"));
+    int is_subscribe = (!strcasecmp(command, "subscribe") || !strcasecmp(command, "psubscribe")
+                        || !strcasecmp(command, "ssubscribe"));
+    int is_unsubscribe = (!strcasecmp(command, "unsubscribe") || !strcasecmp(command, "punsubscribe")
+                          || !strcasecmp(command, "sunsubscribe"));
     if (!strcasecmp(command, "sync") || !strcasecmp(command, "psync")) config.replica_mode = 1;
 
     /* When the user manually calls SCRIPT DEBUG, setup the activation of
@@ -2535,7 +2550,12 @@ static valkeyReply *reconnectingValkeyCommand(valkeyContext *c, const char *fmt,
             fflush(stdout);
 
             valkeyFree(c);
-            c = valkeyConnectWrapper(config.ct, config.conn_info.hostip, config.conn_info.hostport, config.connect_timeout, 0, config.mptcp);
+            c = valkeyConnectWrapper(config.ct,
+                                     config.conn_info.hostip,
+                                     config.conn_info.hostport,
+                                     config.connect_timeout,
+                                     0,
+                                     config.mptcp);
             if (!c->err && config.tls) {
                 const char *err = NULL;
                 if (cliSecureConnection(c, config.sslconfig, &err) == VALKEY_ERR && err) {
@@ -2586,7 +2606,8 @@ static int parseOptions(int argc, char **argv) {
             config.stdin_tag_name = argv[++i];
         } else if (!strcmp(argv[i], "-p") && !lastarg) {
             config.conn_info.hostport = atoi(argv[++i]);
-            if ((config.conn_info.hostport == 0 && !(strlen(argv[i]) == 1 && argv[i][0] == '0')) || config.conn_info.hostport < 0 || config.conn_info.hostport > 65535) {
+            if ((config.conn_info.hostport == 0 && !(strlen(argv[i]) == 1 && argv[i][0] == '0'))
+                || config.conn_info.hostport < 0 || config.conn_info.hostport > 65535) {
                 fprintf(stderr, "Invalid server port.\n");
                 exit(1);
             }
@@ -2760,11 +2781,12 @@ static int parseOptions(int argc, char **argv) {
             config.cluster_manager_command.from_askpass = 1;
         } else if (!strcmp(argv[i], "--cluster-weight") && !lastarg) {
             if (config.cluster_manager_command.weight != NULL) {
-                fprintf(stderr, "WARNING: you cannot use --cluster-weight "
-                                "more than once.\n"
-                                "You can set more weights by adding them "
-                                "as a space-separated list, ie:\n"
-                                "--cluster-weight n1=w n2=w\n");
+                fprintf(stderr,
+                        "WARNING: you cannot use --cluster-weight "
+                        "more than once.\n"
+                        "You can set more weights by adding them "
+                        "as a space-separated list, ie:\n"
+                        "--cluster-weight n1=w n2=w\n");
                 exit(1);
             }
             int widx = i + 1;
@@ -2798,13 +2820,13 @@ static int parseOptions(int argc, char **argv) {
             config.cluster_manager_command.flags |= CLUSTER_MANAGER_CMD_FLAG_COPY;
         } else if (!strcmp(argv[i], "--cluster-slave") || !strcmp(argv[i], "--cluster-replica")) {
             config.cluster_manager_command.flags |= CLUSTER_MANAGER_CMD_FLAG_REPLICA;
-        } else if (!strcmp(argv[i], "--cluster-use-empty-masters") ||
-                   !strcmp(argv[i], "--cluster-use-empty-primaries")) {
+        } else if (!strcmp(argv[i], "--cluster-use-empty-masters")
+                   || !strcmp(argv[i], "--cluster-use-empty-primaries")) {
             config.cluster_manager_command.flags |= CLUSTER_MANAGER_CMD_FLAG_EMPTY_PRIMARY;
         } else if (!strcmp(argv[i], "--cluster-search-multiple-owners")) {
             config.cluster_manager_command.flags |= CLUSTER_MANAGER_CMD_FLAG_CHECK_OWNERS;
-        } else if (!strcmp(argv[i], "--cluster-fix-with-unreachable-masters") ||
-                   !strcmp(argv[i], "--cluster-fix-with-unreachable-primaries")) {
+        } else if (!strcmp(argv[i], "--cluster-fix-with-unreachable-masters")
+                   || !strcmp(argv[i], "--cluster-fix-with-unreachable-primaries")) {
             config.cluster_manager_command.flags |= CLUSTER_MANAGER_CMD_FLAG_FIX_WITH_UNREACHABLE_PRIMARIES;
         } else if (!strcmp(argv[i], "--cluster-use-atomic-slot-migration")) {
             config.cluster_manager_command.flags |= CLUSTER_MANAGER_CMD_FLAG_USE_ATOMIC_SLOT_MIGRATION;
@@ -3044,7 +3066,9 @@ static void usage(int err) {
             "  --show-pushes <yn> Whether to print RESP3 PUSH messages.  Enabled by default when\n"
             "                     STDOUT is a tty but can be overridden with --show-pushes no.\n"
             "  --stat             Print rolling stats about server: mem, clients, ...\n",
-            version, tls_usage, rdma_usage);
+            version,
+            tls_usage,
+            rdma_usage);
 
     fprintf(target,
             "  --latency          Enter a special mode continuously sampling latency.\n"
@@ -3108,7 +3132,8 @@ static void usage(int err) {
             "Examples:\n"
             "  valkey-cli -u valkey://default:PASSWORD@localhost:6379/0\n"
             "  cat /etc/passwd | valkey-cli -x set mypasswd\n"
-            "  valkey-cli -D \"\" --raw dump key > key.dump && valkey-cli -X dump_tag restore key2 0 dump_tag replace < key.dump\n"
+            "  valkey-cli -D \"\" --raw dump key > key.dump && valkey-cli -X dump_tag restore key2 0 dump_tag replace "
+            "< key.dump\n"
             "  valkey-cli -r 100 lpush mylist x\n"
             "  valkey-cli -r 100 -i 1 info | grep used_memory_human:\n"
             "  valkey-cli --quoted-input set '\"null-\\x00-separated\"' value\n"
@@ -3152,8 +3177,8 @@ static int issueCommandRepeat(int argc, char **argv, long repeat) {
     }
 
     while (1) {
-        if (config.cluster_reissue_command || context == NULL || context->err == VALKEY_ERR_IO ||
-            context->err == VALKEY_ERR_EOF) {
+        if (config.cluster_reissue_command || context == NULL || context->err == VALKEY_ERR_IO
+            || context->err == VALKEY_ERR_EOF) {
             if (cliConnect(CC_FORCE) != VALKEY_OK) {
                 cliPrintContextError();
                 config.cluster_reissue_command = 0;
@@ -3264,16 +3289,16 @@ void cliLoadPreferences(void) {
 static int isSensitiveCommand(int argc, char **argv) {
     if (!strcasecmp(argv[0], "auth")) {
         return 1;
-    } else if (argc > 1 && !strcasecmp(argv[0], "acl") &&
-               (!strcasecmp(argv[1], "deluser") || !strcasecmp(argv[1], "setuser") ||
-                !strcasecmp(argv[1], "getuser"))) {
+    } else if (argc > 1 && !strcasecmp(argv[0], "acl")
+               && (!strcasecmp(argv[1], "deluser") || !strcasecmp(argv[1], "setuser")
+                   || !strcasecmp(argv[1], "getuser"))) {
         return 1;
     } else if (argc > 2 && !strcasecmp(argv[0], "config") && !strcasecmp(argv[1], "set")) {
         for (int j = 2; j < argc; j = j + 2) {
-            if (!strcasecmp(argv[j], "masterauth") || !strcasecmp(argv[j], "masteruser") ||
-                !strcasecmp(argv[j], "primaryuser") || !strcasecmp(argv[j], "primaryauth") ||
-                !strcasecmp(argv[j], "tls-key-file-pass") || !strcasecmp(argv[j], "tls-client-key-file-pass") ||
-                !strcasecmp(argv[j], "requirepass")) {
+            if (!strcasecmp(argv[j], "masterauth") || !strcasecmp(argv[j], "masteruser")
+                || !strcasecmp(argv[j], "primaryuser") || !strcasecmp(argv[j], "primaryauth")
+                || !strcasecmp(argv[j], "tls-key-file-pass") || !strcasecmp(argv[j], "tls-client-key-file-pass")
+                || !strcasecmp(argv[j], "requirepass")) {
                 return 1;
             }
         }
@@ -3306,8 +3331,8 @@ static int isSensitiveCommand(int argc, char **argv) {
     } else if (argc > 4 && !strcasecmp(argv[0], "sentinel")) {
         /* SENTINEL CONFIG SET sentinel-pass password
          * SENTINEL CONFIG SET sentinel-user username */
-        if (!strcasecmp(argv[1], "config") && !strcasecmp(argv[2], "set") &&
-            (!strcasecmp(argv[3], "sentinel-pass") || !strcasecmp(argv[3], "sentinel-user"))) {
+        if (!strcasecmp(argv[1], "config") && !strcasecmp(argv[2], "set")
+            && (!strcasecmp(argv[3], "sentinel-pass") || !strcasecmp(argv[3], "sentinel-user"))) {
             return 1;
         }
         /* SENTINEL SET <primaryname> auth-pass password
@@ -3553,10 +3578,9 @@ static int evalMode(int argc, char **argv) {
 
         /* If we are debugging a script, enable the Lua debugger. */
         if (config.eval_ldb) {
-            valkeyReply *reply = valkeyCommand(
-                context,
-                config.eval_ldb_sync ? "SCRIPT DEBUG sync %s" : "SCRIPT DEBUG yes %s",
-                engine_name ? engine_name : "");
+            valkeyReply *reply = valkeyCommand(context,
+                                               config.eval_ldb_sync ? "SCRIPT DEBUG sync %s" : "SCRIPT DEBUG yes %s",
+                                               engine_name ? engine_name : "");
             if (reply) freeReplyObject(reply);
         }
 
@@ -3753,24 +3777,41 @@ typedef struct clusterManagerCommandDef {
 
 clusterManagerCommandDef clusterManagerCommands[] = {
     {"create", clusterManagerCommandCreate, -1, "host1:port1 ... hostN:portN", "replicas <arg>"},
-    {"check", clusterManagerCommandCheck, -1, "<host:port> or <host> <port> - separated by either colon or space",
+    {"check",
+     clusterManagerCommandCheck,
+     -1,
+     "<host:port> or <host> <port> - separated by either colon or space",
      "search-multiple-owners"},
     {"info", clusterManagerCommandInfo, -1, "<host:port> or <host> <port> - separated by either colon or space", NULL},
-    {"fix", clusterManagerCommandFix, -1, "<host:port> or <host> <port> - separated by either colon or space",
+    {"fix",
+     clusterManagerCommandFix,
+     -1,
+     "<host:port> or <host> <port> - separated by either colon or space",
      "search-multiple-owners,fix-with-unreachable-primaries"},
-    {"reshard", clusterManagerCommandReshard, -1, "<host:port> or <host> <port> - separated by either colon or space",
+    {"reshard",
+     clusterManagerCommandReshard,
+     -1,
+     "<host:port> or <host> <port> - separated by either colon or space",
      "from <arg>,to <arg>,slots <arg>,yes,timeout <arg>,pipeline <arg>,"
      "replace"},
-    {"rebalance", clusterManagerCommandRebalance, -1,
+    {"rebalance",
+     clusterManagerCommandRebalance,
+     -1,
      "<host:port> or <host> <port> - separated by either colon or space",
      "weight <node1=w1...nodeN=wN>,use-empty-primaries,"
      "timeout <arg>,simulate,pipeline <arg>,threshold <arg>,replace"},
-    {"add-node", clusterManagerCommandAddNode, 2, "new_host:new_port existing_host:existing_port",
+    {"add-node",
+     clusterManagerCommandAddNode,
+     2,
+     "new_host:new_port existing_host:existing_port",
      "replica,primaries-id <arg>"},
     {"del-node", clusterManagerCommandDeleteNode, 2, "host:port node_id", NULL},
     {"call", clusterManagerCommandCall, -2, "host:port command arg arg .. arg", "only-primaries,only-replicas"},
     {"set-timeout", clusterManagerCommandSetTimeout, 2, "host:port milliseconds", NULL},
-    {"import", clusterManagerCommandImport, 1, "host:port",
+    {"import",
+     clusterManagerCommandImport,
+     1,
+     "host:port",
      "from <arg>,from-user <arg>,from-pass <arg>,from-askpass,copy,replace"},
     {"backup", clusterManagerCommandBackup, 2, "host:port backup_directory", NULL},
     {"help", clusterManagerCommandHelp, 0, NULL, NULL}};
@@ -3829,8 +3870,9 @@ static clusterManagerCommandProc *validateClusterManagerCommand(void) {
         clusterManagerCommandDef cmddef = clusterManagerCommands[i];
         if (!strcmp(cmddef.name, cmdname)) {
             if ((cmddef.arity > 0 && argc != cmddef.arity) || (cmddef.arity < 0 && argc < (cmddef.arity * -1))) {
-                fprintf(stderr, "[ERR] Wrong number of arguments for "
-                                "specified --cluster sub command\n");
+                fprintf(stderr,
+                        "[ERR] Wrong number of arguments for "
+                        "specified --cluster sub command\n");
                 return NULL;
             }
             proc = cmddef.proc;
@@ -4429,7 +4471,13 @@ static sds clusterManagerNodeGetJSON(clusterManagerNode *node, unsigned long err
                         "    \"slots_count\": %d,\n"
                         "    \"flags\": \"%s\",\n"
                         "    \"current_epoch\": %llu",
-                        node->name, node->ip, node->port, replicate, slots, node->slots_count, flags,
+                        node->name,
+                        node->ip,
+                        node->port,
+                        replicate,
+                        slots,
+                        node->slots_count,
+                        flags,
                         (unsigned long long)node->current_epoch);
     if (error_count > 0) {
         json = sdscatprintf(json, ",\n    \"cluster_errors\": %lu", error_count);
@@ -4520,7 +4568,14 @@ static sds clusterManagerNodeInfo(clusterManagerNode *node, int indent) {
                          "%s: %S %s:%u\n"
                          "%s   slots:%S (%u slots) "
                          "%S",
-                         role, node->name, node->ip, node->port, spaces, slots, node->slots_count, flags);
+                         role,
+                         node->name,
+                         node->ip,
+                         node->port,
+                         spaces,
+                         slots,
+                         node->slots_count,
+                         flags);
         sdsfree(slots);
         sdsfree(flags);
     }
@@ -4577,8 +4632,13 @@ static void clusterManagerShowClusterInfo(void) {
                 return;
             };
             if (reply != NULL) freeReplyObject(reply);
-            printf("%s:%d (%s...) -> %lld keys | %d slots | %d replicas.\n", node->ip, node->port, name, dbsize,
-                   node->slots_count, replicas);
+            printf("%s:%d (%s...) -> %lld keys | %d slots | %d replicas.\n",
+                   node->ip,
+                   node->port,
+                   name,
+                   dbsize,
+                   node->slots_count,
+                   replicas);
             primaries++;
             keys += dbsize;
         }
@@ -4693,7 +4753,10 @@ static sds clusterManagerGetSlotRangeString(list *slot_ranges) {
     return slot_range_str;
 }
 
-static int clusterManagerMigrateSlots(clusterManagerNode *node1, clusterManagerNode *node2, list *slot_ranges, char **err) {
+static int clusterManagerMigrateSlots(clusterManagerNode *node1,
+                                      clusterManagerNode *node2,
+                                      list *slot_ranges,
+                                      char **err) {
     /* Create the command */
     const char **argv = zmalloc(sizeof(char *) * (5 + listLength(slot_ranges) * 2));
     size_t *argvlen = zmalloc(sizeof(size_t) * (5 + listLength(slot_ranges) * 2));
@@ -4774,7 +4837,10 @@ void releaseGetSlotMigrationsEntry(void *entry) {
 }
 
 /* Parse the given key and value pair into the provided target_entry. */
-static int parseGetSlotMigrationsEntryKeyValuePair(getSlotMigrationsEntry *target_entry, valkeyReply *key, valkeyReply *value, char **err) {
+static int parseGetSlotMigrationsEntryKeyValuePair(getSlotMigrationsEntry *target_entry,
+                                                   valkeyReply *key,
+                                                   valkeyReply *value,
+                                                   char **err) {
     if (key->type != VALKEY_REPLY_STRING) {
         if (err) *err = zstrdup("Expected string type for each key in CLUSTER GETSLOTMIGRATIONS");
         return 0;
@@ -4925,12 +4991,17 @@ cleanup:
 }
 
 /* Set slot status to "importing" or "migrating" */
-static int
-clusterManagerSetSlot(clusterManagerNode *node1, clusterManagerNode *node2, int slot, const char *status, char **err) {
+static int clusterManagerSetSlot(clusterManagerNode *node1,
+                                 clusterManagerNode *node2,
+                                 int slot,
+                                 const char *status,
+                                 char **err) {
     valkeyReply *reply = CLUSTER_MANAGER_COMMAND(node1,
                                                  "CLUSTER "
                                                  "SETSLOT %d %s %s",
-                                                 slot, status, (char *)node2->name);
+                                                 slot,
+                                                 status,
+                                                 (char *)node2->name);
     if (err != NULL) *err = NULL;
     if (!reply) {
         if (err) *err = zstrdup("CLUSTER SETSLOT failed to run");
@@ -5227,7 +5298,8 @@ static int clusterManagerMigrateKeysInSlot(clusterManagerNode *source,
         reply = CLUSTER_MANAGER_COMMAND(source,
                                         "CLUSTER "
                                         "GETKEYSINSLOT %d %d",
-                                        slot, pipeline);
+                                        slot,
+                                        pipeline);
         success = (reply != NULL);
         if (!success) {
             goto next;
@@ -5277,7 +5349,8 @@ static int clusterManagerMigrateKeysInSlot(clusterManagerNode *source,
                 if (do_fix && not_served) {
                     clusterManagerLogWarn("*** Slot was not served, setting "
                                           "owner to node %s:%d.\n",
-                                          target->ip, target->port);
+                                          target->ip,
+                                          target->port);
                     clusterManagerSetSlot(source, target, slot, "node", NULL);
                 }
                 /* If the key already exists in the target node (BUSYKEY),
@@ -5302,8 +5375,8 @@ static int clusterManagerMigrateKeysInSlot(clusterManagerNode *source,
                         if (!success) {
                             clusterManagerLogErr("*** Value check failed!\n");
                             const char *debug_not_allowed = "ERR DEBUG command not allowed.";
-                            if ((source_err && !strncmp(source_err, debug_not_allowed, 30)) ||
-                                (target_err && !strncmp(target_err, debug_not_allowed, 30))) {
+                            if ((source_err && !strncmp(source_err, debug_not_allowed, 30))
+                                || (target_err && !strncmp(target_err, debug_not_allowed, 30))) {
                                 clusterManagerLogErr("DEBUG command is not allowed.\n"
                                                      "You can turn on the enable-debug-command option.\n"
                                                      "Or you can relaunch the command with --cluster-replace "
@@ -5325,7 +5398,11 @@ static int clusterManagerMigrateKeysInSlot(clusterManagerNode *source,
                                                  "    Source node: %s:%d\n"
                                                  "    Target node: %s:%d\n"
                                                  "    Keys(s):\n",
-                                                 listLength(diffs), source->ip, source->port, target->ip, target->port);
+                                                 listLength(diffs),
+                                                 source->ip,
+                                                 source->port,
+                                                 target->ip,
+                                                 target->port);
                             listIter dli;
                             listNode *dln;
                             listRewind(diffs, &dli);
@@ -5392,10 +5469,19 @@ static int clusterManagerMigrateKeysInSlot(clusterManagerNode *source,
  * CLUSTER_MANAGER_OPT_UPDATE  -- Update node->slots for source/target nodes.
  * CLUSTER_MANAGER_OPT_QUIET   -- Don't print info messages.
  */
-static int clusterManagerMoveSlotRangesASM(clusterManagerNode *source, clusterManagerNode *target, list *slot_ranges, int opts, char **err) {
+static int clusterManagerMoveSlotRangesASM(clusterManagerNode *source,
+                                           clusterManagerNode *target,
+                                           list *slot_ranges,
+                                           int opts,
+                                           char **err) {
     if (!(opts & CLUSTER_MANAGER_OPT_QUIET)) {
         sds to_print = clusterManagerGetSlotRangeString(slot_ranges);
-        printf("Moving slot range %s from %s:%d to %s:%d via atomic slot migration", to_print, source->ip, source->port, target->ip, target->port);
+        printf("Moving slot range %s from %s:%d to %s:%d via atomic slot migration",
+               to_print,
+               source->ip,
+               source->port,
+               target->ip,
+               target->port);
         fflush(stdout);
         sdsfree(to_print);
     }
@@ -5438,8 +5524,11 @@ static int clusterManagerMoveSlotRangesASM(clusterManagerNode *source, clusterMa
  * CLUSTER_MANAGER_OPT_UPDATE  -- Update node->slots for source/target nodes.
  * CLUSTER_MANAGER_OPT_QUIET   -- Don't print info messages.
  */
-static int
-clusterManagerMoveSlot(clusterManagerNode *source, clusterManagerNode *target, int slot, int opts, char **err) {
+static int clusterManagerMoveSlot(clusterManagerNode *source,
+                                  clusterManagerNode *target,
+                                  int slot,
+                                  int opts,
+                                  char **err) {
     if (!(opts & CLUSTER_MANAGER_OPT_QUIET)) {
         printf("Moving slot %d from %s:%d to %s:%d", slot, source->ip, source->port, target->ip, target->port);
         fflush(stdout);
@@ -5490,7 +5579,9 @@ clusterManagerMoveSlot(clusterManagerNode *source, clusterManagerNode *target, i
         success = clusterManagerSetSlot(source, target, slot, "node", err);
         if (!success && err) {
             const char *acceptable[] = {"ERR Please use SETSLOT only with masters.",
-                                        "ERR Please use SETSLOT only with primaries.", "UNBLOCKED", "NOREPLICAS"};
+                                        "ERR Please use SETSLOT only with primaries.",
+                                        "UNBLOCKED",
+                                        "NOREPLICAS"};
             for (size_t i = 0; i < sizeof(acceptable) / sizeof(acceptable[0]); i++) {
                 if (!strncmp(*err, acceptable[i], strlen(acceptable[i]))) {
                     zfree(*err);
@@ -5582,7 +5673,8 @@ static void clusterManagerWaitForClusterJoin(void) {
                     if (parseClusterNodeAddress(nodeaddr, &node_ip, &node_port, &node_bus_port) && node_bus_port) {
                         clusterManagerLogErr(" - The port %d of node %s may "
                                              "be unreachable from:\n",
-                                             node_bus_port, node_ip);
+                                             node_bus_port,
+                                             node_ip);
                     } else {
                         clusterManagerLogErr(" - Node %s may be unreachable "
                                              "from:\n",
@@ -5829,15 +5921,16 @@ static int clusterManagerLoadInfoCommon(clusterManagerNode *node, int include_un
             if (!friend->context && !clusterManagerNodeConnect(friend)) goto invalid_friend;
             e = NULL;
             if (clusterManagerNodeLoadInfo(friend, 0, &e)) {
-                if (friend->flags &
-                    (CLUSTER_MANAGER_FLAG_NOADDR | CLUSTER_MANAGER_FLAG_DISCONNECT | CLUSTER_MANAGER_FLAG_FAIL)) {
+                if (friend->flags
+                    & (CLUSTER_MANAGER_FLAG_NOADDR | CLUSTER_MANAGER_FLAG_DISCONNECT | CLUSTER_MANAGER_FLAG_FAIL)) {
                     goto invalid_friend;
                 }
                 listAddNodeTail(cluster_manager.nodes, friend);
             } else {
                 clusterManagerLogErr("[ERR] Unable to load info for "
                                      "node %s:%d\n",
-                                     friend->ip, friend->port);
+                                     friend->ip,
+                                     friend->port);
                 goto invalid_friend;
             }
             continue;
@@ -5863,7 +5956,9 @@ static int clusterManagerLoadInfoCommon(clusterManagerNode *node, int include_un
             if (primary == NULL) {
                 clusterManagerLogWarn("*** WARNING: %s:%d claims to be "
                                       "replica of unknown node ID %s.\n",
-                                      n->ip, n->port, n->replicate);
+                                      n->ip,
+                                      n->port,
+                                      n->replicate);
             } else
                 primary->replicas_count++;
         }
@@ -6384,7 +6479,9 @@ static int clusterManagerFixSlotsCoverage(char *all_slots) {
                 }
                 clusterManagerLogInfo(">>> Covering slot %s moving keys "
                                       "to %s:%d\n",
-                                      slot, target->ip, target->port);
+                                      slot,
+                                      target->ip,
+                                      target->port);
                 if (!clusterManagerSetSlotOwner(target, s, 1)) {
                     fixed = -1;
                     goto cleanup;
@@ -6471,7 +6568,9 @@ static int clusterManagerFixOpenSlot(int slot) {
             if (success && r->integer > 0) {
                 clusterManagerLogWarn("*** Found keys about slot %d "
                                       "in non-owner node %s:%d!\n",
-                                      slot, n->ip, n->port);
+                                      slot,
+                                      n->ip,
+                                      n->port);
                 listAddNodeTail(owners, n);
             }
             if (r) freeReplyObject(r);
@@ -6525,7 +6624,9 @@ static int clusterManagerFixOpenSlot(int slot) {
             if (success && r->integer > 0) {
                 clusterManagerLogWarn("*** Found keys about slot %d "
                                       "in node %s:%d!\n",
-                                      slot, n->ip, n->port);
+                                      slot,
+                                      n->ip,
+                                      n->port);
                 char *sep = (listLength(importing) == 0 ? "" : ",");
                 importing_str = sdscatfmt(importing_str, "%s%s:%u", sep, n->ip, n->port);
                 listAddNodeTail(importing, n);
@@ -6606,7 +6707,11 @@ static int clusterManagerFixOpenSlot(int slot) {
         clusterManagerNode *dst = listFirst(importing)->value;
         clusterManagerLogInfo(">>> Case 1: Moving slot %d from "
                               "%s:%d to %s:%d\n",
-                              slot, src->ip, src->port, dst->ip, dst->port);
+                              slot,
+                              src->ip,
+                              src->port,
+                              dst->ip,
+                              dst->port);
         move_opts |= CLUSTER_MANAGER_OPT_UPDATE;
         success = clusterManagerMoveSlot(src, dst, slot, move_opts, NULL);
     }
@@ -6618,7 +6723,9 @@ static int clusterManagerFixOpenSlot(int slot) {
     else if (listLength(migrating) == 0 && listLength(importing) > 0) {
         clusterManagerLogInfo(">>> Case 2: Moving all the %d slot keys to its "
                               "owner %s:%d\n",
-                              slot, owner->ip, owner->port);
+                              slot,
+                              owner->ip,
+                              owner->port);
         move_opts |= CLUSTER_MANAGER_OPT_COLD;
         listRewind(importing, &li);
         while ((ln = listNext(&li)) != NULL) {
@@ -6628,7 +6735,9 @@ static int clusterManagerFixOpenSlot(int slot) {
             if (!success) goto cleanup;
             clusterManagerLogInfo(">>> Setting %d as STABLE in "
                                   "%s:%d\n",
-                                  slot, n->ip, n->port);
+                                  slot,
+                                  n->ip,
+                                  n->port);
             success = clusterManagerClearSlotStatus(n, slot);
             if (!success) goto cleanup;
         }
@@ -6683,7 +6792,11 @@ static int clusterManagerFixOpenSlot(int slot) {
             clusterManagerLogInfo(">>> Case 3: Moving slot %d from %s:%d to "
                                   "%s:%d and closing it on all the other "
                                   "importing nodes.\n",
-                                  slot, src->ip, src->port, dst->ip, dst->port);
+                                  slot,
+                                  src->ip,
+                                  src->port,
+                                  dst->ip,
+                                  dst->port);
             /* Move the slot to the destination node. */
             success = clusterManagerMoveSlot(src, dst, slot, move_opts, NULL);
             if (!success) goto cleanup;
@@ -6742,7 +6855,10 @@ static int clusterManagerFixOpenSlot(int slot) {
                                  "yet (work in progress). Slot is set as "
                                  "migrating in %s, as importing in %s, "
                                  "owner is %s:%d\n",
-                                 migrating_str, importing_str, owner->ip, owner->port);
+                                 migrating_str,
+                                 importing_str,
+                                 owner->ip,
+                                 owner->port);
         }
     }
 cleanup:
@@ -6818,7 +6934,8 @@ static int clusterManagerCheckCluster(int quiet) {
             errstr = sdscatprintf(errstr,
                                   "[WARNING] Node %s:%d has slots in "
                                   "migrating state ",
-                                  n->ip, n->port);
+                                  n->ip,
+                                  n->port);
             for (i = 0; i < n->migrating_count; i += 2) {
                 sds slot = n->migrating[i];
                 dictReplace(open_slots, slot, sdsdup(n->migrating[i + 1]));
@@ -6834,7 +6951,8 @@ static int clusterManagerCheckCluster(int quiet) {
             errstr = sdscatprintf(errstr,
                                   "[WARNING] Node %s:%d has slots in "
                                   "importing state ",
-                                  n->ip, n->port);
+                                  n->ip,
+                                  n->port);
             for (i = 0; i < n->importing_count; i += 2) {
                 sds slot = n->importing[i];
                 dictReplace(open_slots, slot, sdsdup(n->importing[i + 1]));
@@ -7187,7 +7305,8 @@ static int clusterManagerCommandCreate(int argc, char **argv) {
         int ignore_force = 0;
         clusterManagerLogInfo("Requested to create a cluster with %d primaries and "
                               "%d replicas per primary.\n",
-                              primaries_count, replicas);
+                              primaries_count,
+                              replicas);
         if (!confirmWithYes("Valkey cluster requires at least 3 primary nodes for "
                             "automatic failover. Are you sure?",
                             ignore_force))
@@ -7539,7 +7658,8 @@ static int clusterManagerCommandAddNode(int argc, char **argv) {
     // Send CLUSTER MEET command to the new node
     clusterManagerLogInfo(">>> Send CLUSTER MEET to node %s:%d to make it "
                           "join the cluster.\n",
-                          ip, port);
+                          ip,
+                          port);
     /* CLUSTER MEET requires an IP address, so we do a DNS lookup here. */
     char first_ip[NET_IP_STR_LEN];
     int anet_flags = ANET_NONE;
@@ -7606,7 +7726,8 @@ static int clusterManagerCommandDeleteNode(int argc, char **argv) {
     if (node->slots_count != 0) {
         clusterManagerLogErr("[ERR] Node %s:%d is not empty! Reshard data "
                              "away and try again.\n",
-                             node->ip, node->port);
+                             node->ip,
+                             node->port);
         return 0;
     }
 
@@ -7625,7 +7746,8 @@ static int clusterManagerCommandDeleteNode(int argc, char **argv) {
             clusterManagerLogWarn(">>> Skipping unreachable node %s:%d. "
                                   "It may need manual reconfiguration "
                                   "when it comes back online.\n",
-                                  n->ip, n->port);
+                                  n->ip,
+                                  n->port);
             continue;
         }
 
@@ -7635,7 +7757,8 @@ static int clusterManagerCommandDeleteNode(int argc, char **argv) {
             if (primary == NULL) {
                 clusterManagerLogErr("[ERR] Could not find a reachable primary node "
                                      "to reassign replica %s:%d.\n",
-                                     n->ip, n->port);
+                                     n->ip,
+                                     n->port);
                 return 0;
             }
             clusterManagerLogInfo(">>> %s:%d as replica of %s:%d\n", n->ip, n->port, primary->ip, primary->port);
@@ -7661,7 +7784,8 @@ static int clusterManagerCommandDeleteNode(int argc, char **argv) {
     } else {
         clusterManagerLogWarn(">>> WARNING: Could not connect to node %s:%d, "
                               "unable to send CLUSTER RESET.\n",
-                              node->ip ? node->ip : "(null)", node->port);
+                              node->ip ? node->ip : "(null)",
+                              node->port);
     }
     clusterManagerLogOk("[OK] Node %s removed from the cluster.\n", node_id);
     return success;
@@ -8034,7 +8158,8 @@ static int clusterManagerCommandRebalance(int argc, char **argv) {
     qsort(weightedNodes, nodes_involved, sizeof(clusterManagerNode *), clusterManagerCompareNodeBalance);
     clusterManagerLogInfo(">>> Rebalancing across %d nodes. "
                           "Total weight = %.2f\n",
-                          nodes_involved, total_weight);
+                          nodes_involved,
+                          total_weight);
     if (config.verbose) {
         for (i = 0; i < nodes_involved; i++) {
             clusterManagerNode *n = weightedNodes[i];
@@ -8100,8 +8225,9 @@ static int clusterManagerCommandSetTimeout(int argc, char **argv) {
     if (!getClusterHostFromCmdArgs(1, argv, &ip, &port)) goto invalid_args;
     int timeout = atoi(argv[1]);
     if (timeout < 100) {
-        fprintf(stderr, "Setting a node timeout of less than 100 "
-                        "milliseconds is a bad idea.\n");
+        fprintf(stderr,
+                "Setting a node timeout of less than 100 "
+                "milliseconds is a bad idea.\n");
         return 0;
     }
     // Load cluster information
@@ -8273,7 +8399,9 @@ static int clusterManagerCommandImport(int argc, char **argv) {
                 if (r && r->str) {
                     clusterManagerLogErr("Source %s:%d replied with "
                                          "error:\n%s\n",
-                                         src_ip, src_port, r->str);
+                                         src_ip,
+                                         src_port,
+                                         r->str);
                 }
                 success = 0;
             }
@@ -8436,10 +8564,11 @@ static int clusterManagerCommandHelp(int argc, char **argv) {
             }
         }
     }
-    fprintf(stdout, "\nFor check, fix, reshard, del-node, set-timeout, "
-                    "info, rebalance, call, import, backup you "
-                    "can specify the host and port of any working node in "
-                    "the cluster.\n");
+    fprintf(stdout,
+            "\nFor check, fix, reshard, del-node, set-timeout, "
+            "info, rebalance, call, import, backup you "
+            "can specify the host and port of any working node in "
+            "the cluster.\n");
 
     int options_count = sizeof(clusterManagerOptions) / sizeof(clusterManagerOptionDef);
     i = 0;
@@ -8817,7 +8946,8 @@ static void replicaMode(int send_sync) {
         fprintf(stderr,
                 "%s with primary, discarding %llu "
                 "bytes of bulk transfer...\n",
-                info, payload);
+                info,
+                payload);
     } else if (out_full_mode == 0 && payload == 0) {
         /* PSYNC +CONTINUE (no RDB payload). */
         fprintf(stderr, "%s with primary...\n", info);
@@ -9114,7 +9244,11 @@ static valkeyReply *sendScan(unsigned long long *it) {
     valkeyReply *reply;
 
     if (config.pattern)
-        reply = valkeyCommand(context, "SCAN %llu MATCH %b COUNT %d", *it, config.pattern, sdslen(config.pattern),
+        reply = valkeyCommand(context,
+                              "SCAN %llu MATCH %b COUNT %d",
+                              *it,
+                              config.pattern,
+                              sdslen(config.pattern),
                               config.count);
     else
         reply = valkeyCommand(context, "SCAN %llu COUNT %d", *it, config.count);
@@ -9184,8 +9318,11 @@ static int getDatabases(valkeyContext *ctx) {
 
     if (reply->type == VALKEY_REPLY_ERROR) {
         dbnum = config.cluster_mode ? 1 : 16;
-        fprintf(stderr, "%s fails: %s, use default value %d instead\n",
-                config.cluster_mode ? cluster : standalone, reply->str, dbnum);
+        fprintf(stderr,
+                "%s fails: %s, use default value %d instead\n",
+                config.cluster_mode ? cluster : standalone,
+                reply->str,
+                dbnum);
     } else {
         assert(reply->elements == 2);
         dbnum = atoi(reply->element[1]->str);
@@ -9255,7 +9392,10 @@ static void getKeyTypes(dict *types_dict, valkeyReply *keys, typeinfo **types) {
     /* Retrieve types */
     for (i = 0; i < keys->elements; i++) {
         if (valkeyGetReply(context, (void **)&reply) != VALKEY_OK) {
-            fprintf(stderr, "Error getting type for key '%s' (%d: %s)\n", keys->element[i]->str, context->err,
+            fprintf(stderr,
+                    "Error getting type for key '%s' (%d: %s)\n",
+                    keys->element[i]->str,
+                    context->err,
                     context->errstr);
             exit(1);
         } else if (reply->type != VALKEY_REPLY_STATUS) {
@@ -9280,8 +9420,11 @@ static void getKeyTypes(dict *types_dict, valkeyReply *keys, typeinfo **types) {
     }
 }
 
-static void
-getKeySizes(valkeyReply *keys, typeinfo **types, unsigned long long *sizes, int memkeys, unsigned memkeys_samples) {
+static void getKeySizes(valkeyReply *keys,
+                        typeinfo **types,
+                        unsigned long long *sizes,
+                        int memkeys,
+                        unsigned memkeys_samples) {
     valkeyReply *reply;
     unsigned int i;
 
@@ -9317,14 +9460,19 @@ getKeySizes(valkeyReply *keys, typeinfo **types, unsigned long long *sizes, int 
 
         /* Retrieve size */
         if (valkeyGetReply(context, (void **)&reply) != VALKEY_OK) {
-            fprintf(stderr, "Error getting size for key '%s' (%d: %s)\n", keys->element[i]->str, context->err,
+            fprintf(stderr,
+                    "Error getting size for key '%s' (%d: %s)\n",
+                    keys->element[i]->str,
+                    context->err,
                     context->errstr);
             exit(1);
         } else if (reply->type != VALKEY_REPLY_INTEGER) {
             /* Theoretically the key could have been removed and
              * added as a different type between TYPE and SIZE */
-            fprintf(stderr, "Warning:  %s on '%s' failed (may have changed type)\n",
-                    !memkeys ? types[i]->sizecmd : "MEMORY USAGE", keys->element[i]->str);
+            fprintf(stderr,
+                    "Warning:  %s on '%s' failed (may have changed type)\n",
+                    !memkeys ? types[i]->sizecmd : "MEMORY USAGE",
+                    keys->element[i]->str);
             sizes[i] = 0;
         } else {
             sizes[i] = reply->integer;
@@ -9347,8 +9495,8 @@ static void sendReadOnly(void) {
     if (read_reply == NULL) {
         fprintf(stderr, "\nI/O error\n");
         exit(1);
-    } else if (read_reply->type == VALKEY_REPLY_ERROR &&
-               strcmp(read_reply->str, "ERR This instance has cluster support disabled") != 0) {
+    } else if (read_reply->type == VALKEY_REPLY_ERROR
+               && strcmp(read_reply->str, "ERR This instance has cluster support disabled") != 0) {
         fprintf(stderr, "Error: %s\n", read_reply->str);
         exit(1);
     }
@@ -9431,8 +9579,12 @@ static void findBigKeys(int memkeys, unsigned memkeys_samples) {
                     exit(1);
                 }
 
-                printf("[%05.2f%%] Biggest %-6s found so far '%s' with %llu %s\n", pct, type->name, type->biggest_key,
-                       sizes[i], !memkeys ? type->sizeunit : "bytes");
+                printf("[%05.2f%%] Biggest %-6s found so far '%s' with %llu %s\n",
+                       pct,
+                       type->name,
+                       type->biggest_key,
+                       sizes[i],
+                       !memkeys ? type->sizeunit : "bytes");
 
                 /* Keep track of the biggest size for this type */
                 type->biggest = sizes[i];
@@ -9466,7 +9618,10 @@ static void findBigKeys(int memkeys, unsigned memkeys_samples) {
     while ((de = dictNext(di))) {
         typeinfo *type = dictGetVal(de);
         if (type->biggest_key) {
-            printf("Biggest %6s found '%s' has %llu %s\n", type->name, type->biggest_key, type->biggest,
+            printf("Biggest %6s found '%s' has %llu %s\n",
+                   type->name,
+                   type->biggest_key,
+                   type->biggest,
                    !memkeys ? type->sizeunit : "bytes");
         }
     }
@@ -9477,8 +9632,12 @@ static void findBigKeys(int memkeys, unsigned memkeys_samples) {
     di = dictGetIterator(types_dict);
     while ((de = dictNext(di))) {
         typeinfo *type = dictGetVal(de);
-        printf("%llu %ss with %llu %s (%05.2f%% of keys, avg size %.2f)\n", type->count, type->name, type->totalsize,
-               !memkeys ? type->sizeunit : "bytes", sampled ? 100 * (double)type->count / sampled : 0,
+        printf("%llu %ss with %llu %s (%05.2f%% of keys, avg size %.2f)\n",
+               type->count,
+               type->name,
+               type->totalsize,
+               !memkeys ? type->sizeunit : "bytes",
+               sampled ? 100 * (double)type->count / sampled : 0,
                type->count ? (double)type->totalsize / type->count : 0);
     }
     dictReleaseIterator(di);
@@ -9783,8 +9942,9 @@ static void scanMode(void) {
         reply = sendScan(&cur);
         for (unsigned int j = 0; j < reply->element[1]->elements; j++) {
             if (config.output == OUTPUT_STANDARD) {
-                sds out =
-                    sdscatrepr(sdsempty(), reply->element[1]->element[j]->str, reply->element[1]->element[j]->len);
+                sds out = sdscatrepr(sdsempty(),
+                                     reply->element[1]->element[j]->str,
+                                     reply->element[1]->element[j]->len);
                 printf("%s\n", out);
                 sdsfree(out);
             } else {
@@ -9869,8 +10029,12 @@ static void LRUTestMode(void) {
             }
         }
         /* Print stats. */
-        printf("%lld Gets/sec | Hits: %lld (%.2f%%) | Misses: %lld (%.2f%%)\n", hits + misses, hits,
-               (double)hits / (hits + misses) * 100, misses, (double)misses / (hits + misses) * 100);
+        printf("%lld Gets/sec | Hits: %lld (%.2f%%) | Misses: %lld (%.2f%%)\n",
+               hits + misses,
+               hits,
+               (double)hits / (hits + misses) * 100,
+               misses,
+               (double)misses / (hits + misses) * 100);
     }
     exit(0);
 }
@@ -9947,7 +10111,9 @@ static void intrinsicLatencyMode(void) {
             printf("\n%lld total runs "
                    "(avg latency: "
                    "%.4f microseconds / %.2f nanoseconds per run).\n",
-                   runs, avg_us, avg_ns);
+                   runs,
+                   avg_us,
+                   avg_ns);
             printf("Worst run took %.0fx longer than the average latency.\n", max_latency / avg_us);
             exit(0);
         }

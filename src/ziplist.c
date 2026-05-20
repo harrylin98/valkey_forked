@@ -191,13 +191,13 @@
 #include "endianconv.h"
 #include "serverassert.h"
 
-#define ZIP_END 255         /* Special "end of ziplist" entry. */
-#define ZIP_BIG_PREVLEN 254 /* ZIP_BIG_PREVLEN - 1 is the max number of bytes of      \
-                               the previous entry, for the "prevlen" field prefixing  \
-                               each entry, to be represented with just a single byte. \
-                               Otherwise it is represented as FE AA BB CC DD, where   \
-                               AA BB CC DD are a 4 bytes unsigned integer             \
-                               representing the previous entry len. */
+#define ZIP_END         255 /* Special "end of ziplist" entry. */
+#define ZIP_BIG_PREVLEN 254 /* ZIP_BIG_PREVLEN - 1 is the max number of bytes of                                                \
+                            the previous entry, for the "prevlen" field prefixing                                               \
+                            each entry, to be represented with just a single byte.                                              \
+                            Otherwise it is represented as FE AA BB CC DD, where                                                \
+                            AA BB CC DD are a 4 bytes unsigned integer                                                          \
+                            representing the previous entry len. */
 
 /* Different encoding/length possibilities */
 #define ZIP_STR_MASK 0xc0
@@ -213,10 +213,10 @@
 
 /* 4 bit integer immediate encoding |1111xxxx| with xxxx between
  * 0001 and 1101. */
-#define ZIP_INT_IMM_MASK 0x0f /* Mask to extract the 4 bits value. To add \
+#define ZIP_INT_IMM_MASK 0x0f /* Mask to extract the 4 bits value. To add                                                       \
                                  one is needed to reconstruct the value. */
-#define ZIP_INT_IMM_MIN 0xf1  /* 11110001 */
-#define ZIP_INT_IMM_MAX 0xfd  /* 11111101 */
+#define ZIP_INT_IMM_MIN  0xf1 /* 11110001 */
+#define ZIP_INT_IMM_MAX  0xfd /* 11111101 */
 
 #define INT24_MAX 0x7fffff
 #define INT24_MIN (-INT24_MAX - 1)
@@ -320,8 +320,8 @@ typedef struct zlentry {
 /* Return the number of bytes required to encode the entry type + length.
  * On error, return ZIP_ENCODING_SIZE_INVALID */
 static inline unsigned int zipEncodingLenSize(unsigned char encoding) {
-    if (encoding == ZIP_INT_16B || encoding == ZIP_INT_32B || encoding == ZIP_INT_24B || encoding == ZIP_INT_64B ||
-        encoding == ZIP_INT_8B)
+    if (encoding == ZIP_INT_16B || encoding == ZIP_INT_32B || encoding == ZIP_INT_24B || encoding == ZIP_INT_64B
+        || encoding == ZIP_INT_8B)
         return 1;
     if (encoding >= ZIP_INT_IMM_MIN && encoding <= ZIP_INT_IMM_MAX) return 1;
     if (encoding == ZIP_STR_06B) return 1;
@@ -416,9 +416,10 @@ unsigned int zipStoreEntryEncoding(unsigned char *p, unsigned char encoding, uns
                 (len) = ((uint32_t)(ptr)[1] << 24) | ((uint32_t)(ptr)[2] << 16) | ((uint32_t)(ptr)[3] << 8) | \
                         ((uint32_t)(ptr)[4]);                                                                 \
             } else {                                                                                          \
-                (lensize) = 0; /* bad encoding, should be covered by a previous */                            \
-                (len) = 0;     /* ZIP_ASSERT_ENCODING / zipEncodingLenSize, or  */                            \
-                               /* match the lensize after this macro with 0.    */                            \
+                (lensize) = 0; /* bad encoding, should be covered by a previous                               \
+                                  ZIP_ASSERT_ENCODING / zipEncodingLenSize, or                                \
+                                  match the lensize after this macro with 0. */                               \
+                (len) = 0;                                                                                    \
             }                                                                                                 \
         } else {                                                                                              \
             (lensize) = 1;                                                                                    \
@@ -1079,14 +1080,16 @@ unsigned char *ziplistMerge(unsigned char **first, unsigned char **second) {
         /* append == appending to target */
         /* Copy source after target (copying over original [END]):
          *   [TARGET - END, SOURCE - HEADER] */
-        memcpy(target + target_bytes - ZIPLIST_END_SIZE, source + ZIPLIST_HEADER_SIZE,
+        memcpy(target + target_bytes - ZIPLIST_END_SIZE,
+               source + ZIPLIST_HEADER_SIZE,
                source_bytes - ZIPLIST_HEADER_SIZE);
     } else {
         /* !append == prepending to target */
         /* Move target *contents* exactly size of (source - [END]),
          * then copy source into vacated space (source - [END]):
          *   [SOURCE - END, TARGET - HEADER] */
-        memmove(target + source_bytes - ZIPLIST_END_SIZE, target + ZIPLIST_HEADER_SIZE,
+        memmove(target + source_bytes - ZIPLIST_END_SIZE,
+                target + ZIPLIST_HEADER_SIZE,
                 target_bytes - ZIPLIST_HEADER_SIZE);
         memcpy(target, source, source_bytes - ZIPLIST_END_SIZE);
     }
@@ -1099,8 +1102,8 @@ unsigned char *ziplistMerge(unsigned char **first, unsigned char **second) {
      *   - 1 byte for [END] of first ziplist
      *   + M bytes for the offset of the original tail of the second ziplist
      *   - J bytes for HEADER because second_offset keeps no header. */
-    ZIPLIST_TAIL_OFFSET(target) =
-        intrev32ifbe((first_bytes - ZIPLIST_END_SIZE) + (second_offset - ZIPLIST_HEADER_SIZE));
+    ZIPLIST_TAIL_OFFSET(target) = intrev32ifbe((first_bytes - ZIPLIST_END_SIZE)
+                                               + (second_offset - ZIPLIST_HEADER_SIZE));
 
     /* __ziplistCascadeUpdate just fixes the prev length values until it finds a
      * correct prev length value (then it assumes the rest of the list is okay).
@@ -1327,8 +1330,11 @@ unsigned int ziplistCompare(unsigned char *p, unsigned char *sstr, unsigned int 
 
 /* Find pointer to the entry equal to the specified entry. Skip 'skip' entries
  * between every comparison. Returns NULL when the field could not be found. */
-unsigned char *
-ziplistFind(unsigned char *zl, unsigned char *p, unsigned char *vstr, unsigned int vlen, unsigned int skip) {
+unsigned char *ziplistFind(unsigned char *zl,
+                           unsigned char *p,
+                           unsigned char *vstr,
+                           unsigned int vlen,
+                           unsigned int skip) {
     int skipcnt = 0;
     unsigned char vencoding = 0;
     long long vll = 0;
@@ -1420,7 +1426,9 @@ void ziplistRepr(unsigned char *zl) {
     printf("{total bytes %u} "
            "{num entries %u}\n"
            "{tail offset %u}\n",
-           intrev32ifbe(ZIPLIST_BYTES(zl)), intrev16ifbe(ZIPLIST_LENGTH(zl)), intrev32ifbe(ZIPLIST_TAIL_OFFSET(zl)));
+           intrev32ifbe(ZIPLIST_BYTES(zl)),
+           intrev16ifbe(ZIPLIST_LENGTH(zl)),
+           intrev32ifbe(ZIPLIST_TAIL_OFFSET(zl)));
     p = ZIPLIST_ENTRY_HEAD(zl);
     while (*p != ZIP_END) {
         assert(zipEntrySafe(zl, zlbytes, p, &entry, 1));
@@ -1433,8 +1441,14 @@ void ziplistRepr(unsigned char *zl) {
                "\tprevrawlen: %5u,\n"
                "\tprevrawlensize: %2u,\n"
                "\tpayload %5u\n",
-               (long unsigned)p, index, (unsigned long)(p - zl), entry.headersize + entry.len, entry.headersize,
-               entry.prevrawlen, entry.prevrawlensize, entry.len);
+               (long unsigned)p,
+               index,
+               (unsigned long)(p - zl),
+               entry.headersize + entry.len,
+               entry.headersize,
+               entry.prevrawlen,
+               entry.prevrawlensize,
+               entry.len);
         printf("\tbytes: ");
         for (unsigned int i = 0; i < entry.headersize + entry.len; i++) {
             printf("%02x|", p[i]);

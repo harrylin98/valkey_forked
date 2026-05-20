@@ -170,8 +170,7 @@ static void get_version_info(ValkeyModuleCtx *ctx,
     ValkeyModule_FreeServerInfo(ctx, info);
 }
 
-static void initializeLuaState(luaEngineCtx *lua_engine_ctx,
-                               ValkeyModuleScriptingEngineSubsystemType type) {
+static void initializeLuaState(luaEngineCtx *lua_engine_ctx, ValkeyModuleScriptingEngineSubsystemType type) {
     lua_State *lua = lua_open();
 
     if (type == VMSE_EVAL) {
@@ -253,9 +252,10 @@ static ValkeyModuleScriptingEngineCompiledFunction **luaEngineCompileCode(Valkey
     if (type == VMSE_EVAL) {
         lua_State *lua = lua_engine_ctx->eval_lua;
 
-        if (luaL_loadbuffer(
-                lua, code, code_len, "@user_script")) {
-            *err = ValkeyModule_CreateStringPrintf(module_ctx, "Error compiling script (new function): %s", lua_tostring(lua, -1));
+        if (luaL_loadbuffer(lua, code, code_len, "@user_script")) {
+            *err = ValkeyModule_CreateStringPrintf(module_ctx,
+                                                   "Error compiling script (new function): %s",
+                                                   lua_tostring(lua, -1));
             lua_pop(lua, 1);
             return functions;
         }
@@ -270,21 +270,15 @@ static ValkeyModuleScriptingEngineCompiledFunction **luaEngineCompileCode(Valkey
         };
 
         ValkeyModuleScriptingEngineCompiledFunction *func = ValkeyModule_Alloc(sizeof(*func));
-        *func = (ValkeyModuleScriptingEngineCompiledFunction){
-            .name = NULL,
-            .function = script,
-            .desc = NULL,
-            .f_flags = 0};
+        *func =
+            (ValkeyModuleScriptingEngineCompiledFunction){.name = NULL, .function = script, .desc = NULL, .f_flags = 0};
 
         *out_num_compiled_functions = 1;
         functions = ValkeyModule_Calloc(1, sizeof(ValkeyModuleScriptingEngineCompiledFunction *));
         *functions = func;
     } else {
-        functions = luaFunctionLibraryCreate(lua_engine_ctx->function_lua,
-                                             code,
-                                             timeout,
-                                             out_num_compiled_functions,
-                                             err);
+        functions =
+            luaFunctionLibraryCreate(lua_engine_ctx->function_lua, code, timeout, out_num_compiled_functions, err);
     }
 
     return functions;
@@ -354,8 +348,8 @@ static int isLuaInsecureAPIEnabled(ValkeyModuleCtx *module_ctx) {
         ValkeyModule_FreeCallReply(reply);
         return 0;
     }
-    ValkeyModule_Assert(ValkeyModule_CallReplyType(reply) == VALKEYMODULE_REPLY_ARRAY &&
-                        ValkeyModule_CallReplyLength(reply) == 2);
+    ValkeyModule_Assert(ValkeyModule_CallReplyType(reply) == VALKEYMODULE_REPLY_ARRAY
+                        && ValkeyModule_CallReplyLength(reply) == 2);
     ValkeyModuleCallReply *val = ValkeyModule_CallReplyArrayElement(reply, 1);
     ValkeyModule_Assert(ValkeyModule_CallReplyType(val) == VALKEYMODULE_REPLY_STRING);
     const char *val_str = ValkeyModule_CallReplyStringPtr(val, NULL);
@@ -395,10 +389,10 @@ static ValkeyModuleScriptingEngineCallableLazyEnvReset *luaEngineResetEnv(Valkey
 static size_t luaEngineFunctionMemoryOverhead(ValkeyModuleCtx *module_ctx,
                                               ValkeyModuleScriptingEngineCompiledFunction *compiled_function) {
     VALKEYMODULE_NOT_USED(module_ctx);
-    return ValkeyModule_MallocSize(compiled_function->function) +
-           (compiled_function->name ? ValkeyModule_MallocSize(compiled_function->name) : 0) +
-           (compiled_function->desc ? ValkeyModule_MallocSize(compiled_function->desc) : 0) +
-           ValkeyModule_MallocSize(compiled_function);
+    return ValkeyModule_MallocSize(compiled_function->function)
+           + (compiled_function->name ? ValkeyModule_MallocSize(compiled_function->name) : 0)
+           + (compiled_function->desc ? ValkeyModule_MallocSize(compiled_function->desc) : 0)
+           + ValkeyModule_MallocSize(compiled_function);
 }
 
 static void luaEngineFreeFunction(ValkeyModuleCtx *module_ctx,
@@ -431,11 +425,12 @@ static void luaEngineFreeFunction(ValkeyModuleCtx *module_ctx,
     ValkeyModule_Free(compiled_function);
 }
 
-static ValkeyModuleScriptingEngineDebuggerEnableRet luaEngineDebuggerEnable(ValkeyModuleCtx *module_ctx,
-                                                                            ValkeyModuleScriptingEngineCtx *engine_ctx,
-                                                                            ValkeyModuleScriptingEngineSubsystemType type,
-                                                                            const ValkeyModuleScriptingEngineDebuggerCommand **commands,
-                                                                            size_t *commands_len) {
+static ValkeyModuleScriptingEngineDebuggerEnableRet luaEngineDebuggerEnable(
+    ValkeyModuleCtx *module_ctx,
+    ValkeyModuleScriptingEngineCtx *engine_ctx,
+    ValkeyModuleScriptingEngineSubsystemType type,
+    const ValkeyModuleScriptingEngineDebuggerCommand **commands,
+    size_t *commands_len) {
     VALKEYMODULE_NOT_USED(module_ctx);
 
     if (type != VMSE_EVAL) {
@@ -445,9 +440,7 @@ static ValkeyModuleScriptingEngineDebuggerEnableRet luaEngineDebuggerEnable(Valk
     ldbEnable();
 
     luaEngineCtx *lua_engine_ctx = engine_ctx;
-    ldbGenerateDebuggerCommandsArray(lua_engine_ctx->eval_lua,
-                                     commands,
-                                     commands_len);
+    ldbGenerateDebuggerCommandsArray(lua_engine_ctx->eval_lua, commands, commands_len);
 
     return VMSE_DEBUG_ENABLED;
 }
@@ -493,9 +486,7 @@ static struct luaEngineCtx *engine_ctx = NULL;
 #define LUA_MODULE_VISIBILITY
 #endif
 
-LUA_MODULE_VISIBILITY int ValkeyModule_OnLoad(ValkeyModuleCtx *ctx,
-                                              ValkeyModuleString **argv,
-                                              int argc) {
+LUA_MODULE_VISIBILITY int ValkeyModule_OnLoad(ValkeyModuleCtx *ctx, ValkeyModuleString **argv, int argc) {
     VALKEYMODULE_NOT_USED(argv);
     VALKEYMODULE_NOT_USED(argc);
 
@@ -503,8 +494,9 @@ LUA_MODULE_VISIBILITY int ValkeyModule_OnLoad(ValkeyModuleCtx *ctx,
         return VALKEYMODULE_ERR;
     }
 
-    ValkeyModule_SetModuleOptions(ctx, VALKEYMODULE_OPTIONS_HANDLE_REPL_ASYNC_LOAD |
-                                           VALKEYMODULE_OPTIONS_HANDLE_ATOMIC_SLOT_MIGRATION);
+    ValkeyModule_SetModuleOptions(ctx,
+                                  VALKEYMODULE_OPTIONS_HANDLE_REPL_ASYNC_LOAD
+                                      | VALKEYMODULE_OPTIONS_HANDLE_ATOMIC_SLOT_MIGRATION);
 
     engine_ctx = createEngineContext(ctx);
 
@@ -529,10 +521,7 @@ LUA_MODULE_VISIBILITY int ValkeyModule_OnLoad(ValkeyModuleCtx *ctx,
         .debugger_end = luaEngineDebuggerEnd,
     };
 
-    int result = ValkeyModule_RegisterScriptingEngine(ctx,
-                                                      LUA_ENGINE_NAME,
-                                                      engine_ctx,
-                                                      &methods);
+    int result = ValkeyModule_RegisterScriptingEngine(ctx, LUA_ENGINE_NAME, engine_ctx, &methods);
 
     if (result == VALKEYMODULE_ERR) {
         ValkeyModule_Log(ctx, "warning", "Failed to register LUA scripting engine");
@@ -561,9 +550,7 @@ LUA_MODULE_VISIBILITY int ValkeyModule_OnUnload(ValkeyModuleCtx *ctx) {
 
 #if STATIC_LUA
 /* Unique entry points (Load and Unload) used by the Lua module when linked statically */
-int ValkeyModule_OnLoad_lua(ValkeyModuleCtx *ctx,
-                            ValkeyModuleString **argv,
-                            int argc) {
+int ValkeyModule_OnLoad_lua(ValkeyModuleCtx *ctx, ValkeyModuleString **argv, int argc) {
     return ValkeyModule_OnLoad(ctx, argv, argc);
 }
 

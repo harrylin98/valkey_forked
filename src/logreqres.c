@@ -184,10 +184,10 @@ size_t reqresAppendRequest(client *c) {
 
     /* Ignore commands that have streaming non-standard response */
     sds cmd = objectGetVal(argv[0]);
-    if (!strcasecmp(cmd, "debug") || /* because of DEBUG SEGFAULT */
-        !strcasecmp(cmd, "sync") || !strcasecmp(cmd, "psync") || !strcasecmp(cmd, "monitor") ||
-        !strcasecmp(cmd, "subscribe") || !strcasecmp(cmd, "unsubscribe") || !strcasecmp(cmd, "ssubscribe") ||
-        !strcasecmp(cmd, "sunsubscribe") || !strcasecmp(cmd, "psubscribe") || !strcasecmp(cmd, "punsubscribe")) {
+    if (!strcasecmp(cmd, "debug") /* because of DEBUG SEGFAULT */
+        || !strcasecmp(cmd, "sync") || !strcasecmp(cmd, "psync") || !strcasecmp(cmd, "monitor")
+        || !strcasecmp(cmd, "subscribe") || !strcasecmp(cmd, "unsubscribe") || !strcasecmp(cmd, "ssubscribe")
+        || !strcasecmp(cmd, "sunsubscribe") || !strcasecmp(cmd, "psubscribe") || !strcasecmp(cmd, "punsubscribe")) {
         return 0;
     }
 
@@ -255,7 +255,8 @@ size_t reqresAppendResponse(client *c) {
             if (i == c->reqres.offset.last_node.index) {
                 /* Write the potentially incomplete node, which had data from
                  * before the current command started */
-                written = reqresAppendBuffer(c, o->buf + c->reqres.offset.last_node.used,
+                written = reqresAppendBuffer(c,
+                                             o->buf + c->reqres.offset.last_node.used,
                                              o->used - c->reqres.offset.last_node.used);
             } else {
                 /* New node */

@@ -153,8 +153,11 @@ unsigned char *zipmapRewind(unsigned char *zm) {
  *     printf("%d bytes value at $p\n", vlen, value);
  * }
  */
-unsigned char *
-zipmapNext(unsigned char *zm, unsigned char **key, unsigned int *klen, unsigned char **value, unsigned int *vlen) {
+unsigned char *zipmapNext(unsigned char *zm,
+                          unsigned char **key,
+                          unsigned int *klen,
+                          unsigned char **value,
+                          unsigned int *vlen) {
     if (zm[0] == ZIPMAP_END) return NULL;
     if (key) {
         *key = zm;
@@ -197,8 +200,7 @@ int zipmapValidateIntegrity(unsigned char *zm, size_t size, int deep) {
         /* read the field name length */
         l = zipmapDecodeLength(p);
         /* Sanity check: length < 254 must be encoded in 1 byte, not 5 bytes */
-        if (l < ZIPMAP_BIGLEN && s != 1)
-            return 0;
+        if (l < ZIPMAP_BIGLEN && s != 1) return 0;
 
         p += s; /* skip the encoded field size */
         p += l; /* skip the field */
@@ -214,8 +216,7 @@ int zipmapValidateIntegrity(unsigned char *zm, size_t size, int deep) {
         /* read the value length */
         l = zipmapDecodeLength(p);
         /* Sanity check: length < 254 must be encoded in 1 byte, not 5 bytes */
-        if (l < ZIPMAP_BIGLEN && s != 1)
-            return 0;
+        if (l < ZIPMAP_BIGLEN && s != 1) return 0;
         p += s;     /* skip the encoded value size*/
         e = *p++;   /* skip the encoded free space (always encoded in one byte) */
         p += l + e; /* skip the value and free space */

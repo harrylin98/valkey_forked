@@ -182,13 +182,11 @@ static inline unsigned jeSize2BinIndexLgQ3(size_t sz) {
     unsigned exp = 64 - leading_zeros; // Effective log2(sz)
 
     /* Calculate the size's position within its group */
-    unsigned within_group_offset = size_class_group_size -
-                                   (((1ULL << exp) - sz) >> (exp - lg_quantum_3_first_pow2));
+    unsigned within_group_offset = size_class_group_size - (((1ULL << exp) - sz) >> (exp - lg_quantum_3_first_pow2));
 
     /* Calculate the final bin index */
-    return within_group_offset +
-           ((exp - (lg_quantum_3_first_pow2 + 3)) - 1) * size_class_group_size +
-           lg_quantum_3_offset;
+    return within_group_offset + ((exp - (lg_quantum_3_first_pow2 + 3)) - 1) * size_class_group_size
+           + lg_quantum_3_offset;
 }
 /* -----------------------------------------------------------------------------
  * Interface functions to get fragmentation info from jemalloc
@@ -222,13 +220,22 @@ static inline int binQueryHelperInitialization(jeBinInfoKeys *helper, unsigned b
     char mallctl_name[128];
 
     /* Mib of fetch number of used regions in the bin */
-    snprintf(mallctl_name, sizeof(mallctl_name), "stats.arenas." STRINGIFY(ARENA_TO_QUERY) ".bins.%d.curregs", bin_index);
+    snprintf(mallctl_name,
+             sizeof(mallctl_name),
+             "stats.arenas." STRINGIFY(ARENA_TO_QUERY) ".bins.%d.curregs",
+             bin_index);
     if (jeQueryKeyInit(mallctl_name, &helper->curr_regs) != 0) return -1;
     /* Mib of fetch number of current slabs in the bin */
-    snprintf(mallctl_name, sizeof(mallctl_name), "stats.arenas." STRINGIFY(ARENA_TO_QUERY) ".bins.%d.curslabs", bin_index);
+    snprintf(mallctl_name,
+             sizeof(mallctl_name),
+             "stats.arenas." STRINGIFY(ARENA_TO_QUERY) ".bins.%d.curslabs",
+             bin_index);
     if (jeQueryKeyInit(mallctl_name, &helper->curr_slabs) != 0) return -1;
     /* Mib of fetch nonfull slabs */
-    snprintf(mallctl_name, sizeof(mallctl_name), "stats.arenas." STRINGIFY(ARENA_TO_QUERY) ".bins.%d.nonfull_slabs", bin_index);
+    snprintf(mallctl_name,
+             sizeof(mallctl_name),
+             "stats.arenas." STRINGIFY(ARENA_TO_QUERY) ".bins.%d.nonfull_slabs",
+             bin_index);
     if (jeQueryKeyInit(mallctl_name, &helper->nonfull_slabs) != 0) return -1;
 
     return 0;
@@ -366,7 +373,9 @@ static inline int makeDefragDecision(jeBinInfo *bin_info, jemallocBinUsageData *
     if (1000 * nalloced < bin_info->nregs * UTILIZATION_THRESHOLD_FACTOR_MILLI) return 1;
 
     /* Don't defrag if the slab usage is greater than the average usage (+ 12.5%) */
-    if (1000 * nalloced * bin_usage->curr_nonfull_slabs > (1000 + UTILIZATION_THRESHOLD_FACTOR_MILLI) * allocated_nonfull) return 0;
+    if (1000 * nalloced * bin_usage->curr_nonfull_slabs
+        > (1000 + UTILIZATION_THRESHOLD_FACTOR_MILLI) * allocated_nonfull)
+        return 0;
 
     /* Otherwise, defrag! */
     return 1;
@@ -387,10 +396,7 @@ int allocatorShouldDefrag(void *ptr) {
     for (unsigned j = 0; j < BATCH_QUERY_ARGS_OUT; j++) {
         out[j] = -1;
     }
-    je_mallctlbymib(je_cb.util_batch_query.key,
-                    je_cb.util_batch_query.keylen,
-                    out, &out_sz,
-                    &ptr, in_sz);
+    je_mallctlbymib(je_cb.util_batch_query.key, je_cb.util_batch_query.keylen, out, &out_sz, &ptr, in_sz);
     /* handle results with appropriate quantum value */
     assert(SLAB_NUM_REGS(out, 0) > 0);
     assert(SLAB_LEN(out, 0) > 0);
@@ -428,8 +434,15 @@ float getAllocatorFragmentation(size_t *out_frag_bytes) {
     float rss_pct = ((float)resident / allocated) * 100 - 100;
     size_t rss_bytes = resident - allocated;
     if (out_frag_bytes) *out_frag_bytes = frag_smallbins_bytes;
-    serverLog(LL_DEBUG, "allocated=%zu, active=%zu, resident=%zu, frag=%.2f%% (%.2f%% rss), frag_bytes=%zu (%zu rss)",
-              allocated, active, resident, frag_pct, rss_pct, frag_smallbins_bytes, rss_bytes);
+    serverLog(LL_DEBUG,
+              "allocated=%zu, active=%zu, resident=%zu, frag=%.2f%% (%.2f%% rss), frag_bytes=%zu (%zu rss)",
+              allocated,
+              active,
+              resident,
+              frag_pct,
+              rss_pct,
+              frag_smallbins_bytes,
+              rss_bytes);
     return frag_pct;
 }
 

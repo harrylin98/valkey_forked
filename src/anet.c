@@ -165,8 +165,8 @@ int anetKeepAlive(char *err, int fd, int interval) {
      * we want the compiler to emit warnings of unused variables if the preprocessor directives
      * somehow fail, and other than those platforms, just omit these warnings if they happen.
      */
-#if !(defined(_AIX) || defined(__APPLE__) || defined(__DragonFly__) || defined(__FreeBSD__) || defined(__illumos__) || \
-      defined(__linux__) || defined(__NetBSD__) || defined(__sun))
+#if !(defined(_AIX) || defined(__APPLE__) || defined(__DragonFly__) || defined(__FreeBSD__) || defined(__illumos__)    \
+      || defined(__linux__) || defined(__NetBSD__) || defined(__sun))
     UNUSED(interval);
     UNUSED(idle);
     UNUSED(intvl);
@@ -666,8 +666,7 @@ int anetRetryAcceptOnError(int err) {
      * the server receives and queues it in the pending connections queue (the SYN queue),
      * but before accept() is called, the connection is aborted.
      * in such cases we can continue accepting other connections. ß*/
-    if (err == ECONNABORTED)
-        return 1;
+    if (err == ECONNABORTED) return 1;
 
 #if defined(__linux__)
     /* https://www.man7.org/linux/man-pages/man2/accept4.2 suggests that:
@@ -679,9 +678,8 @@ int anetRetryAcceptOnError(int err) {
        EAGAIN by retrying.  In the case of TCP/IP, these are ENETDOWN,
        EPROTO, ENOPROTOOPT, EHOSTDOWN, ENONET, EHOSTUNREACH, EOPNOTSUPP,
        and ENETUNREACH. */
-    if (err == ENETDOWN || err == EPROTO || err == ENOPROTOOPT ||
-        err == EHOSTDOWN || err == ENONET || err == EHOSTUNREACH ||
-        err == EOPNOTSUPP || err == ENETUNREACH) {
+    if (err == ENETDOWN || err == EPROTO || err == ENOPROTOOPT || err == EHOSTDOWN || err == ENONET
+        || err == EHOSTUNREACH || err == EOPNOTSUPP || err == ENETUNREACH) {
         return 1;
     }
 #endif

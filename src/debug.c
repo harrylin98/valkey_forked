@@ -524,7 +524,8 @@ void debugCommand(client *c) {
             "SLOTMIGRATION PREVENT-PAUSE <0|1>",
             "    When set to 1, slot migrations will be prevented from pausing on the source node.",
             "SLOTMIGRATION PREVENT-FAILOVER <0|1>",
-            "    When set to 1, slot migrations will be prevented from performing the slot-level failover on the target node.",
+            "    When set to 1, slot migrations will be prevented from performing the slot-level failover on the "
+            "target node.",
             NULL};
         addExtendedReplyHelp(c, help, clusterDebugCommandExtendedHelp());
     } else if (!strcasecmp(objectGetVal(c->argv[1]), "segfault")) {
@@ -535,7 +536,8 @@ void debugCommand(client *c) {
         *p = 'x';
     } else if (!strcasecmp(objectGetVal(c->argv[1]), "panic")) {
         serverPanic("DEBUG PANIC called at Unix time %lld", (long long)time(NULL));
-    } else if (!strcasecmp(objectGetVal(c->argv[1]), "restart") || !strcasecmp(objectGetVal(c->argv[1]), "crash-and-recover")) {
+    } else if (!strcasecmp(objectGetVal(c->argv[1]), "restart")
+               || !strcasecmp(objectGetVal(c->argv[1]), "crash-and-recover")) {
         long long delay = 0;
         if (c->argc >= 3) {
             if (getLongLongFromObjectOrReply(c, c->argv[2], &delay, NULL) != C_OK) return;
@@ -573,8 +575,9 @@ void debugCommand(client *c) {
             } else if (!strcasecmp(opt, "NOSAVE")) {
                 save = 0;
             } else {
-                addReplyError(c, "DEBUG RELOAD only supports the "
-                                 "MERGE, NOFLUSH and NOSAVE options.");
+                addReplyError(c,
+                              "DEBUG RELOAD only supports the "
+                              "MERGE, NOFLUSH and NOSAVE options.");
                 return;
             }
         }
@@ -724,8 +727,11 @@ void debugCommand(client *c) {
             addReplyStatusFormat(c,
                                  "key_sds_len:%lld key_sds_avail:%lld obj_alloc:%lld "
                                  "val_sds_len:%lld val_sds_avail:%lld val_alloc:%lld",
-                                 (long long)sdslen(key), (long long)sdsavail(key), (long long)obj_alloc,
-                                 (long long)sdslen(objectGetVal(val)), (long long)sdsavail(objectGetVal(val)),
+                                 (long long)sdslen(key),
+                                 (long long)sdsavail(key),
+                                 (long long)obj_alloc,
+                                 (long long)sdslen(objectGetVal(val)),
+                                 (long long)sdsavail(objectGetVal(val)),
                                  (long long)val_alloc);
         }
     } else if (!strcasecmp(objectGetVal(c->argv[1]), "listpack") && c->argc == 3) {
@@ -876,8 +882,9 @@ void debugCommand(client *c) {
         } else if (!strcasecmp(name, "verbatim")) {
             addReplyVerbatim(c, "This is a verbatim\nstring", 25, "txt");
         } else {
-            addReplyError(c, "Wrong protocol type name. Please use one of the following: "
-                             "string|integer|double|bignum|null|array|set|map|attrib|push|verbatim|true|false");
+            addReplyError(c,
+                          "Wrong protocol type name. Please use one of the following: "
+                          "string|integer|double|bignum|null|array|set|map|attrib|push|verbatim|true|false");
         }
     } else if (!strcasecmp(objectGetVal(c->argv[1]), "sleep") && c->argc == 3) {
         double dtime = valkey_strtod_sds(objectGetVal(c->argv[2]), NULL);
@@ -981,8 +988,9 @@ void debugCommand(client *c) {
             hashtableGetStats(buf, sizeof(buf), ht, full);
             addReplyVerbatim(c, buf, strlen(buf), "txt");
         } else {
-            addReplyError(c, "The value stored at the specified key is not "
-                             "represented using an hash table");
+            addReplyError(c,
+                          "The value stored at the specified key is not "
+                          "represented using an hash table");
         }
     } else if (!strcasecmp(objectGetVal(c->argv[1]), "change-repl-id") && c->argc == 2) {
         serverLog(LL_NOTICE, "Changing replication IDs after receiving DEBUG change-repl-id");
@@ -1010,14 +1018,16 @@ void debugCommand(client *c) {
             if (j == 0)
                 bucket_info = sdscatprintf(bucket_info, "bucket          0");
             else
-                bucket_info =
-                    sdscatprintf(bucket_info, "bucket %10zu", (size_t)1 << (j - 1 + CLIENT_MEM_USAGE_BUCKET_MIN_LOG));
+                bucket_info = sdscatprintf(bucket_info,
+                                           "bucket %10zu",
+                                           (size_t)1 << (j - 1 + CLIENT_MEM_USAGE_BUCKET_MIN_LOG));
             if (j == CLIENT_MEM_USAGE_BUCKETS - 1)
                 bucket_info = sdscatprintf(bucket_info, "+            : ");
             else
                 bucket_info =
                     sdscatprintf(bucket_info, " - %10zu: ", ((size_t)1 << (j + CLIENT_MEM_USAGE_BUCKET_MIN_LOG)) - 1);
-            bucket_info = sdscatprintf(bucket_info, "tot-mem: %10zu, clients: %lu\n",
+            bucket_info = sdscatprintf(bucket_info,
+                                       "tot-mem: %10zu, clients: %lu\n",
                                        server.client_mem_usage_buckets[j].mem_usage_sum,
                                        server.client_mem_usage_buckets[j].clients->len);
         }
@@ -1120,7 +1130,10 @@ void _serverAssertPrintClientInfo(const client *c) {
 
     bugReportStart();
     serverLog(LL_WARNING, "=== ASSERTION FAILED CLIENT CONTEXT ===");
-    serverLog(LL_WARNING, "client->flags = %llu(0-63) %llu(64-127)", (unsigned long long)c->raw_flag1, (unsigned long long)c->raw_flag2);
+    serverLog(LL_WARNING,
+              "client->flags = %llu(0-63) %llu(64-127)",
+              (unsigned long long)c->raw_flag1,
+              (unsigned long long)c->raw_flag2);
     serverLog(LL_WARNING, "client->conn = %s", connGetInfo(c->conn, conninfo, sizeof(conninfo)));
     serverLog(LL_WARNING, "client->argc = %d", c->argc);
     for (j = 0; j < c->argc; j++) {
@@ -1214,7 +1227,8 @@ __attribute__((noinline)) void _serverPanic(const char *file, int line, const ch
 int bugReportStart(void) {
     pthread_mutex_lock(&bug_report_start_mutex);
     if (bug_report_start == 0) {
-        serverLog(LL_WARNING | LL_RAW, "\n\n=== %s BUG REPORT START: Cut & paste starting from here ===\n",
+        serverLog(LL_WARNING | LL_RAW,
+                  "\n\n=== %s BUG REPORT START: Cut & paste starting from here ===\n",
                   server.extended_redis_compat ? "REDIS" : "VALKEY");
         bug_report_start = 1;
         pthread_mutex_unlock(&bug_report_start_mutex);
@@ -1360,16 +1374,26 @@ void logRegisters(ucontext_t *uc) {
               "R8 :%016lx R9 :%016lx\nR10:%016lx R11:%016lx\n"
               "R12:%016lx R13:%016lx\nR14:%016lx R15:%016lx\n"
               "RIP:%016lx EFL:%016lx\nCS :%016lx FS:%016lx  GS:%016lx",
-              (unsigned long)uc->uc_mcontext->__ss.__rax, (unsigned long)uc->uc_mcontext->__ss.__rbx,
-              (unsigned long)uc->uc_mcontext->__ss.__rcx, (unsigned long)uc->uc_mcontext->__ss.__rdx,
-              (unsigned long)uc->uc_mcontext->__ss.__rdi, (unsigned long)uc->uc_mcontext->__ss.__rsi,
-              (unsigned long)uc->uc_mcontext->__ss.__rbp, (unsigned long)uc->uc_mcontext->__ss.__rsp,
-              (unsigned long)uc->uc_mcontext->__ss.__r8, (unsigned long)uc->uc_mcontext->__ss.__r9,
-              (unsigned long)uc->uc_mcontext->__ss.__r10, (unsigned long)uc->uc_mcontext->__ss.__r11,
-              (unsigned long)uc->uc_mcontext->__ss.__r12, (unsigned long)uc->uc_mcontext->__ss.__r13,
-              (unsigned long)uc->uc_mcontext->__ss.__r14, (unsigned long)uc->uc_mcontext->__ss.__r15,
-              (unsigned long)uc->uc_mcontext->__ss.__rip, (unsigned long)uc->uc_mcontext->__ss.__rflags,
-              (unsigned long)uc->uc_mcontext->__ss.__cs, (unsigned long)uc->uc_mcontext->__ss.__fs,
+              (unsigned long)uc->uc_mcontext->__ss.__rax,
+              (unsigned long)uc->uc_mcontext->__ss.__rbx,
+              (unsigned long)uc->uc_mcontext->__ss.__rcx,
+              (unsigned long)uc->uc_mcontext->__ss.__rdx,
+              (unsigned long)uc->uc_mcontext->__ss.__rdi,
+              (unsigned long)uc->uc_mcontext->__ss.__rsi,
+              (unsigned long)uc->uc_mcontext->__ss.__rbp,
+              (unsigned long)uc->uc_mcontext->__ss.__rsp,
+              (unsigned long)uc->uc_mcontext->__ss.__r8,
+              (unsigned long)uc->uc_mcontext->__ss.__r9,
+              (unsigned long)uc->uc_mcontext->__ss.__r10,
+              (unsigned long)uc->uc_mcontext->__ss.__r11,
+              (unsigned long)uc->uc_mcontext->__ss.__r12,
+              (unsigned long)uc->uc_mcontext->__ss.__r13,
+              (unsigned long)uc->uc_mcontext->__ss.__r14,
+              (unsigned long)uc->uc_mcontext->__ss.__r15,
+              (unsigned long)uc->uc_mcontext->__ss.__rip,
+              (unsigned long)uc->uc_mcontext->__ss.__rflags,
+              (unsigned long)uc->uc_mcontext->__ss.__cs,
+              (unsigned long)uc->uc_mcontext->__ss.__fs,
               (unsigned long)uc->uc_mcontext->__ss.__gs);
     logStackContent((void **)uc->uc_mcontext->__ss.__rsp);
 #elif defined(__i386__)
@@ -1380,47 +1404,70 @@ void logRegisters(ucontext_t *uc) {
               "EDI:%08lx ESI:%08lx EBP:%08lx ESP:%08lx\n"
               "SS:%08lx  EFL:%08lx EIP:%08lx CS :%08lx\n"
               "DS:%08lx  ES:%08lx  FS :%08lx GS :%08lx",
-              (unsigned long)uc->uc_mcontext->__ss.__eax, (unsigned long)uc->uc_mcontext->__ss.__ebx,
-              (unsigned long)uc->uc_mcontext->__ss.__ecx, (unsigned long)uc->uc_mcontext->__ss.__edx,
-              (unsigned long)uc->uc_mcontext->__ss.__edi, (unsigned long)uc->uc_mcontext->__ss.__esi,
-              (unsigned long)uc->uc_mcontext->__ss.__ebp, (unsigned long)uc->uc_mcontext->__ss.__esp,
-              (unsigned long)uc->uc_mcontext->__ss.__ss, (unsigned long)uc->uc_mcontext->__ss.__eflags,
-              (unsigned long)uc->uc_mcontext->__ss.__eip, (unsigned long)uc->uc_mcontext->__ss.__cs,
-              (unsigned long)uc->uc_mcontext->__ss.__ds, (unsigned long)uc->uc_mcontext->__ss.__es,
-              (unsigned long)uc->uc_mcontext->__ss.__fs, (unsigned long)uc->uc_mcontext->__ss.__gs);
+              (unsigned long)uc->uc_mcontext->__ss.__eax,
+              (unsigned long)uc->uc_mcontext->__ss.__ebx,
+              (unsigned long)uc->uc_mcontext->__ss.__ecx,
+              (unsigned long)uc->uc_mcontext->__ss.__edx,
+              (unsigned long)uc->uc_mcontext->__ss.__edi,
+              (unsigned long)uc->uc_mcontext->__ss.__esi,
+              (unsigned long)uc->uc_mcontext->__ss.__ebp,
+              (unsigned long)uc->uc_mcontext->__ss.__esp,
+              (unsigned long)uc->uc_mcontext->__ss.__ss,
+              (unsigned long)uc->uc_mcontext->__ss.__eflags,
+              (unsigned long)uc->uc_mcontext->__ss.__eip,
+              (unsigned long)uc->uc_mcontext->__ss.__cs,
+              (unsigned long)uc->uc_mcontext->__ss.__ds,
+              (unsigned long)uc->uc_mcontext->__ss.__es,
+              (unsigned long)uc->uc_mcontext->__ss.__fs,
+              (unsigned long)uc->uc_mcontext->__ss.__gs);
     logStackContent((void **)uc->uc_mcontext->__ss.__esp);
 #elif defined(__arm64__)
     /* macOS ARM64 */
-    serverLog(
-        LL_WARNING,
-        "\n"
-        "x0:%016lx x1:%016lx x2:%016lx x3:%016lx\n"
-        "x4:%016lx x5:%016lx x6:%016lx x7:%016lx\n"
-        "x8:%016lx x9:%016lx x10:%016lx x11:%016lx\n"
-        "x12:%016lx x13:%016lx x14:%016lx x15:%016lx\n"
-        "x16:%016lx x17:%016lx x18:%016lx x19:%016lx\n"
-        "x20:%016lx x21:%016lx x22:%016lx x23:%016lx\n"
-        "x24:%016lx x25:%016lx x26:%016lx x27:%016lx\n"
-        "x28:%016lx fp:%016lx lr:%016lx\n"
-        "sp:%016lx pc:%016lx cpsr:%08lx\n",
-        (unsigned long)uc->uc_mcontext->__ss.__x[0], (unsigned long)uc->uc_mcontext->__ss.__x[1],
-        (unsigned long)uc->uc_mcontext->__ss.__x[2], (unsigned long)uc->uc_mcontext->__ss.__x[3],
-        (unsigned long)uc->uc_mcontext->__ss.__x[4], (unsigned long)uc->uc_mcontext->__ss.__x[5],
-        (unsigned long)uc->uc_mcontext->__ss.__x[6], (unsigned long)uc->uc_mcontext->__ss.__x[7],
-        (unsigned long)uc->uc_mcontext->__ss.__x[8], (unsigned long)uc->uc_mcontext->__ss.__x[9],
-        (unsigned long)uc->uc_mcontext->__ss.__x[10], (unsigned long)uc->uc_mcontext->__ss.__x[11],
-        (unsigned long)uc->uc_mcontext->__ss.__x[12], (unsigned long)uc->uc_mcontext->__ss.__x[13],
-        (unsigned long)uc->uc_mcontext->__ss.__x[14], (unsigned long)uc->uc_mcontext->__ss.__x[15],
-        (unsigned long)uc->uc_mcontext->__ss.__x[16], (unsigned long)uc->uc_mcontext->__ss.__x[17],
-        (unsigned long)uc->uc_mcontext->__ss.__x[18], (unsigned long)uc->uc_mcontext->__ss.__x[19],
-        (unsigned long)uc->uc_mcontext->__ss.__x[20], (unsigned long)uc->uc_mcontext->__ss.__x[21],
-        (unsigned long)uc->uc_mcontext->__ss.__x[22], (unsigned long)uc->uc_mcontext->__ss.__x[23],
-        (unsigned long)uc->uc_mcontext->__ss.__x[24], (unsigned long)uc->uc_mcontext->__ss.__x[25],
-        (unsigned long)uc->uc_mcontext->__ss.__x[26], (unsigned long)uc->uc_mcontext->__ss.__x[27],
-        (unsigned long)uc->uc_mcontext->__ss.__x[28], (unsigned long)arm_thread_state64_get_fp(uc->uc_mcontext->__ss),
-        (unsigned long)arm_thread_state64_get_lr(uc->uc_mcontext->__ss),
-        (unsigned long)arm_thread_state64_get_sp(uc->uc_mcontext->__ss),
-        (unsigned long)arm_thread_state64_get_pc(uc->uc_mcontext->__ss), (unsigned long)uc->uc_mcontext->__ss.__cpsr);
+    serverLog(LL_WARNING,
+              "\n"
+              "x0:%016lx x1:%016lx x2:%016lx x3:%016lx\n"
+              "x4:%016lx x5:%016lx x6:%016lx x7:%016lx\n"
+              "x8:%016lx x9:%016lx x10:%016lx x11:%016lx\n"
+              "x12:%016lx x13:%016lx x14:%016lx x15:%016lx\n"
+              "x16:%016lx x17:%016lx x18:%016lx x19:%016lx\n"
+              "x20:%016lx x21:%016lx x22:%016lx x23:%016lx\n"
+              "x24:%016lx x25:%016lx x26:%016lx x27:%016lx\n"
+              "x28:%016lx fp:%016lx lr:%016lx\n"
+              "sp:%016lx pc:%016lx cpsr:%08lx\n",
+              (unsigned long)uc->uc_mcontext->__ss.__x[0],
+              (unsigned long)uc->uc_mcontext->__ss.__x[1],
+              (unsigned long)uc->uc_mcontext->__ss.__x[2],
+              (unsigned long)uc->uc_mcontext->__ss.__x[3],
+              (unsigned long)uc->uc_mcontext->__ss.__x[4],
+              (unsigned long)uc->uc_mcontext->__ss.__x[5],
+              (unsigned long)uc->uc_mcontext->__ss.__x[6],
+              (unsigned long)uc->uc_mcontext->__ss.__x[7],
+              (unsigned long)uc->uc_mcontext->__ss.__x[8],
+              (unsigned long)uc->uc_mcontext->__ss.__x[9],
+              (unsigned long)uc->uc_mcontext->__ss.__x[10],
+              (unsigned long)uc->uc_mcontext->__ss.__x[11],
+              (unsigned long)uc->uc_mcontext->__ss.__x[12],
+              (unsigned long)uc->uc_mcontext->__ss.__x[13],
+              (unsigned long)uc->uc_mcontext->__ss.__x[14],
+              (unsigned long)uc->uc_mcontext->__ss.__x[15],
+              (unsigned long)uc->uc_mcontext->__ss.__x[16],
+              (unsigned long)uc->uc_mcontext->__ss.__x[17],
+              (unsigned long)uc->uc_mcontext->__ss.__x[18],
+              (unsigned long)uc->uc_mcontext->__ss.__x[19],
+              (unsigned long)uc->uc_mcontext->__ss.__x[20],
+              (unsigned long)uc->uc_mcontext->__ss.__x[21],
+              (unsigned long)uc->uc_mcontext->__ss.__x[22],
+              (unsigned long)uc->uc_mcontext->__ss.__x[23],
+              (unsigned long)uc->uc_mcontext->__ss.__x[24],
+              (unsigned long)uc->uc_mcontext->__ss.__x[25],
+              (unsigned long)uc->uc_mcontext->__ss.__x[26],
+              (unsigned long)uc->uc_mcontext->__ss.__x[27],
+              (unsigned long)uc->uc_mcontext->__ss.__x[28],
+              (unsigned long)arm_thread_state64_get_fp(uc->uc_mcontext->__ss),
+              (unsigned long)arm_thread_state64_get_lr(uc->uc_mcontext->__ss),
+              (unsigned long)arm_thread_state64_get_sp(uc->uc_mcontext->__ss),
+              (unsigned long)arm_thread_state64_get_pc(uc->uc_mcontext->__ss),
+              (unsigned long)uc->uc_mcontext->__ss.__cpsr);
     logStackContent((void **)arm_thread_state64_get_sp(uc->uc_mcontext->__ss));
 #else
     /* At the moment we do not implement this for PowerPC */
@@ -1436,14 +1483,22 @@ void logRegisters(ucontext_t *uc) {
               "EDI:%08lx ESI:%08lx EBP:%08lx ESP:%08lx\n"
               "SS :%08lx EFL:%08lx EIP:%08lx CS:%08lx\n"
               "DS :%08lx ES :%08lx FS :%08lx GS:%08lx",
-              (unsigned long)uc->uc_mcontext.gregs[11], (unsigned long)uc->uc_mcontext.gregs[8],
-              (unsigned long)uc->uc_mcontext.gregs[10], (unsigned long)uc->uc_mcontext.gregs[9],
-              (unsigned long)uc->uc_mcontext.gregs[4], (unsigned long)uc->uc_mcontext.gregs[5],
-              (unsigned long)uc->uc_mcontext.gregs[6], (unsigned long)uc->uc_mcontext.gregs[7],
-              (unsigned long)uc->uc_mcontext.gregs[18], (unsigned long)uc->uc_mcontext.gregs[17],
-              (unsigned long)uc->uc_mcontext.gregs[14], (unsigned long)uc->uc_mcontext.gregs[15],
-              (unsigned long)uc->uc_mcontext.gregs[3], (unsigned long)uc->uc_mcontext.gregs[2],
-              (unsigned long)uc->uc_mcontext.gregs[1], (unsigned long)uc->uc_mcontext.gregs[0]);
+              (unsigned long)uc->uc_mcontext.gregs[11],
+              (unsigned long)uc->uc_mcontext.gregs[8],
+              (unsigned long)uc->uc_mcontext.gregs[10],
+              (unsigned long)uc->uc_mcontext.gregs[9],
+              (unsigned long)uc->uc_mcontext.gregs[4],
+              (unsigned long)uc->uc_mcontext.gregs[5],
+              (unsigned long)uc->uc_mcontext.gregs[6],
+              (unsigned long)uc->uc_mcontext.gregs[7],
+              (unsigned long)uc->uc_mcontext.gregs[18],
+              (unsigned long)uc->uc_mcontext.gregs[17],
+              (unsigned long)uc->uc_mcontext.gregs[14],
+              (unsigned long)uc->uc_mcontext.gregs[15],
+              (unsigned long)uc->uc_mcontext.gregs[3],
+              (unsigned long)uc->uc_mcontext.gregs[2],
+              (unsigned long)uc->uc_mcontext.gregs[1],
+              (unsigned long)uc->uc_mcontext.gregs[0]);
     logStackContent((void **)uc->uc_mcontext.gregs[7]);
 #elif defined(__X86_64__) || defined(__x86_64__)
     /* Linux AMD64 */
@@ -1454,15 +1509,24 @@ void logRegisters(ucontext_t *uc) {
               "R8 :%016lx R9 :%016lx\nR10:%016lx R11:%016lx\n"
               "R12:%016lx R13:%016lx\nR14:%016lx R15:%016lx\n"
               "RIP:%016lx EFL:%016lx\nCSGSFS:%016lx",
-              (unsigned long)uc->uc_mcontext.gregs[13], (unsigned long)uc->uc_mcontext.gregs[11],
-              (unsigned long)uc->uc_mcontext.gregs[14], (unsigned long)uc->uc_mcontext.gregs[12],
-              (unsigned long)uc->uc_mcontext.gregs[8], (unsigned long)uc->uc_mcontext.gregs[9],
-              (unsigned long)uc->uc_mcontext.gregs[10], (unsigned long)uc->uc_mcontext.gregs[15],
-              (unsigned long)uc->uc_mcontext.gregs[0], (unsigned long)uc->uc_mcontext.gregs[1],
-              (unsigned long)uc->uc_mcontext.gregs[2], (unsigned long)uc->uc_mcontext.gregs[3],
-              (unsigned long)uc->uc_mcontext.gregs[4], (unsigned long)uc->uc_mcontext.gregs[5],
-              (unsigned long)uc->uc_mcontext.gregs[6], (unsigned long)uc->uc_mcontext.gregs[7],
-              (unsigned long)uc->uc_mcontext.gregs[16], (unsigned long)uc->uc_mcontext.gregs[17],
+              (unsigned long)uc->uc_mcontext.gregs[13],
+              (unsigned long)uc->uc_mcontext.gregs[11],
+              (unsigned long)uc->uc_mcontext.gregs[14],
+              (unsigned long)uc->uc_mcontext.gregs[12],
+              (unsigned long)uc->uc_mcontext.gregs[8],
+              (unsigned long)uc->uc_mcontext.gregs[9],
+              (unsigned long)uc->uc_mcontext.gregs[10],
+              (unsigned long)uc->uc_mcontext.gregs[15],
+              (unsigned long)uc->uc_mcontext.gregs[0],
+              (unsigned long)uc->uc_mcontext.gregs[1],
+              (unsigned long)uc->uc_mcontext.gregs[2],
+              (unsigned long)uc->uc_mcontext.gregs[3],
+              (unsigned long)uc->uc_mcontext.gregs[4],
+              (unsigned long)uc->uc_mcontext.gregs[5],
+              (unsigned long)uc->uc_mcontext.gregs[6],
+              (unsigned long)uc->uc_mcontext.gregs[7],
+              (unsigned long)uc->uc_mcontext.gregs[16],
+              (unsigned long)uc->uc_mcontext.gregs[17],
               (unsigned long)uc->uc_mcontext.gregs[18]);
     logStackContent((void **)uc->uc_mcontext.gregs[15]);
 #elif defined(__riscv)     /* Linux RISC-V */
@@ -1476,21 +1540,36 @@ void logRegisters(ucontext_t *uc) {
               "s6:%016lx s7:%016lx\ns8:%016lx s9:%016lx\n"
               "s10:%016lx s11:%016lx\nt3:%016lx t4:%016lx\n"
               "t5:%016lx t6:%016lx\n",
-              (unsigned long)uc->uc_mcontext.__gregs[1], (unsigned long)uc->uc_mcontext.__gregs[3],
-              (unsigned long)uc->uc_mcontext.__gregs[4], (unsigned long)uc->uc_mcontext.__gregs[5],
-              (unsigned long)uc->uc_mcontext.__gregs[6], (unsigned long)uc->uc_mcontext.__gregs[7],
-              (unsigned long)uc->uc_mcontext.__gregs[8], (unsigned long)uc->uc_mcontext.__gregs[9],
-              (unsigned long)uc->uc_mcontext.__gregs[10], (unsigned long)uc->uc_mcontext.__gregs[11],
-              (unsigned long)uc->uc_mcontext.__gregs[12], (unsigned long)uc->uc_mcontext.__gregs[13],
-              (unsigned long)uc->uc_mcontext.__gregs[14], (unsigned long)uc->uc_mcontext.__gregs[15],
-              (unsigned long)uc->uc_mcontext.__gregs[16], (unsigned long)uc->uc_mcontext.__gregs[17],
-              (unsigned long)uc->uc_mcontext.__gregs[18], (unsigned long)uc->uc_mcontext.__gregs[19],
-              (unsigned long)uc->uc_mcontext.__gregs[20], (unsigned long)uc->uc_mcontext.__gregs[21],
-              (unsigned long)uc->uc_mcontext.__gregs[22], (unsigned long)uc->uc_mcontext.__gregs[23],
-              (unsigned long)uc->uc_mcontext.__gregs[24], (unsigned long)uc->uc_mcontext.__gregs[25],
-              (unsigned long)uc->uc_mcontext.__gregs[26], (unsigned long)uc->uc_mcontext.__gregs[27],
-              (unsigned long)uc->uc_mcontext.__gregs[28], (unsigned long)uc->uc_mcontext.__gregs[29],
-              (unsigned long)uc->uc_mcontext.__gregs[30], (unsigned long)uc->uc_mcontext.__gregs[31]);
+              (unsigned long)uc->uc_mcontext.__gregs[1],
+              (unsigned long)uc->uc_mcontext.__gregs[3],
+              (unsigned long)uc->uc_mcontext.__gregs[4],
+              (unsigned long)uc->uc_mcontext.__gregs[5],
+              (unsigned long)uc->uc_mcontext.__gregs[6],
+              (unsigned long)uc->uc_mcontext.__gregs[7],
+              (unsigned long)uc->uc_mcontext.__gregs[8],
+              (unsigned long)uc->uc_mcontext.__gregs[9],
+              (unsigned long)uc->uc_mcontext.__gregs[10],
+              (unsigned long)uc->uc_mcontext.__gregs[11],
+              (unsigned long)uc->uc_mcontext.__gregs[12],
+              (unsigned long)uc->uc_mcontext.__gregs[13],
+              (unsigned long)uc->uc_mcontext.__gregs[14],
+              (unsigned long)uc->uc_mcontext.__gregs[15],
+              (unsigned long)uc->uc_mcontext.__gregs[16],
+              (unsigned long)uc->uc_mcontext.__gregs[17],
+              (unsigned long)uc->uc_mcontext.__gregs[18],
+              (unsigned long)uc->uc_mcontext.__gregs[19],
+              (unsigned long)uc->uc_mcontext.__gregs[20],
+              (unsigned long)uc->uc_mcontext.__gregs[21],
+              (unsigned long)uc->uc_mcontext.__gregs[22],
+              (unsigned long)uc->uc_mcontext.__gregs[23],
+              (unsigned long)uc->uc_mcontext.__gregs[24],
+              (unsigned long)uc->uc_mcontext.__gregs[25],
+              (unsigned long)uc->uc_mcontext.__gregs[26],
+              (unsigned long)uc->uc_mcontext.__gregs[27],
+              (unsigned long)uc->uc_mcontext.__gregs[28],
+              (unsigned long)uc->uc_mcontext.__gregs[29],
+              (unsigned long)uc->uc_mcontext.__gregs[30],
+              (unsigned long)uc->uc_mcontext.__gregs[31]);
     logStackContent((void **)uc->uc_mcontext.__gregs[REG_SP]);
 #elif defined(__aarch64__) /* Linux AArch64 */
     serverLog(LL_WARNING,
@@ -1500,14 +1579,22 @@ void logRegisters(ucontext_t *uc) {
               "X26:%016lx X27:%016lx\nX28:%016lx X29:%016lx\n"
               "X30:%016lx\n"
               "pc:%016lx sp:%016lx\npstate:%016lx fault_address:%016lx\n",
-              (unsigned long)uc->uc_mcontext.regs[18], (unsigned long)uc->uc_mcontext.regs[19],
-              (unsigned long)uc->uc_mcontext.regs[20], (unsigned long)uc->uc_mcontext.regs[21],
-              (unsigned long)uc->uc_mcontext.regs[22], (unsigned long)uc->uc_mcontext.regs[23],
-              (unsigned long)uc->uc_mcontext.regs[24], (unsigned long)uc->uc_mcontext.regs[25],
-              (unsigned long)uc->uc_mcontext.regs[26], (unsigned long)uc->uc_mcontext.regs[27],
-              (unsigned long)uc->uc_mcontext.regs[28], (unsigned long)uc->uc_mcontext.regs[29],
-              (unsigned long)uc->uc_mcontext.regs[30], (unsigned long)uc->uc_mcontext.pc,
-              (unsigned long)uc->uc_mcontext.sp, (unsigned long)uc->uc_mcontext.pstate,
+              (unsigned long)uc->uc_mcontext.regs[18],
+              (unsigned long)uc->uc_mcontext.regs[19],
+              (unsigned long)uc->uc_mcontext.regs[20],
+              (unsigned long)uc->uc_mcontext.regs[21],
+              (unsigned long)uc->uc_mcontext.regs[22],
+              (unsigned long)uc->uc_mcontext.regs[23],
+              (unsigned long)uc->uc_mcontext.regs[24],
+              (unsigned long)uc->uc_mcontext.regs[25],
+              (unsigned long)uc->uc_mcontext.regs[26],
+              (unsigned long)uc->uc_mcontext.regs[27],
+              (unsigned long)uc->uc_mcontext.regs[28],
+              (unsigned long)uc->uc_mcontext.regs[29],
+              (unsigned long)uc->uc_mcontext.regs[30],
+              (unsigned long)uc->uc_mcontext.pc,
+              (unsigned long)uc->uc_mcontext.sp,
+              (unsigned long)uc->uc_mcontext.pstate,
               (unsigned long)uc->uc_mcontext.fault_address);
     logStackContent((void **)uc->uc_mcontext.sp);
 #elif defined(__arm__)     /* Linux ARM */
@@ -1518,15 +1605,24 @@ void logRegisters(ucontext_t *uc) {
               "R2 :%016lx R1 :%016lx\nR0 :%016lx EC :%016lx\n"
               "fp: %016lx ip:%016lx\n"
               "pc:%016lx sp:%016lx\ncpsr:%016lx fault_address:%016lx\n",
-              (unsigned long)uc->uc_mcontext.arm_r10, (unsigned long)uc->uc_mcontext.arm_r9,
-              (unsigned long)uc->uc_mcontext.arm_r8, (unsigned long)uc->uc_mcontext.arm_r7,
-              (unsigned long)uc->uc_mcontext.arm_r6, (unsigned long)uc->uc_mcontext.arm_r5,
-              (unsigned long)uc->uc_mcontext.arm_r4, (unsigned long)uc->uc_mcontext.arm_r3,
-              (unsigned long)uc->uc_mcontext.arm_r2, (unsigned long)uc->uc_mcontext.arm_r1,
-              (unsigned long)uc->uc_mcontext.arm_r0, (unsigned long)uc->uc_mcontext.error_code,
-              (unsigned long)uc->uc_mcontext.arm_fp, (unsigned long)uc->uc_mcontext.arm_ip,
-              (unsigned long)uc->uc_mcontext.arm_pc, (unsigned long)uc->uc_mcontext.arm_sp,
-              (unsigned long)uc->uc_mcontext.arm_cpsr, (unsigned long)uc->uc_mcontext.fault_address);
+              (unsigned long)uc->uc_mcontext.arm_r10,
+              (unsigned long)uc->uc_mcontext.arm_r9,
+              (unsigned long)uc->uc_mcontext.arm_r8,
+              (unsigned long)uc->uc_mcontext.arm_r7,
+              (unsigned long)uc->uc_mcontext.arm_r6,
+              (unsigned long)uc->uc_mcontext.arm_r5,
+              (unsigned long)uc->uc_mcontext.arm_r4,
+              (unsigned long)uc->uc_mcontext.arm_r3,
+              (unsigned long)uc->uc_mcontext.arm_r2,
+              (unsigned long)uc->uc_mcontext.arm_r1,
+              (unsigned long)uc->uc_mcontext.arm_r0,
+              (unsigned long)uc->uc_mcontext.error_code,
+              (unsigned long)uc->uc_mcontext.arm_fp,
+              (unsigned long)uc->uc_mcontext.arm_ip,
+              (unsigned long)uc->uc_mcontext.arm_pc,
+              (unsigned long)uc->uc_mcontext.arm_sp,
+              (unsigned long)uc->uc_mcontext.arm_cpsr,
+              (unsigned long)uc->uc_mcontext.fault_address);
     logStackContent((void **)uc->uc_mcontext.arm_sp);
 #else
     NOT_SUPPORTED();
@@ -1540,15 +1636,24 @@ void logRegisters(ucontext_t *uc) {
               "R8 :%016lx R9 :%016lx\nR10:%016lx R11:%016lx\n"
               "R12:%016lx R13:%016lx\nR14:%016lx R15:%016lx\n"
               "RIP:%016lx EFL:%016lx\nCSGSFS:%016lx",
-              (unsigned long)uc->uc_mcontext.mc_rax, (unsigned long)uc->uc_mcontext.mc_rbx,
-              (unsigned long)uc->uc_mcontext.mc_rcx, (unsigned long)uc->uc_mcontext.mc_rdx,
-              (unsigned long)uc->uc_mcontext.mc_rdi, (unsigned long)uc->uc_mcontext.mc_rsi,
-              (unsigned long)uc->uc_mcontext.mc_rbp, (unsigned long)uc->uc_mcontext.mc_rsp,
-              (unsigned long)uc->uc_mcontext.mc_r8, (unsigned long)uc->uc_mcontext.mc_r9,
-              (unsigned long)uc->uc_mcontext.mc_r10, (unsigned long)uc->uc_mcontext.mc_r11,
-              (unsigned long)uc->uc_mcontext.mc_r12, (unsigned long)uc->uc_mcontext.mc_r13,
-              (unsigned long)uc->uc_mcontext.mc_r14, (unsigned long)uc->uc_mcontext.mc_r15,
-              (unsigned long)uc->uc_mcontext.mc_rip, (unsigned long)uc->uc_mcontext.mc_rflags,
+              (unsigned long)uc->uc_mcontext.mc_rax,
+              (unsigned long)uc->uc_mcontext.mc_rbx,
+              (unsigned long)uc->uc_mcontext.mc_rcx,
+              (unsigned long)uc->uc_mcontext.mc_rdx,
+              (unsigned long)uc->uc_mcontext.mc_rdi,
+              (unsigned long)uc->uc_mcontext.mc_rsi,
+              (unsigned long)uc->uc_mcontext.mc_rbp,
+              (unsigned long)uc->uc_mcontext.mc_rsp,
+              (unsigned long)uc->uc_mcontext.mc_r8,
+              (unsigned long)uc->uc_mcontext.mc_r9,
+              (unsigned long)uc->uc_mcontext.mc_r10,
+              (unsigned long)uc->uc_mcontext.mc_r11,
+              (unsigned long)uc->uc_mcontext.mc_r12,
+              (unsigned long)uc->uc_mcontext.mc_r13,
+              (unsigned long)uc->uc_mcontext.mc_r14,
+              (unsigned long)uc->uc_mcontext.mc_r15,
+              (unsigned long)uc->uc_mcontext.mc_rip,
+              (unsigned long)uc->uc_mcontext.mc_rflags,
               (unsigned long)uc->uc_mcontext.mc_cs);
     logStackContent((void **)uc->uc_mcontext.mc_rsp);
 #elif defined(__i386__)
@@ -1558,13 +1663,20 @@ void logRegisters(ucontext_t *uc) {
               "EDI:%08lx ESI:%08lx EBP:%08lx ESP:%08lx\n"
               "SS :%08lx EFL:%08lx EIP:%08lx CS:%08lx\n"
               "DS :%08lx ES :%08lx FS :%08lx GS:%08lx",
-              (unsigned long)uc->uc_mcontext.mc_eax, (unsigned long)uc->uc_mcontext.mc_ebx,
-              (unsigned long)uc->uc_mcontext.mc_ebx, (unsigned long)uc->uc_mcontext.mc_edx,
-              (unsigned long)uc->uc_mcontext.mc_edi, (unsigned long)uc->uc_mcontext.mc_esi,
-              (unsigned long)uc->uc_mcontext.mc_ebp, (unsigned long)uc->uc_mcontext.mc_esp,
-              (unsigned long)uc->uc_mcontext.mc_ss, (unsigned long)uc->uc_mcontext.mc_eflags,
-              (unsigned long)uc->uc_mcontext.mc_eip, (unsigned long)uc->uc_mcontext.mc_cs,
-              (unsigned long)uc->uc_mcontext.mc_es, (unsigned long)uc->uc_mcontext.mc_fs,
+              (unsigned long)uc->uc_mcontext.mc_eax,
+              (unsigned long)uc->uc_mcontext.mc_ebx,
+              (unsigned long)uc->uc_mcontext.mc_ebx,
+              (unsigned long)uc->uc_mcontext.mc_edx,
+              (unsigned long)uc->uc_mcontext.mc_edi,
+              (unsigned long)uc->uc_mcontext.mc_esi,
+              (unsigned long)uc->uc_mcontext.mc_ebp,
+              (unsigned long)uc->uc_mcontext.mc_esp,
+              (unsigned long)uc->uc_mcontext.mc_ss,
+              (unsigned long)uc->uc_mcontext.mc_eflags,
+              (unsigned long)uc->uc_mcontext.mc_eip,
+              (unsigned long)uc->uc_mcontext.mc_cs,
+              (unsigned long)uc->uc_mcontext.mc_es,
+              (unsigned long)uc->uc_mcontext.mc_fs,
               (unsigned long)uc->uc_mcontext.mc_gs);
     logStackContent((void **)uc->uc_mcontext.mc_esp);
 #else
@@ -1579,12 +1691,25 @@ void logRegisters(ucontext_t *uc) {
               "R8 :%016lx R9 :%016lx\nR10:%016lx R11:%016lx\n"
               "R12:%016lx R13:%016lx\nR14:%016lx R15:%016lx\n"
               "RIP:%016lx EFL:%016lx\nCSGSFS:%016lx",
-              (unsigned long)uc->sc_rax, (unsigned long)uc->sc_rbx, (unsigned long)uc->sc_rcx,
-              (unsigned long)uc->sc_rdx, (unsigned long)uc->sc_rdi, (unsigned long)uc->sc_rsi,
-              (unsigned long)uc->sc_rbp, (unsigned long)uc->sc_rsp, (unsigned long)uc->sc_r8, (unsigned long)uc->sc_r9,
-              (unsigned long)uc->sc_r10, (unsigned long)uc->sc_r11, (unsigned long)uc->sc_r12,
-              (unsigned long)uc->sc_r13, (unsigned long)uc->sc_r14, (unsigned long)uc->sc_r15,
-              (unsigned long)uc->sc_rip, (unsigned long)uc->sc_rflags, (unsigned long)uc->sc_cs);
+              (unsigned long)uc->sc_rax,
+              (unsigned long)uc->sc_rbx,
+              (unsigned long)uc->sc_rcx,
+              (unsigned long)uc->sc_rdx,
+              (unsigned long)uc->sc_rdi,
+              (unsigned long)uc->sc_rsi,
+              (unsigned long)uc->sc_rbp,
+              (unsigned long)uc->sc_rsp,
+              (unsigned long)uc->sc_r8,
+              (unsigned long)uc->sc_r9,
+              (unsigned long)uc->sc_r10,
+              (unsigned long)uc->sc_r11,
+              (unsigned long)uc->sc_r12,
+              (unsigned long)uc->sc_r13,
+              (unsigned long)uc->sc_r14,
+              (unsigned long)uc->sc_r15,
+              (unsigned long)uc->sc_rip,
+              (unsigned long)uc->sc_rflags,
+              (unsigned long)uc->sc_cs);
     logStackContent((void **)uc->sc_rsp);
 #elif defined(__i386__)
     serverLog(LL_WARNING,
@@ -1593,11 +1718,21 @@ void logRegisters(ucontext_t *uc) {
               "EDI:%08lx ESI:%08lx EBP:%08lx ESP:%08lx\n"
               "SS :%08lx EFL:%08lx EIP:%08lx CS:%08lx\n"
               "DS :%08lx ES :%08lx FS :%08lx GS:%08lx",
-              (unsigned long)uc->sc_eax, (unsigned long)uc->sc_ebx, (unsigned long)uc->sc_ebx,
-              (unsigned long)uc->sc_edx, (unsigned long)uc->sc_edi, (unsigned long)uc->sc_esi,
-              (unsigned long)uc->sc_ebp, (unsigned long)uc->sc_esp, (unsigned long)uc->sc_ss,
-              (unsigned long)uc->sc_eflags, (unsigned long)uc->sc_eip, (unsigned long)uc->sc_cs,
-              (unsigned long)uc->sc_es, (unsigned long)uc->sc_fs, (unsigned long)uc->sc_gs);
+              (unsigned long)uc->sc_eax,
+              (unsigned long)uc->sc_ebx,
+              (unsigned long)uc->sc_ebx,
+              (unsigned long)uc->sc_edx,
+              (unsigned long)uc->sc_edi,
+              (unsigned long)uc->sc_esi,
+              (unsigned long)uc->sc_ebp,
+              (unsigned long)uc->sc_esp,
+              (unsigned long)uc->sc_ss,
+              (unsigned long)uc->sc_eflags,
+              (unsigned long)uc->sc_eip,
+              (unsigned long)uc->sc_cs,
+              (unsigned long)uc->sc_es,
+              (unsigned long)uc->sc_fs,
+              (unsigned long)uc->sc_gs);
     logStackContent((void **)uc->sc_esp);
 #else
     NOT_SUPPORTED();
@@ -1611,15 +1746,24 @@ void logRegisters(ucontext_t *uc) {
               "R8 :%016lx R9 :%016lx\nR10:%016lx R11:%016lx\n"
               "R12:%016lx R13:%016lx\nR14:%016lx R15:%016lx\n"
               "RIP:%016lx EFL:%016lx\nCSGSFS:%016lx",
-              (unsigned long)uc->uc_mcontext.__gregs[_REG_RAX], (unsigned long)uc->uc_mcontext.__gregs[_REG_RBX],
-              (unsigned long)uc->uc_mcontext.__gregs[_REG_RCX], (unsigned long)uc->uc_mcontext.__gregs[_REG_RDX],
-              (unsigned long)uc->uc_mcontext.__gregs[_REG_RDI], (unsigned long)uc->uc_mcontext.__gregs[_REG_RSI],
-              (unsigned long)uc->uc_mcontext.__gregs[_REG_RBP], (unsigned long)uc->uc_mcontext.__gregs[_REG_RSP],
-              (unsigned long)uc->uc_mcontext.__gregs[_REG_R8], (unsigned long)uc->uc_mcontext.__gregs[_REG_R9],
-              (unsigned long)uc->uc_mcontext.__gregs[_REG_R10], (unsigned long)uc->uc_mcontext.__gregs[_REG_R11],
-              (unsigned long)uc->uc_mcontext.__gregs[_REG_R12], (unsigned long)uc->uc_mcontext.__gregs[_REG_R13],
-              (unsigned long)uc->uc_mcontext.__gregs[_REG_R14], (unsigned long)uc->uc_mcontext.__gregs[_REG_R15],
-              (unsigned long)uc->uc_mcontext.__gregs[_REG_RIP], (unsigned long)uc->uc_mcontext.__gregs[_REG_RFLAGS],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_RAX],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_RBX],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_RCX],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_RDX],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_RDI],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_RSI],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_RBP],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_RSP],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_R8],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_R9],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_R10],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_R11],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_R12],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_R13],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_R14],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_R15],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_RIP],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_RFLAGS],
               (unsigned long)uc->uc_mcontext.__gregs[_REG_CS]);
     logStackContent((void **)uc->uc_mcontext.__gregs[_REG_RSP]);
 #elif defined(__i386__)
@@ -1629,13 +1773,20 @@ void logRegisters(ucontext_t *uc) {
               "EDI:%08lx ESI:%08lx EBP:%08lx ESP:%08lx\n"
               "SS :%08lx EFL:%08lx EIP:%08lx CS:%08lx\n"
               "DS :%08lx ES :%08lx FS :%08lx GS:%08lx",
-              (unsigned long)uc->uc_mcontext.__gregs[_REG_EAX], (unsigned long)uc->uc_mcontext.__gregs[_REG_EBX],
-              (unsigned long)uc->uc_mcontext.__gregs[_REG_EDX], (unsigned long)uc->uc_mcontext.__gregs[_REG_EDI],
-              (unsigned long)uc->uc_mcontext.__gregs[_REG_ESI], (unsigned long)uc->uc_mcontext.__gregs[_REG_EBP],
-              (unsigned long)uc->uc_mcontext.__gregs[_REG_ESP], (unsigned long)uc->uc_mcontext.__gregs[_REG_SS],
-              (unsigned long)uc->uc_mcontext.__gregs[_REG_EFLAGS], (unsigned long)uc->uc_mcontext.__gregs[_REG_EIP],
-              (unsigned long)uc->uc_mcontext.__gregs[_REG_CS], (unsigned long)uc->uc_mcontext.__gregs[_REG_ES],
-              (unsigned long)uc->uc_mcontext.__gregs[_REG_FS], (unsigned long)uc->uc_mcontext.__gregs[_REG_GS]);
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_EAX],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_EBX],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_EDX],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_EDI],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_ESI],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_EBP],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_ESP],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_SS],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_EFLAGS],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_EIP],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_CS],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_ES],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_FS],
+              (unsigned long)uc->uc_mcontext.__gregs[_REG_GS]);
 #else
     NOT_SUPPORTED();
 #endif
@@ -1647,15 +1798,24 @@ void logRegisters(ucontext_t *uc) {
               "R8 :%016lx R9 :%016lx\nR10:%016lx R11:%016lx\n"
               "R12:%016lx R13:%016lx\nR14:%016lx R15:%016lx\n"
               "RIP:%016lx EFL:%016lx\nCSGSFS:%016lx",
-              (unsigned long)uc->uc_mcontext.mc_rax, (unsigned long)uc->uc_mcontext.mc_rbx,
-              (unsigned long)uc->uc_mcontext.mc_rcx, (unsigned long)uc->uc_mcontext.mc_rdx,
-              (unsigned long)uc->uc_mcontext.mc_rdi, (unsigned long)uc->uc_mcontext.mc_rsi,
-              (unsigned long)uc->uc_mcontext.mc_rbp, (unsigned long)uc->uc_mcontext.mc_rsp,
-              (unsigned long)uc->uc_mcontext.mc_r8, (unsigned long)uc->uc_mcontext.mc_r9,
-              (unsigned long)uc->uc_mcontext.mc_r10, (unsigned long)uc->uc_mcontext.mc_r11,
-              (unsigned long)uc->uc_mcontext.mc_r12, (unsigned long)uc->uc_mcontext.mc_r13,
-              (unsigned long)uc->uc_mcontext.mc_r14, (unsigned long)uc->uc_mcontext.mc_r15,
-              (unsigned long)uc->uc_mcontext.mc_rip, (unsigned long)uc->uc_mcontext.mc_rflags,
+              (unsigned long)uc->uc_mcontext.mc_rax,
+              (unsigned long)uc->uc_mcontext.mc_rbx,
+              (unsigned long)uc->uc_mcontext.mc_rcx,
+              (unsigned long)uc->uc_mcontext.mc_rdx,
+              (unsigned long)uc->uc_mcontext.mc_rdi,
+              (unsigned long)uc->uc_mcontext.mc_rsi,
+              (unsigned long)uc->uc_mcontext.mc_rbp,
+              (unsigned long)uc->uc_mcontext.mc_rsp,
+              (unsigned long)uc->uc_mcontext.mc_r8,
+              (unsigned long)uc->uc_mcontext.mc_r9,
+              (unsigned long)uc->uc_mcontext.mc_r10,
+              (unsigned long)uc->uc_mcontext.mc_r11,
+              (unsigned long)uc->uc_mcontext.mc_r12,
+              (unsigned long)uc->uc_mcontext.mc_r13,
+              (unsigned long)uc->uc_mcontext.mc_r14,
+              (unsigned long)uc->uc_mcontext.mc_r15,
+              (unsigned long)uc->uc_mcontext.mc_rip,
+              (unsigned long)uc->uc_mcontext.mc_rflags,
               (unsigned long)uc->uc_mcontext.mc_cs);
     logStackContent((void **)uc->uc_mcontext.mc_rsp);
 #elif defined(__sun)
@@ -1667,15 +1827,24 @@ void logRegisters(ucontext_t *uc) {
               "R8 :%016lx R9 :%016lx\nR10:%016lx R11:%016lx\n"
               "R12:%016lx R13:%016lx\nR14:%016lx R15:%016lx\n"
               "RIP:%016lx EFL:%016lx\nCSGSFS:%016lx",
-              (unsigned long)uc->uc_mcontext.gregs[REG_RAX], (unsigned long)uc->uc_mcontext.gregs[REG_RBX],
-              (unsigned long)uc->uc_mcontext.gregs[REG_RCX], (unsigned long)uc->uc_mcontext.gregs[REG_RDX],
-              (unsigned long)uc->uc_mcontext.gregs[REG_RDI], (unsigned long)uc->uc_mcontext.gregs[REG_RSI],
-              (unsigned long)uc->uc_mcontext.gregs[REG_RBP], (unsigned long)uc->uc_mcontext.gregs[REG_RSP],
-              (unsigned long)uc->uc_mcontext.gregs[REG_R8], (unsigned long)uc->uc_mcontext.gregs[REG_R9],
-              (unsigned long)uc->uc_mcontext.gregs[REG_R10], (unsigned long)uc->uc_mcontext.gregs[REG_R11],
-              (unsigned long)uc->uc_mcontext.gregs[REG_R12], (unsigned long)uc->uc_mcontext.gregs[REG_R13],
-              (unsigned long)uc->uc_mcontext.gregs[REG_R14], (unsigned long)uc->uc_mcontext.gregs[REG_R15],
-              (unsigned long)uc->uc_mcontext.gregs[REG_RIP], (unsigned long)uc->uc_mcontext.gregs[REG_RFL],
+              (unsigned long)uc->uc_mcontext.gregs[REG_RAX],
+              (unsigned long)uc->uc_mcontext.gregs[REG_RBX],
+              (unsigned long)uc->uc_mcontext.gregs[REG_RCX],
+              (unsigned long)uc->uc_mcontext.gregs[REG_RDX],
+              (unsigned long)uc->uc_mcontext.gregs[REG_RDI],
+              (unsigned long)uc->uc_mcontext.gregs[REG_RSI],
+              (unsigned long)uc->uc_mcontext.gregs[REG_RBP],
+              (unsigned long)uc->uc_mcontext.gregs[REG_RSP],
+              (unsigned long)uc->uc_mcontext.gregs[REG_R8],
+              (unsigned long)uc->uc_mcontext.gregs[REG_R9],
+              (unsigned long)uc->uc_mcontext.gregs[REG_R10],
+              (unsigned long)uc->uc_mcontext.gregs[REG_R11],
+              (unsigned long)uc->uc_mcontext.gregs[REG_R12],
+              (unsigned long)uc->uc_mcontext.gregs[REG_R13],
+              (unsigned long)uc->uc_mcontext.gregs[REG_R14],
+              (unsigned long)uc->uc_mcontext.gregs[REG_R15],
+              (unsigned long)uc->uc_mcontext.gregs[REG_RIP],
+              (unsigned long)uc->uc_mcontext.gregs[REG_RFL],
               (unsigned long)uc->uc_mcontext.gregs[REG_CS]);
     logStackContent((void **)uc->uc_mcontext.gregs[REG_RSP]);
 #endif
@@ -1744,17 +1913,21 @@ static int libbacktrace_full_cb(void *data, uintptr_t pc, const char *filename, 
 
     if (function) {
         if (filename && lineno > 0) {
-            len = snprintf(buf, sizeof(buf), "#%d 0x%lx %s at %s:%d\n",
-                           cb_data->count, (unsigned long)pc, function, filename, lineno);
+            len = snprintf(buf,
+                           sizeof(buf),
+                           "#%d 0x%lx %s at %s:%d\n",
+                           cb_data->count,
+                           (unsigned long)pc,
+                           function,
+                           filename,
+                           lineno);
         } else {
-            len = snprintf(buf, sizeof(buf), "#%d 0x%lx %s\n",
-                           cb_data->count, (unsigned long)pc, function);
+            len = snprintf(buf, sizeof(buf), "#%d 0x%lx %s\n", cb_data->count, (unsigned long)pc, function);
         }
         /* Mark that we found a real function name */
         cb_data->found_symbols = 1;
     } else {
-        len = snprintf(buf, sizeof(buf), "#%d 0x%lx <unknown>\n",
-                       cb_data->count, (unsigned long)pc);
+        len = snprintf(buf, sizeof(buf), "#%d 0x%lx <unknown>\n", cb_data->count, (unsigned long)pc);
     }
 
     if (len > 0 && write(cb_data->fd, buf, len) == -1) { /* Avoid warning. */
@@ -1769,13 +1942,11 @@ static void symbolizeWithLibbacktrace(void **trace, int trace_size, int fd, int 
 
     if (pid == 0) {
         /* Child process - safe to use libbacktrace here */
-        struct backtrace_state *state = backtrace_create_state(
-            NULL, 0, libbacktrace_error_cb, &fd);
+        struct backtrace_state *state = backtrace_create_state(NULL, 0, libbacktrace_error_cb, &fd);
         if (state) {
             backtrace_callback_data cb_data = {.fd = fd, .count = 0, .found_symbols = 0};
             for (int i = uplevel; i < trace_size; i++) {
-                backtrace_pcinfo(state, (uintptr_t)trace[i], libbacktrace_full_cb,
-                                 libbacktrace_error_cb, &cb_data);
+                backtrace_pcinfo(state, (uintptr_t)trace[i], libbacktrace_full_cb, libbacktrace_error_cb, &cb_data);
             }
             /* If libbacktrace produced no frames or no useful function names, fall back to standard backtrace */
             if (cb_data.count == 0 || !cb_data.found_symbols) {
@@ -1873,7 +2044,10 @@ __attribute__((noinline)) static void writeStacktraces(int fd, int uplevel) {
     stacktrace_data curr_stacktrace_data = {{0}};
     while (read(stacktrace_pipe[0], &curr_stacktrace_data, sizeof(curr_stacktrace_data)) > 0) {
         /* stacktrace header includes the tid and the thread's name */
-        snprintf_async_signal_safe(buff, sizeof(buff), "\n%d %s", curr_stacktrace_data.tid,
+        snprintf_async_signal_safe(buff,
+                                   sizeof(buff),
+                                   "\n%d %s",
+                                   curr_stacktrace_data.tid,
                                    curr_stacktrace_data.thread_name);
         if (write(fd, buff, strlen(buff)) == -1) { /* Avoid warning. */
         };
@@ -1897,14 +2071,18 @@ __attribute__((noinline)) static void writeStacktraces(int fd, int uplevel) {
 #ifdef USE_LIBBACKTRACE
         symbolizeWithLibbacktrace(curr_stacktrace_data.trace, curr_stacktrace_data.trace_size, fd, curr_uplevel);
 #else
-        backtrace_symbols_fd(curr_stacktrace_data.trace + curr_uplevel, curr_stacktrace_data.trace_size - curr_uplevel,
+        backtrace_symbols_fd(curr_stacktrace_data.trace + curr_uplevel,
+                             curr_stacktrace_data.trace_size - curr_uplevel,
                              fd);
 #endif
 
         ++collected;
     }
 
-    snprintf_async_signal_safe(buff, sizeof(buff), "\n%lu/%lu expected stacktraces.\n", (long unsigned)(collected),
+    snprintf_async_signal_safe(buff,
+                               sizeof(buff),
+                               "\n%lu/%lu expected stacktraces.\n",
+                               (long unsigned)(collected),
                                (long unsigned)len_tids);
     if (write(fd, buff, strlen(buff)) == -1) { /* Avoid warning. */
     };
@@ -2115,8 +2293,11 @@ int memtest_test_linux_anonymous_maps(void) {
 
         start_vect[regions] = start_addr;
         size_vect[regions] = size;
-        snprintf(logbuf, sizeof(logbuf), "*** Preparing to test memory region %lx (%lu bytes)\n",
-                 (unsigned long)start_vect[regions], (unsigned long)size_vect[regions]);
+        snprintf(logbuf,
+                 sizeof(logbuf),
+                 "*** Preparing to test memory region %lx (%lu bytes)\n",
+                 (unsigned long)start_vect[regions],
+                 (unsigned long)size_vect[regions]);
         if (write(fd, logbuf, strlen(logbuf)) == -1) { /* Nothing to do. */
         }
         regions++;
@@ -2172,8 +2353,9 @@ void doFastMemoryTest(void) {
         if (memtest_test_linux_anonymous_maps()) {
             serverLogRaw(LL_WARNING | LL_RAW, "!!! MEMORY ERROR DETECTED! Check your memory ASAP !!!\n");
         } else {
-            serverLogRaw(LL_WARNING | LL_RAW, "Fast memory test PASSED, however your memory can still be broken. "
-                                              "Please run a memory test for several hours if possible.\n");
+            serverLogRaw(LL_WARNING | LL_RAW,
+                         "Fast memory test PASSED, however your memory can still be broken. "
+                         "Please run a memory test for several hours if possible.\n");
         }
     }
 #endif /* HAVE_PROC_MAPS */
@@ -2217,7 +2399,11 @@ void dumpCodeAroundEIP(void *eip) {
                   "$ xxd -r -p /tmp/dump.hex /tmp/dump.bin\n"
                   "$ objdump --adjust-vma=%p -D -b binary -m i386:x86-64 /tmp/dump.bin\n"
                   "------\n",
-                  info.dli_sname, info.dli_saddr, info.dli_fname, info.dli_fbase, info.dli_saddr);
+                  info.dli_sname,
+                  info.dli_saddr,
+                  info.dli_fname,
+                  info.dli_fbase,
+                  info.dli_saddr);
         size_t len = (long)eip - (long)info.dli_saddr;
         unsigned long sz = sysconf(_SC_PAGESIZE);
         if (len < 1 << 13) { /* we don't have functions over 8k (verified) */
@@ -2555,8 +2741,11 @@ static int is_thread_ready_to_signal(const char *proc_pid_task_path, const char 
     /* if we reached EOF, it means we haven't found SigBlk or/and SigIgn, something is wrong */
     if (line == NULL) {
         ret = 0;
-        serverLogFromHandler(LL_WARNING, "tid:%s: failed to find SigBlk or/and SigIgn field(s) in %s/%s/status file",
-                             tid, proc_pid_task_path, tid);
+        serverLogFromHandler(LL_WARNING,
+                             "tid:%s: failed to find SigBlk or/and SigIgn field(s) in %s/%s/status file",
+                             tid,
+                             proc_pid_task_path,
+                             tid);
     }
     return ret;
 }

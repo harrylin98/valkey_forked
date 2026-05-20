@@ -51,6 +51,11 @@ void freeCliConnInfo(cliConnInfo connInfo);
 
 sds cliVersion(void);
 
-valkeyContext *valkeyConnectWrapper(enum valkeyConnectionType ct, const char *ip_or_path, int port, const struct timeval tv, int nonblock, int multipath);
+valkeyContext *valkeyConnectWrapper(enum valkeyConnectionType ct,
+                                    const char *ip_or_path,
+                                    int port,
+                                    const struct timeval tv,
+                                    int nonblock,
+                                    int multipath);
 
 #endif /* __CLICOMMON_H */

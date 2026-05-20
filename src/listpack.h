@@ -58,8 +58,12 @@ unsigned char *lpNew(size_t capacity);
 void lpFree(unsigned char *lp);
 void lpFreeVoid(void *lp);
 unsigned char *lpShrinkToFit(unsigned char *lp);
-unsigned char *
-lpInsertString(unsigned char *lp, unsigned char *s, uint32_t slen, unsigned char *p, int where, unsigned char **newp);
+unsigned char *lpInsertString(unsigned char *lp,
+                              unsigned char *s,
+                              uint32_t slen,
+                              unsigned char *p,
+                              int where,
+                              unsigned char **newp);
 unsigned char *lpInsertInteger(unsigned char *lp, long long lval, unsigned char *p, int where, unsigned char **newp);
 unsigned char *lpPrepend(unsigned char *lp, unsigned char *s, uint32_t slen);
 unsigned char *lpPrependInteger(unsigned char *lp, long long lval);
@@ -93,8 +97,11 @@ void lpRandomPair(unsigned char *lp, unsigned long total_count, listpackEntry *k
 void lpRandomPairs(unsigned char *lp, unsigned int count, listpackEntry *keys, listpackEntry *vals);
 unsigned int lpRandomPairsUnique(unsigned char *lp, unsigned int count, listpackEntry *keys, listpackEntry *vals);
 void lpRandomEntries(unsigned char *lp, unsigned int count, listpackEntry *entries);
-unsigned char *
-lpNextRandom(unsigned char *lp, unsigned char *p, unsigned int *index, unsigned int remaining, int even_only);
+unsigned char *lpNextRandom(unsigned char *lp,
+                            unsigned char *p,
+                            unsigned int *index,
+                            unsigned int remaining,
+                            int even_only);
 int lpSafeToAdd(unsigned char *lp, size_t add);
 void lpRepr(unsigned char *lp);
 

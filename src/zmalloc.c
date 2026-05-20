@@ -103,12 +103,15 @@ static thread_local int thread_index = -1;
  * the reader will see the inconsistency memory on non x86 architecture potentially.
  * For the ARM and PowerPC platform, we can solve this issue by make the memory aligned.
  * For the other architecture, lets fall back to the atomic operation to keep safe. */
-#if defined(__i386__) || defined(__x86_64__) || defined(__amd64__) || defined(__POWERPC__) || defined(__arm__) || \
-    defined(__arm64__)
+#if defined(__i386__) || defined(__x86_64__) || defined(__amd64__) || defined(__POWERPC__) || defined(__arm__)         \
+    || defined(__arm64__)
+// clang-format off
 static __attribute__((aligned(CACHE_LINE_SIZE))) size_t used_memory_thread_padded[MAX_THREADS_NUM + PADDING_ELEMENT_NUM];
+// clang-format on
 static size_t *used_memory_thread = &used_memory_thread_padded[PADDING_ELEMENT_NUM];
 #else
-static __attribute__((aligned(CACHE_LINE_SIZE))) _Atomic size_t used_memory_thread_padded[MAX_THREADS_NUM + PADDING_ELEMENT_NUM];
+static __attribute__((aligned(CACHE_LINE_SIZE))) _Atomic size_t
+    used_memory_thread_padded[MAX_THREADS_NUM + PADDING_ELEMENT_NUM];
 static _Atomic size_t *used_memory_thread = &used_memory_thread_padded[PADDING_ELEMENT_NUM];
 #endif
 static atomic_int total_active_threads = 0;
@@ -233,8 +236,8 @@ void *zmalloc_cache_aligned(size_t size) {
     unsigned char *raw = malloc(alloc_size + extra);
     if (!raw) zmalloc_oom_handler(size);
 
-    uintptr_t aligned =
-        ((uintptr_t)(raw + sizeof(void *) + PREFIX_SIZE + CACHE_LINE_SIZE - 1)) & ~((uintptr_t)CACHE_LINE_SIZE - 1);
+    uintptr_t aligned = ((uintptr_t)(raw + sizeof(void *) + PREFIX_SIZE + CACHE_LINE_SIZE - 1))
+                        & ~((uintptr_t)CACHE_LINE_SIZE - 1);
     void *ptr = (void *)aligned;
 
     *((void **)((unsigned char *)ptr - PREFIX_SIZE - sizeof(void *))) = raw;

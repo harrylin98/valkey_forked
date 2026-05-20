@@ -195,15 +195,18 @@ int processAnnotations(FILE *fp, char *filename, int last_file) {
         if (epos == 0) {
             printf("AOF %s has nothing before timestamp %ld, "
                    "aborting...\n",
-                   filename, to_timestamp);
+                   filename,
+                   to_timestamp);
             exit(1);
         }
         if (!last_file) {
             printf("Failed to truncate AOF %s to timestamp %ld to offset %ld because it is not the last file.\n",
-                   filename, to_timestamp, (long int)epos);
-            printf(
-                "If you insist, please delete all files after this file according to the manifest "
-                "file and delete the corresponding records in manifest file manually. Then re-run valkey-check-aof.\n");
+                   filename,
+                   to_timestamp,
+                   (long int)epos);
+            printf("If you insist, please delete all files after this file according to the manifest "
+                   "file and delete the corresponding records in manifest file manually. Then re-run "
+                   "valkey-check-aof.\n");
             exit(1);
         }
         /* Truncate remaining AOF if exceeding 'to_timestamp' */
@@ -301,8 +304,12 @@ int checkSingleAof(char *aof_filename, char *aof_filepath, int last_file, int fi
         return AOF_CHECK_OK;
     }
 
-    printf("AOF analyzed: filename=%s, size=%lld, ok_up_to=%lld, ok_up_to_line=%lld, diff=%lld\n", aof_filename,
-           (long long)size, (long long)pos, line, (long long)diff);
+    printf("AOF analyzed: filename=%s, size=%lld, ok_up_to=%lld, ok_up_to_line=%lld, diff=%lld\n",
+           aof_filename,
+           (long long)size,
+           (long long)pos,
+           line,
+           (long long)diff);
     if (diff > 0) {
         if (fix) {
             if (!last_file) {
@@ -311,8 +318,11 @@ int checkSingleAof(char *aof_filename, char *aof_filepath, int last_file, int fi
             }
 
             char buf[2];
-            printf("This will shrink the AOF %s from %lld bytes, with %lld bytes, to %lld bytes\n", aof_filename,
-                   (long long)size, (long long)diff, (long long)pos);
+            printf("This will shrink the AOF %s from %lld bytes, with %lld bytes, to %lld bytes\n",
+                   aof_filename,
+                   (long long)size,
+                   (long long)diff,
+                   (long long)pos);
             printf("Continue? [y/N]: ");
             if (fgets(buf, sizeof(buf), stdin) == NULL || strncasecmp(buf, "y", 1) != 0) {
                 printf("Aborting...\n");

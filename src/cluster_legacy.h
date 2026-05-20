@@ -49,26 +49,28 @@ typedef struct clusterLink {
 #define linkSupportsExtension(link) ((link)->flags & CLUSTER_LINK_EXTENSIONS_SUPPORTED)
 
 /* Cluster node flags and macros. */
-#define CLUSTER_NODE_PRIMARY (1 << 0)                                             /* The node is a primary */
-#define CLUSTER_NODE_REPLICA (1 << 1)                                             /* The node is a replica */
-#define CLUSTER_NODE_PFAIL (1 << 2)                                               /* Failure? Need acknowledge */
-#define CLUSTER_NODE_FAIL (1 << 3)                                                /* The node is believed to be malfunctioning */
-#define CLUSTER_NODE_MYSELF (1 << 4)                                              /* This node is myself */
-#define CLUSTER_NODE_HANDSHAKE (1 << 5)                                           /* We have still to exchange the first ping */
-#define CLUSTER_NODE_NOADDR (1 << 6)                                              /* We don't know the address of this node */
-#define CLUSTER_NODE_MEET (1 << 7)                                                /* Send a MEET message to this node */
-#define CLUSTER_NODE_MIGRATE_TO (1 << 8)                                          /* Primary eligible for replica migration. */
-#define CLUSTER_NODE_NOFAILOVER (1 << 9)                                          /* Replica will not try to failover. */
-#define CLUSTER_NODE_EXTENSIONS_SUPPORTED (1 << 10)                               /* This node supports extensions. */
-#define CLUSTER_NODE_LIGHT_HDR_PUBLISH_SUPPORTED (1 << 11)                        /* This node supports light message header for publish type. */
-#define CLUSTER_NODE_LIGHT_HDR_MODULE_SUPPORTED (1 << 12)                         /* This node supports light message header for module type. */
+#define CLUSTER_NODE_PRIMARY (1 << 0)                      /* The node is a primary */
+#define CLUSTER_NODE_REPLICA (1 << 1)                      /* The node is a replica */
+#define CLUSTER_NODE_PFAIL (1 << 2)                        /* Failure? Need acknowledge */
+#define CLUSTER_NODE_FAIL (1 << 3)                         /* The node is believed to be malfunctioning */
+#define CLUSTER_NODE_MYSELF (1 << 4)                       /* This node is myself */
+#define CLUSTER_NODE_HANDSHAKE (1 << 5)                    /* We have still to exchange the first ping */
+#define CLUSTER_NODE_NOADDR (1 << 6)                       /* We don't know the address of this node */
+#define CLUSTER_NODE_MEET (1 << 7)                         /* Send a MEET message to this node */
+#define CLUSTER_NODE_MIGRATE_TO (1 << 8)                   /* Primary eligible for replica migration. */
+#define CLUSTER_NODE_NOFAILOVER (1 << 9)                   /* Replica will not try to failover. */
+#define CLUSTER_NODE_EXTENSIONS_SUPPORTED (1 << 10)        /* This node supports extensions. */
+#define CLUSTER_NODE_LIGHT_HDR_PUBLISH_SUPPORTED (1 << 11) /* This node supports light message header for publish type. */
+#define CLUSTER_NODE_LIGHT_HDR_MODULE_SUPPORTED (1 << 12)  /* This node supports light message header for module type. */
+
 #define CLUSTER_NODE_MULTI_MEET_SUPPORTED CLUSTER_NODE_LIGHT_HDR_MODULE_SUPPORTED /* This node handles multi meet packet.                             \
                                                                                      Light hdr for module and multi meet were both introduced in 8.1, \
                                                                                      so we could reduce the same flag value. */
-#define CLUSTER_NODE_MY_PRIMARY_FAIL (1 << 13)                                    /* myself is a replica and my primary is FAIL in my view. \
-                                                                                   * myself will gossip this flag to other replica in the   \
-                                                                                   * shard so that the replicas can make a better ranking   \
-                                                                                   * decisions to help with the failover. */
+
+#define CLUSTER_NODE_MY_PRIMARY_FAIL (1 << 13) /* myself is a replica and my primary is FAIL in my view. \
+                                                * myself will gossip this flag to other replica in the   \
+                                                * shard so that the replicas can make a better ranking   \
+                                                * decisions to help with the failover. */
 
 #define CLUSTER_NODE_NULL_NAME                                                                                         \
     "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000" \
@@ -332,7 +334,7 @@ static_assert(offsetof(clusterMsg, data) == 2256, "unexpected field offset");
 /* Message flags better specify the packet content or are used to
  * provide some information about the node state. */
 #define CLUSTERMSG_FLAG0_PAUSED (1 << 0)   /* Primary paused for manual failover. */
-#define CLUSTERMSG_FLAG0_FORCEACK (1 << 1) /* Give ACK to AUTH_REQUEST even if \
+#define CLUSTERMSG_FLAG0_FORCEACK (1 << 1)                               /* Give ACK to AUTH_REQUEST even if \
                                               primary is up. */
 #define CLUSTERMSG_FLAG0_EXT_DATA (1 << 2) /* Message contains extension data */
 

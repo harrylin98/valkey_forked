@@ -35,10 +35,9 @@
 #include "io_threads.h"
 #include "bio.h"
 
-#if defined(USE_OPENSSL) &&                    \
-    ((USE_OPENSSL == 1 /* BUILD_YES */) ||     \
-     ((USE_OPENSSL == 2 /* BUILD_MODULE */) && \
-      (defined(BUILD_TLS_MODULE) && BUILD_TLS_MODULE == 2)))
+#if defined(USE_OPENSSL)                                                                                               \
+    && ((USE_OPENSSL == 1 /* BUILD_YES */)                                                                             \
+        || ((USE_OPENSSL == 2 /* BUILD_MODULE */) && (defined(BUILD_TLS_MODULE) && BUILD_TLS_MODULE == 2)))
 
 #include <openssl/conf.h>
 #include <openssl/ssl.h>
@@ -102,8 +101,9 @@ static int parseProtocolsConfig(const char *str) {
             break;
 #endif
         } else {
-            serverLog(LL_WARNING, "Invalid tls-protocols specified. "
-                                  "Use a combination of 'TLSv1', 'TLSv1.1', 'TLSv1.2' and 'TLSv1.3'.");
+            serverLog(LL_WARNING,
+                      "Invalid tls-protocols specified. "
+                      "Use a combination of 'TLSv1', 'TLSv1.1', 'TLSv1.2' and 'TLSv1.3'.");
             protocols = -1;
             break;
         }
@@ -291,7 +291,12 @@ static void tlsClearCertSerial(sds *serial) {
     }
 }
 
-static int tlsStoreCertInfo(long long expiry, sds serial, int count, long long *out_expiry, sds *out_serial, int *out_count) {
+static int tlsStoreCertInfo(long long expiry,
+                            sds serial,
+                            int count,
+                            long long *out_expiry,
+                            sds *out_serial,
+                            int *out_count) {
     if (out_count) *out_count = count;
     tlsClearCertSerial(out_serial);
     if (expiry == 0) {
@@ -341,7 +346,12 @@ static int tlsUpdateCertInfoFromFileHandle(FILE *fp, long long *expiry, sds *ser
     return C_OK;
 }
 
-static void tlsMergeCertInfo(long long *expiry, sds *serial, int *count, long long src_expiry, sds src_serial, int src_count) {
+static void tlsMergeCertInfo(long long *expiry,
+                             sds *serial,
+                             int *count,
+                             long long src_expiry,
+                             sds src_serial,
+                             int src_count) {
     if (count) *count += src_count;
     if (src_expiry > 0 && (*expiry == 0 || src_expiry < *expiry)) {
         if (*serial) sdsfree(*serial);
@@ -399,14 +409,18 @@ static int tlsUpdateCertInfoFromDir(const char *path, long long *expiry, sds *se
 }
 
 static void tlsRefreshServerCertInfo(void) {
-    if (!(server.tls_port || server.tls_replication || server.tls_cluster) || !valkey_tls_ctx ||
-        tlsUpdateCertInfoFromCtx(valkey_tls_ctx, &server.tls_server_cert_expire_time, &server.tls_server_cert_serial) == C_ERR) {
+    if (!(server.tls_port || server.tls_replication || server.tls_cluster) || !valkey_tls_ctx
+        || tlsUpdateCertInfoFromCtx(valkey_tls_ctx, &server.tls_server_cert_expire_time, &server.tls_server_cert_serial)
+               == C_ERR) {
         tlsClearCertInfo(&server.tls_server_cert_expire_time, &server.tls_server_cert_serial);
     }
 }
 
 static void tlsRefreshClientCertInfo(void) {
-    if (tlsUpdateCertInfoFromCtx(valkey_tls_client_ctx, &server.tls_client_cert_expire_time, &server.tls_client_cert_serial) == C_ERR) {
+    if (tlsUpdateCertInfoFromCtx(valkey_tls_client_ctx,
+                                 &server.tls_client_cert_expire_time,
+                                 &server.tls_client_cert_serial)
+        == C_ERR) {
         tlsClearCertInfo(&server.tls_client_cert_expire_time, &server.tls_client_cert_serial);
     }
 }
@@ -415,14 +429,10 @@ static void tlsRefreshCACertInfo(void) {
     long long file_expiry = 0, dir_expiry = 0;
     sds file_serial = NULL, dir_serial = NULL;
     int file_count = 0, dir_count = 0;
-    int file_ok = tlsUpdateCertInfoFromFile(server.tls_ctx_config.ca_cert_file,
-                                            &file_expiry,
-                                            &file_serial,
-                                            &file_count) == C_OK;
-    int dir_ok = tlsUpdateCertInfoFromDir(server.tls_ctx_config.ca_cert_dir,
-                                          &dir_expiry,
-                                          &dir_serial,
-                                          &dir_count) == C_OK;
+    int file_ok = tlsUpdateCertInfoFromFile(server.tls_ctx_config.ca_cert_file, &file_expiry, &file_serial, &file_count)
+                  == C_OK;
+    int dir_ok = tlsUpdateCertInfoFromDir(server.tls_ctx_config.ca_cert_dir, &dir_expiry, &dir_serial, &dir_count)
+                 == C_OK;
 
     tlsClearCACertInfo();
     if (!file_ok && !dir_ok) {
@@ -469,8 +479,7 @@ static bool isCertValid(X509 *cert) {
     const ASN1_TIME *not_before = X509_get0_notBefore(cert);
     const ASN1_TIME *not_after = X509_get0_notAfter(cert);
     if (!not_before || !not_after) return false;
-    if (X509_cmp_current_time(not_before) > 0 ||
-        X509_cmp_current_time(not_after) < 0) {
+    if (X509_cmp_current_time(not_before) > 0 || X509_cmp_current_time(not_after) < 0) {
         return false;
     }
     return true;
@@ -590,7 +599,9 @@ static SSL_CTX *createSSLContext(serverTLSContextConfig *ctx_config, int protoco
     }
 
     if (!isCertValid(SSL_CTX_get0_certificate(ctx))) {
-        serverLog(LL_WARNING, "%s TLS certificate is invalid. Aborting TLS configuration.", client ? "Client" : "Server");
+        serverLog(LL_WARNING,
+                  "%s TLS certificate is invalid. Aborting TLS configuration.",
+                  client ? "Client" : "Server");
         goto error;
     }
 
@@ -657,10 +668,11 @@ static int tlsCreateContexts(serverTLSContextConfig *ctx_config, SSL_CTX **out_c
         goto error;
     }
 
-    if (((server.tls_auth_clients != TLS_CLIENT_AUTH_NO) || server.tls_cluster || server.tls_replication) &&
-        !ctx_config->ca_cert_file && !ctx_config->ca_cert_dir) {
-        serverLog(LL_WARNING, "Either tls-ca-cert-file or tls-ca-cert-dir must be specified when tls-cluster, "
-                              "tls-replication or tls-auth-clients are enabled!");
+    if (((server.tls_auth_clients != TLS_CLIENT_AUTH_NO) || server.tls_cluster || server.tls_replication)
+        && !ctx_config->ca_cert_file && !ctx_config->ca_cert_dir) {
+        serverLog(LL_WARNING,
+                  "Either tls-ca-cert-file or tls-ca-cert-dir must be specified when tls-cluster, "
+                  "tls-replication or tls-auth-clients are enabled!");
         goto error;
     }
 
@@ -826,7 +838,9 @@ static void captureMetadata(serverTLSContextConfig *ctx_config, tlsMaterialsMeta
 
     /* Certificate files: fingerprint-based detection */
     getCertFingerprint(ctx_config->cert_file, metadata->cert_fingerprint, &metadata->cert_fingerprint_len);
-    getCertFingerprint(ctx_config->client_cert_file, metadata->client_cert_fingerprint, &metadata->client_cert_fingerprint_len);
+    getCertFingerprint(ctx_config->client_cert_file,
+                       metadata->client_cert_fingerprint,
+                       &metadata->client_cert_fingerprint_len);
     getCertFingerprint(ctx_config->ca_cert_file, metadata->ca_cert_fingerprint, &metadata->ca_cert_fingerprint_len);
 
     /* Key files and CA dir: inode + mtime */
@@ -848,18 +862,22 @@ static void captureMetadata(serverTLSContextConfig *ctx_config, tlsMaterialsMeta
 /* Compare two metadata structures to detect changes. */
 static int metadataChanged(const tlsMaterialsMetadata *old, const tlsMaterialsMetadata *new) {
     /* Check certificate fingerprints */
-    if (old->cert_fingerprint_len != new->cert_fingerprint_len ||
-        (new->cert_fingerprint_len > 0 && memcmp(old->cert_fingerprint, new->cert_fingerprint, new->cert_fingerprint_len) != 0)) {
+    if (old->cert_fingerprint_len != new->cert_fingerprint_len
+        || (new->cert_fingerprint_len > 0
+            && memcmp(old->cert_fingerprint, new->cert_fingerprint, new->cert_fingerprint_len) != 0)) {
         return 1;
     }
 
-    if (old->client_cert_fingerprint_len != new->client_cert_fingerprint_len ||
-        (new->client_cert_fingerprint_len > 0 && memcmp(old->client_cert_fingerprint, new->client_cert_fingerprint, new->client_cert_fingerprint_len) != 0)) {
+    if (old->client_cert_fingerprint_len != new->client_cert_fingerprint_len
+        || (new->client_cert_fingerprint_len > 0
+            && memcmp(old->client_cert_fingerprint, new->client_cert_fingerprint, new->client_cert_fingerprint_len)
+                   != 0)) {
         return 1;
     }
 
-    if (old->ca_cert_fingerprint_len != new->ca_cert_fingerprint_len ||
-        (new->ca_cert_fingerprint_len > 0 && memcmp(old->ca_cert_fingerprint, new->ca_cert_fingerprint, new->ca_cert_fingerprint_len) != 0)) {
+    if (old->ca_cert_fingerprint_len != new->ca_cert_fingerprint_len
+        || (new->ca_cert_fingerprint_len > 0
+            && memcmp(old->ca_cert_fingerprint, new->ca_cert_fingerprint, new->ca_cert_fingerprint_len) != 0)) {
         return 1;
     }
 
@@ -870,7 +888,8 @@ static int metadataChanged(const tlsMaterialsMetadata *old, const tlsMaterialsMe
     if (old->key_file_inode != new->key_file_inode || old->key_file_mtime != new->key_file_mtime) {
         return 1;
     }
-    if (old->client_key_file_inode != new->client_key_file_inode || old->client_key_file_mtime != new->client_key_file_mtime) {
+    if (old->client_key_file_inode != new->client_key_file_inode
+        || old->client_key_file_mtime != new->client_key_file_mtime) {
         return 1;
     }
 
@@ -1010,8 +1029,8 @@ void tlsReconfigureIfNeeded(void) {
     long long lastConfigureTime = atomic_load_explicit(&lastTlsConfigureTime, memory_order_relaxed);
     const long long configAgeMicros = server.ustime - lastConfigureTime;
     const long long configAgeSeconds = (configAgeMicros / 1000) / 1000;
-    if (server.tls_ctx_config.auto_reload_interval == 0 ||
-        configAgeSeconds < server.tls_ctx_config.auto_reload_interval) {
+    if (server.tls_ctx_config.auto_reload_interval == 0
+        || configAgeSeconds < server.tls_ctx_config.auto_reload_interval) {
         return;
     }
     bioCreateTlsReloadJob();
@@ -1345,7 +1364,8 @@ user *tlsGetPeerUser(connection *conn_, sds *cert_username) {
 
     long verify_result = SSL_get_verify_result(conn->ssl);
     if (verify_result != X509_V_OK) {
-        serverLog(LL_DEBUG, "TLS: Client certificate verification failed: %s",
+        serverLog(LL_DEBUG,
+                  "TLS: Client certificate verification failed: %s",
                   X509_verify_cert_error_string(verify_result));
         return NULL;
     }
@@ -1382,8 +1402,7 @@ user *tlsGetPeerUser(connection *conn_, sds *cert_username) {
         break;
     }
 
-    default:
-        break;
+    default: break;
     }
 
 #if OPENSSL_VERSION_NUMBER < 0x30000000L
@@ -1444,10 +1463,10 @@ static void tlsHandleEvent(tls_connection *conn, int mask) {
         if (connTLSAccept((connection *)conn, NULL) == C_ERR || conn->c.state != CONN_STATE_CONNECTED) return;
         break;
     case CONN_STATE_CONNECTED: {
-        int call_read = ((mask & AE_READABLE) && conn->c.read_handler) ||
-                        ((mask & AE_WRITABLE) && (conn->flags & TLS_CONN_FLAG_READ_WANT_WRITE));
-        int call_write = ((mask & AE_WRITABLE) && conn->c.write_handler) ||
-                         ((mask & AE_READABLE) && (conn->flags & TLS_CONN_FLAG_WRITE_WANT_READ));
+        int call_read = ((mask & AE_READABLE) && conn->c.read_handler)
+                        || ((mask & AE_WRITABLE) && (conn->flags & TLS_CONN_FLAG_READ_WANT_WRITE));
+        int call_write = ((mask & AE_WRITABLE) && conn->c.write_handler)
+                         || ((mask & AE_READABLE) && (conn->flags & TLS_CONN_FLAG_WRITE_WANT_READ));
 
         /* Normally we execute the readable event first, and the writable
          * event laster. This is useful as sometimes we may be able
@@ -2001,7 +2020,9 @@ int ValkeyModule_OnLoad(void *ctx, ValkeyModuleString **argv, int argc) {
 
     /* Connection modules must be part of the same build as the server. */
     if (strcmp(REDIS_BUILD_ID_RAW, serverBuildIdRaw())) {
-        serverLog(LL_NOTICE, "Connection type %s was not built together with the valkey-server used.", getConnectionTypeName(CONN_TYPE_TLS));
+        serverLog(LL_NOTICE,
+                  "Connection type %s was not built together with the valkey-server used.",
+                  getConnectionTypeName(CONN_TYPE_TLS));
         return VALKEYMODULE_ERR;
     }
 
@@ -2009,11 +2030,15 @@ int ValkeyModule_OnLoad(void *ctx, ValkeyModuleString **argv, int argc) {
 
     /* Connection modules is available only bootup. */
     if ((ValkeyModule_GetContextFlags(ctx) & VALKEYMODULE_CTX_FLAGS_SERVER_STARTUP) == 0) {
-        serverLog(LL_NOTICE, "Connection type %s can be loaded only during bootup", getConnectionTypeName(CONN_TYPE_TLS));
+        serverLog(LL_NOTICE,
+                  "Connection type %s can be loaded only during bootup",
+                  getConnectionTypeName(CONN_TYPE_TLS));
         return VALKEYMODULE_ERR;
     }
 
-    ValkeyModule_SetModuleOptions(ctx, VALKEYMODULE_OPTIONS_HANDLE_REPL_ASYNC_LOAD | VALKEYMODULE_OPTIONS_HANDLE_ATOMIC_SLOT_MIGRATION);
+    ValkeyModule_SetModuleOptions(ctx,
+                                  VALKEYMODULE_OPTIONS_HANDLE_REPL_ASYNC_LOAD
+                                      | VALKEYMODULE_OPTIONS_HANDLE_ATOMIC_SLOT_MIGRATION);
 
     if (connTypeRegister(&CT_TLS) != C_OK) return VALKEYMODULE_ERR;
 

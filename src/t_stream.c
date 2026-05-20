@@ -34,7 +34,7 @@
 /* Every stream item inside the listpack, has a flags field that is used to
  * mark the entry as deleted, or having the same field as the "primary"
  * entry at the start of the listpack> */
-#define STREAM_ITEM_FLAG_NONE 0              /* No special flags. */
+#define STREAM_ITEM_FLAG_NONE   0            /* No special flags. */
 #define STREAM_ITEM_FLAG_DELETED (1 << 0)    /* Entry is deleted. Skip it. */
 #define STREAM_ITEM_FLAG_SAMEFIELDS (1 << 1) /* Same fields as primary entry. */
 
@@ -231,7 +231,10 @@ robj *streamDup(robj *o) {
             new_consumer = zmalloc(sizeof(*new_consumer));
             new_consumer->name = sdsdup(consumer->name);
             new_consumer->pel = raxNew();
-            raxInsert(new_cg->consumers, (unsigned char *)new_consumer->name, sdslen(new_consumer->name), new_consumer,
+            raxInsert(new_cg->consumers,
+                      (unsigned char *)new_consumer->name,
+                      sdslen(new_consumer->name),
+                      new_consumer,
                       NULL);
             new_consumer->seen_time = consumer->seen_time;
             new_consumer->active_time = consumer->active_time;
@@ -771,7 +774,7 @@ int64_t streamTrim(stream *s, streamAddTrimArgs *args) {
         int64_t primary_fields_count = lpGetInteger(p);
         p = lpNext(lp, p);                                                    /* Skip the first field. */
         for (int64_t j = 0; j < primary_fields_count; j++) p = lpNext(lp, p); /* Skip all primary fields. */
-        p = lpNext(lp, p);                                                    /* Skip the zero primary entry terminator. */
+        p = lpNext(lp, p); /* Skip the zero primary entry terminator. */
 
         /* 'p' is now pointing to the first entry inside the listpack.
          * We have to run entry after entry, marking entries as deleted
@@ -1183,16 +1186,16 @@ int streamIteratorGetID(streamIterator *si, streamID *id, int64_t *numfields) {
             /* If current >= start, and the entry is not marked as
              * deleted or tombstones are included, emit it. */
             if (!si->rev) {
-                if (streamCompareID(id, &si->start_id) >= 0 &&
-                    (!si->skip_tombstones || !(flags & STREAM_ITEM_FLAG_DELETED))) {
+                if (streamCompareID(id, &si->start_id) >= 0
+                    && (!si->skip_tombstones || !(flags & STREAM_ITEM_FLAG_DELETED))) {
                     if (streamCompareID(id, &si->end_id) > 0) return 0; /* We are already out of range. */
                     si->entry_flags = flags;
                     if (flags & STREAM_ITEM_FLAG_SAMEFIELDS) si->primary_fields_ptr = si->primary_fields_start;
                     return 1; /* Valid item returned. */
                 }
             } else {
-                if (streamCompareID(id, &si->end_id) <= 0 &&
-                    (!si->skip_tombstones || !(flags & STREAM_ITEM_FLAG_DELETED))) {
+                if (streamCompareID(id, &si->end_id) <= 0
+                    && (!si->skip_tombstones || !(flags & STREAM_ITEM_FLAG_DELETED))) {
                     if (streamCompareID(id, &si->start_id) < 0) return 0; /* We are already out of range. */
                     si->entry_flags = flags;
                     if (flags & STREAM_ITEM_FLAG_SAMEFIELDS) si->primary_fields_ptr = si->primary_fields_start;
@@ -1426,8 +1429,8 @@ int streamRangeHasTombstones(stream *s, streamID *start, streamID *end) {
         end_id.seq = UINT64_MAX;
     }
 
-    if (streamCompareID(&start_id, &s->max_deleted_entry_id) <= 0 &&
-        streamCompareID(&s->max_deleted_entry_id, &end_id) <= 0) {
+    if (streamCompareID(&start_id, &s->max_deleted_entry_id) <= 0
+        && streamCompareID(&s->max_deleted_entry_id, &end_id) <= 0) {
         /* start_id <= max_deleted_entry_id <= end_id: The range does include a tombstone. */
         return 1;
     }
@@ -1659,7 +1662,7 @@ void streamPropagateConsumerCreation(client *c, robj *key, robj *groupname, sds 
  * PEL by ID) to the client. This is the use case for the STREAM_RWR_RAWENTRIES
  * flag.
  */
-#define STREAM_RWR_NOACK (1 << 0) /* Do not create entries in the PEL. */
+#define STREAM_RWR_NOACK (1 << 0)   /* Do not create entries in the PEL. */
 #define STREAM_RWR_RAWENTRIES                                         \
     (1 << 1)                        /* Do not emit protocol for array \
                                        boundaries, just the entries. */
@@ -1698,9 +1701,8 @@ size_t streamReplyWithRange(client *c,
     while (streamIteratorGetID(&si, &id, &numfields)) {
         /* Update the group last_id if needed. */
         if (group && streamCompareID(&id, &group->last_id) > 0) {
-            if (group->entries_read != SCG_INVALID_ENTRIES_READ &&
-                streamCompareID(&group->last_id, &s->first_id) >= 0 &&
-                !streamRangeHasTombstones(s, &group->last_id, NULL)) {
+            if (group->entries_read != SCG_INVALID_ENTRIES_READ && streamCompareID(&group->last_id, &s->first_id) >= 0
+                && !streamRangeHasTombstones(s, &group->last_id, NULL)) {
                 /* A valid counter and no tombstones in the group's last-delivered-id and the stream's last-generated-id,
                  * we can increment the read counter to keep tracking the group's progress. */
                 group->entries_read++;
@@ -1934,8 +1936,9 @@ int streamGenericParseIDOrReply(client *c,
 
 invalid:
     if (c)
-        addReplyError(c, "Invalid stream ID specified as stream "
-                         "command argument");
+        addReplyError(c,
+                      "Invalid stream ID specified as stream "
+                      "command argument");
     return C_ERR;
 }
 
@@ -2030,20 +2033,27 @@ void xaddCommand(client *c) {
 
     /* Return ASAP if the stream has reached the last possible ID */
     if (s->last_id.ms == UINT64_MAX && s->last_id.seq == UINT64_MAX) {
-        addReplyError(c, "The stream has exhausted the last possible ID, "
-                         "unable to add more items");
+        addReplyError(c,
+                      "The stream has exhausted the last possible ID, "
+                      "unable to add more items");
         return;
     }
 
     /* Append using the low level function and return the ID. */
     errno = 0;
     streamID id;
-    if (streamAppendItem(s, c->argv + field_pos, (c->argc - field_pos) / 2, &id,
-                         parsed_args.id_given ? &parsed_args.id : NULL, parsed_args.seq_given) == C_ERR) {
+    if (streamAppendItem(s,
+                         c->argv + field_pos,
+                         (c->argc - field_pos) / 2,
+                         &id,
+                         parsed_args.id_given ? &parsed_args.id : NULL,
+                         parsed_args.seq_given)
+        == C_ERR) {
         serverAssert(errno != 0);
         if (errno == EDOM)
-            addReplyError(c, "The ID specified in XADD is equal or smaller than "
-                             "the target stream top item");
+            addReplyError(c,
+                          "The ID specified in XADD is equal or smaller than "
+                          "the target stream top item");
         else
             addReplyError(c, "Elements are too large to be stored");
         return;
@@ -2202,15 +2212,17 @@ void xreadCommand(client *c) {
                                     "Unbalanced '%s' list of streams: "
                                     "for each stream key an ID or '%c' must be "
                                     "specified.",
-                                    c->cmd->fullname, symbol);
+                                    c->cmd->fullname,
+                                    symbol);
                 return;
             }
             streams_count /= 2; /* We have two arguments for each stream. */
             break;
         } else if (!strcasecmp(o, "GROUP") && moreargs >= 2) {
             if (!xreadgroup) {
-                addReplyError(c, "The GROUP option is only supported by "
-                                 "XREADGROUP. You called XREAD instead.");
+                addReplyError(c,
+                              "The GROUP option is only supported by "
+                              "XREADGROUP. You called XREAD instead.");
                 return;
             }
             groupname = c->argv[i + 1];
@@ -2218,8 +2230,9 @@ void xreadCommand(client *c) {
             i += 2;
         } else if (!strcasecmp(o, "NOACK")) {
             if (!xreadgroup) {
-                addReplyError(c, "The NOACK option is only supported by "
-                                 "XREADGROUP. You called XREAD instead.");
+                addReplyError(c,
+                              "The NOACK option is only supported by "
+                              "XREADGROUP. You called XREAD instead.");
                 return;
             }
             noack = 1;
@@ -2264,7 +2277,8 @@ void xreadCommand(client *c) {
                                     "-NOGROUP No such key '%s' or consumer "
                                     "group '%s' in XREADGROUP with GROUP "
                                     "option",
-                                    (char *)objectGetVal(key), (char *)objectGetVal(groupname));
+                                    (char *)objectGetVal(key),
+                                    (char *)objectGetVal(groupname));
                 goto cleanup;
             }
             groups[id_idx] = group;
@@ -2272,11 +2286,12 @@ void xreadCommand(client *c) {
 
         if (strcmp(objectGetVal(c->argv[i]), "$") == 0) {
             if (xreadgroup) {
-                addReplyError(c, "The $ ID is meaningless in the context of "
-                                 "XREADGROUP: you want to read the history of "
-                                 "this consumer by specifying a proper ID, or "
-                                 "use the > ID to get new messages. The $ ID would "
-                                 "just return an empty result set.");
+                addReplyError(c,
+                              "The $ ID is meaningless in the context of "
+                              "XREADGROUP: you want to read the history of "
+                              "this consumer by specifying a proper ID, or "
+                              "use the > ID to get new messages. The $ ID would "
+                              "just return an empty result set.");
                 goto cleanup;
             }
             if (o) {
@@ -2289,11 +2304,12 @@ void xreadCommand(client *c) {
             continue;
         } else if (strcmp(objectGetVal(c->argv[i]), "+") == 0) {
             if (xreadgroup) {
-                addReplyError(c, "The + ID is meaningless in the context of "
-                                 "XREADGROUP: you want to read the history of "
-                                 "this consumer by specifying a proper ID, or "
-                                 "use the > ID to get new messages. The + ID would "
-                                 "just return an empty result set.");
+                addReplyError(c,
+                              "The + ID is meaningless in the context of "
+                              "XREADGROUP: you want to read the history of "
+                              "this consumer by specifying a proper ID, or "
+                              "use the > ID to get new messages. The + ID would "
+                              "just return an empty result set.");
                 goto cleanup;
             }
             if (o && ((stream *)objectGetVal(o))->length) {
@@ -2311,9 +2327,10 @@ void xreadCommand(client *c) {
             continue;
         } else if (strcmp(objectGetVal(c->argv[i]), ">") == 0) {
             if (!xreadgroup) {
-                addReplyError(c, "The > ID can be specified only when calling "
-                                 "XREADGROUP using the GROUP <group> "
-                                 "<consumer> option.");
+                addReplyError(c,
+                              "The > ID can be specified only when calling "
+                              "XREADGROUP using the GROUP <group> "
+                              "<consumer> option.");
                 goto cleanup;
             }
             /* We use just the maximum ID to signal this is a ">" ID, anyway
@@ -2361,7 +2378,10 @@ void xreadCommand(client *c) {
             }
             consumer = streamLookupConsumer(groups[i], objectGetVal(consumername));
             if (consumer == NULL) {
-                consumer = streamCreateConsumer(groups[i], objectGetVal(consumername), c->argv[streams_arg + i], c->db->id,
+                consumer = streamCreateConsumer(groups[i],
+                                                objectGetVal(consumername),
+                                                c->argv[streams_arg + i],
+                                                c->db->id,
                                                 SCC_DEFAULT);
                 if (noack) streamPropagateConsumerCreation(c, spi.keyname, spi.groupname, consumer->name);
             }
@@ -2598,8 +2618,8 @@ void xgroupCommand(client *c) {
             if (create_subcmd && !strcasecmp(objectGetVal(c->argv[i]), "MKSTREAM")) {
                 mkstream = 1;
                 i++;
-            } else if ((create_subcmd || setid_subcmd) && !strcasecmp(objectGetVal(c->argv[i]), "ENTRIESREAD") &&
-                       i + 1 < c->argc) {
+            } else if ((create_subcmd || setid_subcmd) && !strcasecmp(objectGetVal(c->argv[i]), "ENTRIESREAD")
+                       && i + 1 < c->argc) {
                 if (getLongLongFromObjectOrReply(c, c->argv[i + 1], &entries_read, NULL) != C_OK) return;
                 if (entries_read < 0 && entries_read != SCG_INVALID_ENTRIES_READ) {
                     addReplyError(c, "value for ENTRIESREAD must be positive or -1");
@@ -2624,19 +2644,21 @@ void xgroupCommand(client *c) {
     if (c->argc >= 4 && !mkstream) {
         /* At this point key must exist, or there is an error. */
         if (s == NULL) {
-            addReplyError(c, "The XGROUP subcommand requires the key to exist. "
-                             "Note that for CREATE you may want to use the MKSTREAM "
-                             "option to create an empty stream automatically.");
+            addReplyError(c,
+                          "The XGROUP subcommand requires the key to exist. "
+                          "Note that for CREATE you may want to use the MKSTREAM "
+                          "option to create an empty stream automatically.");
             return;
         }
 
         /* Certain subcommands require the group to exist. */
-        if ((cg = streamLookupCG(s, grpname)) == NULL &&
-            (!strcasecmp(opt, "SETID") || !strcasecmp(opt, "CREATECONSUMER") || !strcasecmp(opt, "DELCONSUMER"))) {
+        if ((cg = streamLookupCG(s, grpname)) == NULL
+            && (!strcasecmp(opt, "SETID") || !strcasecmp(opt, "CREATECONSUMER") || !strcasecmp(opt, "DELCONSUMER"))) {
             addReplyErrorFormat(c,
                                 "-NOGROUP No such consumer group '%s' "
                                 "for key name '%s'",
-                                (char *)grpname, (char *)objectGetVal(c->argv[2]));
+                                (char *)grpname,
+                                (char *)objectGetVal(c->argv[2]));
             return;
         }
     }
@@ -2716,7 +2738,8 @@ void xgroupCommand(client *c) {
             addReply(c, shared.czero);
         }
     } else if (!strcasecmp(opt, "CREATECONSUMER") && c->argc == 5) {
-        streamConsumer *created = streamCreateConsumer(cg, objectGetVal(c->argv[4]), c->argv[2], c->db->id, SCC_DEFAULT);
+        streamConsumer *created =
+            streamCreateConsumer(cg, objectGetVal(c->argv[4]), c->argv[2], c->db->id, SCC_DEFAULT);
         addReplyLongLong(c, created ? 1 : 0);
     } else if (!strcasecmp(opt, "DELCONSUMER") && c->argc == 5) {
         long long pending = 0;
@@ -2937,7 +2960,8 @@ void xpendingCommand(client *c) {
         addReplyErrorFormat(c,
                             "-NOGROUP No such key '%s' or consumer "
                             "group '%s'",
-                            (char *)objectGetVal(key), (char *)objectGetVal(groupname));
+                            (char *)objectGetVal(key),
+                            (char *)objectGetVal(groupname));
         return;
     }
 
@@ -3128,7 +3152,8 @@ void xclaimCommand(client *c) {
         addReplyErrorFormat(c,
                             "-NOGROUP No such key '%s' or "
                             "consumer group '%s'",
-                            (char *)objectGetVal(c->argv[1]), (char *)objectGetVal(c->argv[2]));
+                            (char *)objectGetVal(c->argv[1]),
+                            (char *)objectGetVal(c->argv[2]));
         return;
     }
 
@@ -3164,19 +3189,22 @@ void xclaimCommand(client *c) {
             justid = 1;
         } else if (!strcasecmp(opt, "IDLE") && moreargs) {
             j++;
-            if (getLongLongFromObjectOrReply(c, c->argv[j], &deliverytime, "Invalid IDLE option argument for XCLAIM") !=
-                C_OK)
+            if (getLongLongFromObjectOrReply(c, c->argv[j], &deliverytime, "Invalid IDLE option argument for XCLAIM")
+                != C_OK)
                 goto cleanup;
             deliverytime = now - deliverytime;
         } else if (!strcasecmp(opt, "TIME") && moreargs) {
             j++;
-            if (getLongLongFromObjectOrReply(c, c->argv[j], &deliverytime, "Invalid TIME option argument for XCLAIM") !=
-                C_OK)
+            if (getLongLongFromObjectOrReply(c, c->argv[j], &deliverytime, "Invalid TIME option argument for XCLAIM")
+                != C_OK)
                 goto cleanup;
         } else if (!strcasecmp(opt, "RETRYCOUNT") && moreargs) {
             j++;
-            if (getLongLongFromObjectOrReply(c, c->argv[j], &retrycount,
-                                             "Invalid RETRYCOUNT option argument for XCLAIM") != C_OK)
+            if (getLongLongFromObjectOrReply(c,
+                                             c->argv[j],
+                                             &retrycount,
+                                             "Invalid RETRYCOUNT option argument for XCLAIM")
+                != C_OK)
                 goto cleanup;
         } else if (!strcasecmp(opt, "LASTID") && moreargs) {
             j++;
@@ -3289,8 +3317,17 @@ void xclaimCommand(client *c) {
             if (justid) {
                 addReplyStreamID(c, &id);
             } else {
-                serverAssert(streamReplyWithRange(c, objectGetVal(o), &id, &id, 1, 0, NULL, NULL, STREAM_RWR_RAWENTRIES, NULL) ==
-                             1);
+                serverAssert(streamReplyWithRange(c,
+                                                  objectGetVal(o),
+                                                  &id,
+                                                  &id,
+                                                  1,
+                                                  0,
+                                                  NULL,
+                                                  NULL,
+                                                  STREAM_RWR_RAWENTRIES,
+                                                  NULL)
+                             == 1);
             }
             arraylen++;
 
@@ -3376,7 +3413,9 @@ void xautoclaimCommand(client *c) {
     /* No key or group? Send an error given that the group creation
      * is mandatory. */
     if (o == NULL || group == NULL) {
-        addReplyErrorFormat(c, "-NOGROUP No such key '%s' or consumer group '%s'", (char *)objectGetVal(c->argv[1]),
+        addReplyErrorFormat(c,
+                            "-NOGROUP No such key '%s' or consumer group '%s'",
+                            (char *)objectGetVal(c->argv[1]),
                             (char *)objectGetVal(c->argv[2]));
         return;
     }
@@ -3459,7 +3498,17 @@ void xautoclaimCommand(client *c) {
         if (justid) {
             addReplyStreamID(c, &id);
         } else {
-            serverAssert(streamReplyWithRange(c, objectGetVal(o), &id, &id, 1, 0, NULL, NULL, STREAM_RWR_RAWENTRIES, NULL) == 1);
+            serverAssert(streamReplyWithRange(c,
+                                              objectGetVal(o),
+                                              &id,
+                                              &id,
+                                              1,
+                                              0,
+                                              NULL,
+                                              NULL,
+                                              STREAM_RWR_RAWENTRIES,
+                                              NULL)
+                         == 1);
         }
         arraylen++;
         count--;
@@ -3860,7 +3909,8 @@ void xinfoCommand(client *c) {
             addReplyErrorFormat(c,
                                 "-NOGROUP No such consumer group '%s' "
                                 "for key name '%s'",
-                                (char *)objectGetVal(c->argv[3]), (char *)objectGetVal(key));
+                                (char *)objectGetVal(c->argv[3]),
+                                (char *)objectGetVal(key));
             return;
         }
 

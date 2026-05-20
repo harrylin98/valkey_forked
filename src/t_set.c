@@ -63,8 +63,8 @@ robj *setTypeCreate(sds value, size_t size_hint) {
 /* Check if the existing set should be converted to another encoding based off the
  * the size hint. */
 void setTypeMaybeConvert(robj *set, size_t size_hint) {
-    if ((set->encoding == OBJ_ENCODING_LISTPACK && size_hint > server.set_max_listpack_entries) ||
-        (set->encoding == OBJ_ENCODING_INTSET && size_hint > server.set_max_intset_entries)) {
+    if ((set->encoding == OBJ_ENCODING_LISTPACK && size_hint > server.set_max_listpack_entries)
+        || (set->encoding == OBJ_ENCODING_INTSET && size_hint > server.set_max_intset_entries)) {
         setTypeConvertAndExpand(set, OBJ_ENCODING_HASHTABLE, size_hint, 1);
     }
 }
@@ -161,8 +161,8 @@ int setTypeAddAux(robj *set, char *str, size_t len, int64_t llval, int str_is_sd
         if (p != NULL) p = lpFind(lp, p, (unsigned char *)str, len, 0);
         if (p == NULL) {
             /* Not found.  */
-            if (lpLength(lp) < server.set_max_listpack_entries && len <= server.set_max_listpack_value &&
-                lpSafeToAdd(lp, len)) {
+            if (lpLength(lp) < server.set_max_listpack_entries && len <= server.set_max_listpack_value
+                && lpSafeToAdd(lp, len)) {
                 if (str == tmpbuf) {
                     /* This came in as integer so we can avoid parsing it again.
                      * TODO: Create and use lpFindInteger; don't go via string. */
@@ -199,9 +199,9 @@ int setTypeAddAux(robj *set, char *str, size_t len, int64_t llval, int str_is_sd
                 size_t s2 = lpEstimateBytesRepeatedInteger(intsetMin(objectGetVal(set)), n);
                 totsize = max(s1, s2);
             }
-            if (intsetLen((const intset *)objectGetVal(set)) < server.set_max_listpack_entries &&
-                len <= server.set_max_listpack_value && maxelelen <= server.set_max_listpack_value &&
-                lpSafeToAdd(NULL, totsize + len)) {
+            if (intsetLen((const intset *)objectGetVal(set)) < server.set_max_listpack_entries
+                && len <= server.set_max_listpack_value && maxelelen <= server.set_max_listpack_value
+                && lpSafeToAdd(NULL, totsize + len)) {
                 /* In the "safe to add" check above we assumed all elements in
                  * the intset are of size maxelelen. This is an upper bound. */
                 setTypeConvertAndExpand(set, OBJ_ENCODING_LISTPACK, intsetLen(objectGetVal(set)) + 1, 1);
@@ -1482,8 +1482,8 @@ void sunionDiffGenericCommand(client *c, robj **setkeys, int setnum, robj *dstke
          * If one of the set is OBJ_ENCODING_LISTPACK, let's set 'dstset' to hashtable default encoding,
          * the hashtable is more efficient when find and compare than the listpack. The corresponding
          * time complexity are O(1) vs O(n). */
-        if (!dstkey && dstset_encoding == OBJ_ENCODING_INTSET &&
-            (setobj->encoding == OBJ_ENCODING_LISTPACK || setobj->encoding == OBJ_ENCODING_HASHTABLE)) {
+        if (!dstkey && dstset_encoding == OBJ_ENCODING_INTSET
+            && (setobj->encoding == OBJ_ENCODING_LISTPACK || setobj->encoding == OBJ_ENCODING_HASHTABLE)) {
             dstset_encoding = OBJ_ENCODING_HASHTABLE;
         }
         sets[j] = setobj;

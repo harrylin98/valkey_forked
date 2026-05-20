@@ -133,10 +133,10 @@ int HelloListSplice_ValkeyCommand(ValkeyModuleCtx *ctx, ValkeyModuleString **arg
     ValkeyModuleKey *dstkey = ValkeyModule_OpenKey(ctx, argv[2], VALKEYMODULE_READ | VALKEYMODULE_WRITE);
 
     /* Src and dst key must be empty or lists. */
-    if ((ValkeyModule_KeyType(srckey) != VALKEYMODULE_KEYTYPE_LIST &&
-         ValkeyModule_KeyType(srckey) != VALKEYMODULE_KEYTYPE_EMPTY) ||
-        (ValkeyModule_KeyType(dstkey) != VALKEYMODULE_KEYTYPE_LIST &&
-         ValkeyModule_KeyType(dstkey) != VALKEYMODULE_KEYTYPE_EMPTY)) {
+    if ((ValkeyModule_KeyType(srckey) != VALKEYMODULE_KEYTYPE_LIST
+         && ValkeyModule_KeyType(srckey) != VALKEYMODULE_KEYTYPE_EMPTY)
+        || (ValkeyModule_KeyType(dstkey) != VALKEYMODULE_KEYTYPE_LIST
+            && ValkeyModule_KeyType(dstkey) != VALKEYMODULE_KEYTYPE_EMPTY)) {
         ValkeyModule_CloseKey(srckey);
         ValkeyModule_CloseKey(dstkey);
         return ValkeyModule_ReplyWithError(ctx, VALKEYMODULE_ERRORMSG_WRONGTYPE);
@@ -176,10 +176,10 @@ int HelloListSpliceAuto_ValkeyCommand(ValkeyModuleCtx *ctx, ValkeyModuleString *
     ValkeyModuleKey *dstkey = ValkeyModule_OpenKey(ctx, argv[2], VALKEYMODULE_READ | VALKEYMODULE_WRITE);
 
     /* Src and dst key must be empty or lists. */
-    if ((ValkeyModule_KeyType(srckey) != VALKEYMODULE_KEYTYPE_LIST &&
-         ValkeyModule_KeyType(srckey) != VALKEYMODULE_KEYTYPE_EMPTY) ||
-        (ValkeyModule_KeyType(dstkey) != VALKEYMODULE_KEYTYPE_LIST &&
-         ValkeyModule_KeyType(dstkey) != VALKEYMODULE_KEYTYPE_EMPTY)) {
+    if ((ValkeyModule_KeyType(srckey) != VALKEYMODULE_KEYTYPE_LIST
+         && ValkeyModule_KeyType(srckey) != VALKEYMODULE_KEYTYPE_EMPTY)
+        || (ValkeyModule_KeyType(dstkey) != VALKEYMODULE_KEYTYPE_LIST
+            && ValkeyModule_KeyType(dstkey) != VALKEYMODULE_KEYTYPE_EMPTY)) {
         return ValkeyModule_ReplyWithError(ctx, VALKEYMODULE_ERRORMSG_WRONGTYPE);
     }
 
@@ -355,8 +355,8 @@ int HelloZsumRange_ValkeyCommand(ValkeyModuleCtx *ctx, ValkeyModuleString **argv
     double score_start, score_end;
     if (argc != 4) return ValkeyModule_WrongArity(ctx);
 
-    if (ValkeyModule_StringToDouble(argv[2], &score_start) != VALKEYMODULE_OK ||
-        ValkeyModule_StringToDouble(argv[3], &score_end) != VALKEYMODULE_OK) {
+    if (ValkeyModule_StringToDouble(argv[2], &score_start) != VALKEYMODULE_OK
+        || ValkeyModule_StringToDouble(argv[3], &score_end) != VALKEYMODULE_OK) {
         return ValkeyModule_ReplyWithError(ctx, "ERR invalid range");
     }
 
@@ -520,36 +520,42 @@ int ValkeyModule_OnLoad(ValkeyModuleCtx *ctx, ValkeyModuleString **argv, int arg
         printf("Module loaded with ARGV[%d] = %s\n", j, s);
     }
 
-    if (ValkeyModule_CreateCommand(ctx, "hello.simple", HelloSimple_ValkeyCommand, "readonly", 0, 0, 0) ==
-        VALKEYMODULE_ERR)
+    if (ValkeyModule_CreateCommand(ctx, "hello.simple", HelloSimple_ValkeyCommand, "readonly", 0, 0, 0)
+        == VALKEYMODULE_ERR)
         return VALKEYMODULE_ERR;
 
-    if (ValkeyModule_CreateCommand(ctx, "hello.push.native", HelloPushNative_ValkeyCommand, "write deny-oom", 1, 1,
-                                   1) == VALKEYMODULE_ERR)
+    if (ValkeyModule_CreateCommand(ctx, "hello.push.native", HelloPushNative_ValkeyCommand, "write deny-oom", 1, 1, 1)
+        == VALKEYMODULE_ERR)
         return VALKEYMODULE_ERR;
 
-    if (ValkeyModule_CreateCommand(ctx, "hello.push.call", HelloPushCall_ValkeyCommand, "write deny-oom", 1, 1, 1) ==
-        VALKEYMODULE_ERR)
+    if (ValkeyModule_CreateCommand(ctx, "hello.push.call", HelloPushCall_ValkeyCommand, "write deny-oom", 1, 1, 1)
+        == VALKEYMODULE_ERR)
         return VALKEYMODULE_ERR;
 
-    if (ValkeyModule_CreateCommand(ctx, "hello.push.call2", HelloPushCall2_ValkeyCommand, "write deny-oom", 1, 1, 1) ==
-        VALKEYMODULE_ERR)
+    if (ValkeyModule_CreateCommand(ctx, "hello.push.call2", HelloPushCall2_ValkeyCommand, "write deny-oom", 1, 1, 1)
+        == VALKEYMODULE_ERR)
         return VALKEYMODULE_ERR;
 
-    if (ValkeyModule_CreateCommand(ctx, "hello.list.sum.len", HelloListSumLen_ValkeyCommand, "readonly", 1, 1, 1) ==
-        VALKEYMODULE_ERR)
+    if (ValkeyModule_CreateCommand(ctx, "hello.list.sum.len", HelloListSumLen_ValkeyCommand, "readonly", 1, 1, 1)
+        == VALKEYMODULE_ERR)
         return VALKEYMODULE_ERR;
 
-    if (ValkeyModule_CreateCommand(ctx, "hello.list.splice", HelloListSplice_ValkeyCommand, "write deny-oom", 1, 2,
-                                   1) == VALKEYMODULE_ERR)
+    if (ValkeyModule_CreateCommand(ctx, "hello.list.splice", HelloListSplice_ValkeyCommand, "write deny-oom", 1, 2, 1)
+        == VALKEYMODULE_ERR)
         return VALKEYMODULE_ERR;
 
-    if (ValkeyModule_CreateCommand(ctx, "hello.list.splice.auto", HelloListSpliceAuto_ValkeyCommand, "write deny-oom",
-                                   1, 2, 1) == VALKEYMODULE_ERR)
+    if (ValkeyModule_CreateCommand(ctx,
+                                   "hello.list.splice.auto",
+                                   HelloListSpliceAuto_ValkeyCommand,
+                                   "write deny-oom",
+                                   1,
+                                   2,
+                                   1)
+        == VALKEYMODULE_ERR)
         return VALKEYMODULE_ERR;
 
-    if (ValkeyModule_CreateCommand(ctx, "hello.rand.array", HelloRandArray_ValkeyCommand, "readonly", 0, 0, 0) ==
-        VALKEYMODULE_ERR)
+    if (ValkeyModule_CreateCommand(ctx, "hello.rand.array", HelloRandArray_ValkeyCommand, "readonly", 0, 0, 0)
+        == VALKEYMODULE_ERR)
         return VALKEYMODULE_ERR;
 
     if (ValkeyModule_CreateCommand(ctx, "hello.repl1", HelloRepl1_ValkeyCommand, "write", 0, 0, 0) == VALKEYMODULE_ERR)
@@ -558,24 +564,24 @@ int ValkeyModule_OnLoad(ValkeyModuleCtx *ctx, ValkeyModuleString **argv, int arg
     if (ValkeyModule_CreateCommand(ctx, "hello.repl2", HelloRepl2_ValkeyCommand, "write", 1, 1, 1) == VALKEYMODULE_ERR)
         return VALKEYMODULE_ERR;
 
-    if (ValkeyModule_CreateCommand(ctx, "hello.toggle.case", HelloToggleCase_ValkeyCommand, "write", 1, 1, 1) ==
-        VALKEYMODULE_ERR)
+    if (ValkeyModule_CreateCommand(ctx, "hello.toggle.case", HelloToggleCase_ValkeyCommand, "write", 1, 1, 1)
+        == VALKEYMODULE_ERR)
         return VALKEYMODULE_ERR;
 
-    if (ValkeyModule_CreateCommand(ctx, "hello.more.expire", HelloMoreExpire_ValkeyCommand, "write", 1, 1, 1) ==
-        VALKEYMODULE_ERR)
+    if (ValkeyModule_CreateCommand(ctx, "hello.more.expire", HelloMoreExpire_ValkeyCommand, "write", 1, 1, 1)
+        == VALKEYMODULE_ERR)
         return VALKEYMODULE_ERR;
 
-    if (ValkeyModule_CreateCommand(ctx, "hello.zsumrange", HelloZsumRange_ValkeyCommand, "readonly", 1, 1, 1) ==
-        VALKEYMODULE_ERR)
+    if (ValkeyModule_CreateCommand(ctx, "hello.zsumrange", HelloZsumRange_ValkeyCommand, "readonly", 1, 1, 1)
+        == VALKEYMODULE_ERR)
         return VALKEYMODULE_ERR;
 
-    if (ValkeyModule_CreateCommand(ctx, "hello.lexrange", HelloLexRange_ValkeyCommand, "readonly", 1, 1, 1) ==
-        VALKEYMODULE_ERR)
+    if (ValkeyModule_CreateCommand(ctx, "hello.lexrange", HelloLexRange_ValkeyCommand, "readonly", 1, 1, 1)
+        == VALKEYMODULE_ERR)
         return VALKEYMODULE_ERR;
 
-    if (ValkeyModule_CreateCommand(ctx, "hello.hcopy", HelloHCopy_ValkeyCommand, "write deny-oom", 1, 1, 1) ==
-        VALKEYMODULE_ERR)
+    if (ValkeyModule_CreateCommand(ctx, "hello.hcopy", HelloHCopy_ValkeyCommand, "write deny-oom", 1, 1, 1)
+        == VALKEYMODULE_ERR)
         return VALKEYMODULE_ERR;
 
     if (ValkeyModule_CreateCommand(ctx, "hello.leftpad", HelloLeftPad_ValkeyCommand, "", 1, 1, 1) == VALKEYMODULE_ERR)

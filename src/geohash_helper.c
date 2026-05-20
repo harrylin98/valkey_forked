@@ -195,7 +195,8 @@ GeoHashRadius geohashCalculateAreasByShapeWGS84(GeoShape *shape) {
         radius_meters = shape->t.radius;
     } else if (shape->type == RECTANGLE_TYPE) {
         /* For rectangles, calculate the diagonal as the radius. */
-        radius_meters = sqrt((shape->t.r.width / 2) * (shape->t.r.width / 2) + (shape->t.r.height / 2) * (shape->t.r.height / 2));
+        radius_meters = sqrt((shape->t.r.width / 2) * (shape->t.r.width / 2)
+                             + (shape->t.r.height / 2) * (shape->t.r.height / 2));
     } else if (shape->type == POLYGON_TYPE) {
         /* For polygons, use max distance from the centroid to the bounding box. */
         double dist_top_left = geohashGetDistance(longitude, latitude, min_lon, max_lat);
@@ -350,14 +351,20 @@ int geohashGetDistanceIfInRectangle(double width_m,
  * The algorithm is based on PNPOLY - Point Inclusion in Polygon Test by W. Randolph Franklin (WRF).
  * See: https://wrfranklin.org/Research/Short_Notes/pnpoly.html
  * Returns 1 if inside the polyon and returns 0 otherwise. */
-int geohashGetDistanceIfInPolygon(double centroidLon, double centroidLat, double *point, double (*vertices)[2], int num_vertices, double *distance) {
+int geohashGetDistanceIfInPolygon(double centroidLon,
+                                  double centroidLat,
+                                  double *point,
+                                  double (*vertices)[2],
+                                  int num_vertices,
+                                  double *distance) {
     int i, j;
     int inside = 0;
     for (i = 0, j = num_vertices - 1; i < num_vertices; j = i++) {
         double *vertexA = vertices[i];
         double *vertexB = vertices[j];
-        if (((vertexA[1] > point[1]) != (vertexB[1] > point[1])) &&
-            (point[0] < (vertexB[0] - vertexA[0]) * (point[1] - vertexA[1]) / (vertexB[1] - vertexA[1]) + vertexA[0])) {
+        if (((vertexA[1] > point[1]) != (vertexB[1] > point[1]))
+            && (point[0]
+                < (vertexB[0] - vertexA[0]) * (point[1] - vertexA[1]) / (vertexB[1] - vertexA[1]) + vertexA[0])) {
             inside = !inside;
         }
     }

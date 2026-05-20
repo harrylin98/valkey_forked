@@ -106,8 +106,8 @@ typedef enum {
     EL_DURATION_TYPE_EL = 0, // cumulative time duration metric of the whole eventloop
     EL_DURATION_TYPE_CMD,    // cumulative time duration metric of executing commands
     EL_DURATION_TYPE_AOF,    // cumulative time duration metric of flushing AOF in eventloop
-    EL_DURATION_TYPE_CRON,   // cumulative time duration metric of cron (serverCron and beforeSleep, but excluding IO and
-                             // AOF)
+    EL_DURATION_TYPE_CRON,   // cumulative time duration metric of cron (serverCron and beforeSleep,
+                             // but excluding IO and AOF)
     EL_DURATION_TYPE_NUM
 } DurationType;
 

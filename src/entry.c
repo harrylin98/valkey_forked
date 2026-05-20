@@ -309,7 +309,9 @@ static entry *entryConstruct(size_t alloc_size,
                              size_t expiry_size,
                              size_t embedded_value_sds_size,
                              size_t embedded_field_sds_size) {
-    serverAssert((sds_value == NULL && stringref_value == NULL && embed_value) || (sds_value != NULL && stringref_value == NULL) || (sds_value == NULL && stringref_value != NULL && !embed_value));
+    serverAssert((sds_value == NULL && stringref_value == NULL && embed_value)
+                 || (sds_value != NULL && stringref_value == NULL)
+                 || (sds_value == NULL && stringref_value != NULL && !embed_value));
     size_t buf_size;
     /* allocate the buffer */
     char *buf = zmalloc_usable(alloc_size, &buf_size);
@@ -328,7 +330,11 @@ static entry *entryConstruct(size_t alloc_size,
         buf_size -= sizeof(void *);
     } else if (sds_value) {
         /* The value is embedded, the value data is written after the field data. */
-        sdswrite(buf + embedded_field_sds_size, buf_size - embedded_field_sds_size, SDS_TYPE_8, sds_value, sdslen(sds_value));
+        sdswrite(buf + embedded_field_sds_size,
+                 buf_size - embedded_field_sds_size,
+                 SDS_TYPE_8,
+                 sds_value,
+                 sdslen(sds_value));
         sdsfree(sds_value);
         buf_size -= embedded_value_sds_size;
     }
@@ -341,8 +347,10 @@ static entry *entryConstruct(size_t alloc_size,
     sdsSetAuxBit(entryGetField(new_entry), FIELD_SDS_AUX_BIT_ENTRY_HAS_EXPIRY, expiry_size > 0 ? 1 : 0);
 
     /* Check that the new entry was built correctly */
-    debugServerAssert(sdsGetAuxBit(entryGetField(new_entry), FIELD_SDS_AUX_BIT_ENTRY_HAS_VALUE_PTR) == (embed_value ? 0 : 1));
-    debugServerAssert(sdsGetAuxBit(entryGetField(new_entry), FIELD_SDS_AUX_BIT_ENTRY_HAS_EXPIRY) == (expiry_size > 0 ? 1 : 0));
+    debugServerAssert(sdsGetAuxBit(entryGetField(new_entry), FIELD_SDS_AUX_BIT_ENTRY_HAS_VALUE_PTR)
+                      == (embed_value ? 0 : 1));
+    debugServerAssert(sdsGetAuxBit(entryGetField(new_entry), FIELD_SDS_AUX_BIT_ENTRY_HAS_EXPIRY)
+                      == (expiry_size > 0 ? 1 : 0));
     return new_entry;
 }
 
@@ -352,8 +360,24 @@ entry *entryCreate(const_sds field, sds value, mstime_t expiry) {
     int embedded_field_sds_type;
     size_t expiry_size, embedded_value_sds_size, embedded_field_sds_size;
     size_t value_len = value ? sdslen(value) : SIZE_MAX;
-    size_t alloc_size = entryReqSize(sdslen(field), value_len, expiry, &embed_value, &embedded_field_sds_type, &embedded_field_sds_size, &expiry_size, &embedded_value_sds_size);
-    return entryConstruct(alloc_size, field, value, NULL, expiry, embed_value, embedded_field_sds_type, expiry_size, embedded_value_sds_size, embedded_field_sds_size);
+    size_t alloc_size = entryReqSize(sdslen(field),
+                                     value_len,
+                                     expiry,
+                                     &embed_value,
+                                     &embedded_field_sds_type,
+                                     &embedded_field_sds_size,
+                                     &expiry_size,
+                                     &embedded_value_sds_size);
+    return entryConstruct(alloc_size,
+                          field,
+                          value,
+                          NULL,
+                          expiry,
+                          embed_value,
+                          embedded_field_sds_type,
+                          expiry_size,
+                          embedded_value_sds_size,
+                          embedded_field_sds_size);
 }
 
 /* Sets the entry's value to a string reference object.
@@ -391,7 +415,16 @@ entry *entryUpdateAsStringRef(entry *e, const char *buf, size_t len, mstime_t ex
 
     size_t expiry_size = 0;
     if (expiry != EXPIRY_NONE) expiry_size = sizeof(expiry);
-    entry *new_entry = entryConstruct(alloc_size, field, NULL, value, expiry, false, SDS_TYPE_8, expiry_size, sizeof(value), field_size);
+    entry *new_entry = entryConstruct(alloc_size,
+                                      field,
+                                      NULL,
+                                      value,
+                                      expiry,
+                                      false,
+                                      SDS_TYPE_8,
+                                      expiry_size,
+                                      sizeof(value),
+                                      field_size);
     entryFree(e);
 
     sdsSetAuxBit(entryGetField(new_entry), FIELD_SDS_AUX_BIT_ENTRY_HAS_STRING_REF, 1);
@@ -425,22 +458,31 @@ entry *entryUpdate(entry *e, sds value, mstime_t expiry) {
     bool embed_value = false;
     int embedded_field_sds_type;
     size_t expiry_size, embedded_value_size, embedded_field_size;
-    size_t required_entry_size = entryReqSize(sdslen(field), value_len, expiry, &embed_value, &embedded_field_sds_type, &embedded_field_size, &expiry_size, &embedded_value_size);
+    size_t required_entry_size = entryReqSize(sdslen(field),
+                                              value_len,
+                                              expiry,
+                                              &embed_value,
+                                              &embedded_field_sds_type,
+                                              &embedded_field_size,
+                                              &expiry_size,
+                                              &embedded_value_size);
     size_t current_embedded_allocation_size = entryHasEmbeddedValue(e) ? entryMemUsage(e) : 0;
 
-    bool expiry_add_remove = update_expiry && (curr_expiration_time == EXPIRY_NONE || expiry == EXPIRY_NONE); // In case we are toggling expiration
-    bool value_change_encoding = update_value && (embed_value != entryHasEmbeddedValue(e));                   // In case we change the way value is embedded or not
+    // In case we are toggling expiration
+    bool expiry_add_remove = update_expiry && (curr_expiration_time == EXPIRY_NONE || expiry == EXPIRY_NONE);
+    // In case we change the way value is embedded or not
+    bool value_change_encoding = update_value && (embed_value != entryHasEmbeddedValue(e));
 
 
     /* We will create a new entry in the following cases:
      * 1. In the case were we add or remove expiration.
      * 2. We change the way value is encoded
      * 3. in the case were we are NOT migrating from an embedded entry to an embedded entry with ~the same size. */
-    bool create_new_entry = (expiry_add_remove) || (value_change_encoding) ||
-                            (update_value && entryHasEmbeddedValue(e) &&
-                             !(required_entry_size <= EMBED_VALUE_MAX_ALLOC_SIZE &&
-                               required_entry_size <= current_embedded_allocation_size &&
-                               required_entry_size >= current_embedded_allocation_size * 3 / 4));
+    bool create_new_entry = (expiry_add_remove) || (value_change_encoding)
+                            || (update_value && entryHasEmbeddedValue(e)
+                                && !(required_entry_size <= EMBED_VALUE_MAX_ALLOC_SIZE
+                                     && required_entry_size <= current_embedded_allocation_size
+                                     && required_entry_size >= current_embedded_allocation_size * 3 / 4));
 
     if (!create_new_entry) {
         /* In this case we are sure we do not have to allocate new entry, so expiry must already be set. */
@@ -480,12 +522,23 @@ entry *entryUpdate(entry *e, sds value, mstime_t expiry) {
             }
         }
         /* allocate the buffer for a new entry */
-        new_entry = entryConstruct(required_entry_size, field, value, NULL, expiry, embed_value, embedded_field_sds_type, expiry_size, embedded_value_size, embedded_field_size);
+        new_entry = entryConstruct(required_entry_size,
+                                   field,
+                                   value,
+                                   NULL,
+                                   expiry,
+                                   embed_value,
+                                   embedded_field_sds_type,
+                                   expiry_size,
+                                   embedded_value_size,
+                                   embedded_field_size);
         entryFree(e);
     }
     /* Check that the new entry was built correctly */
-    debugServerAssert(sdsGetAuxBit(entryGetField(new_entry), FIELD_SDS_AUX_BIT_ENTRY_HAS_VALUE_PTR) == (embed_value ? 0 : 1));
-    debugServerAssert(sdsGetAuxBit(entryGetField(new_entry), FIELD_SDS_AUX_BIT_ENTRY_HAS_EXPIRY) == (expiry_size > 0 ? 1 : 0));
+    debugServerAssert(sdsGetAuxBit(entryGetField(new_entry), FIELD_SDS_AUX_BIT_ENTRY_HAS_VALUE_PTR)
+                      == (embed_value ? 0 : 1));
+    debugServerAssert(sdsGetAuxBit(entryGetField(new_entry), FIELD_SDS_AUX_BIT_ENTRY_HAS_EXPIRY)
+                      == (expiry_size > 0 ? 1 : 0));
     serverAssert(new_entry);
     return new_entry;
 }

@@ -260,8 +260,7 @@ void *bioProcessBackgroundJobs(void *arg) {
     sigemptyset(&sigset);
     sigaddset(&sigset, SIGALRM);
     int err = pthread_sigmask(SIG_BLOCK, &sigset, NULL);
-    if (err)
-        serverLog(LL_WARNING, "Warning: can't mask SIGALRM in bio.c thread: %s", strerror(err));
+    if (err) serverLog(LL_WARNING, "Warning: can't mask SIGALRM in bio.c thread: %s", strerror(err));
 
     bio_worker_num = bioWorkerNum(bwd);
 

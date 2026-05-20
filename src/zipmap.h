@@ -36,8 +36,11 @@
 #define _ZIPMAP_H
 
 unsigned char *zipmapRewind(unsigned char *zm);
-unsigned char *
-zipmapNext(unsigned char *zm, unsigned char **key, unsigned int *klen, unsigned char **value, unsigned int *vlen);
+unsigned char *zipmapNext(unsigned char *zm,
+                          unsigned char **key,
+                          unsigned int *klen,
+                          unsigned char **value,
+                          unsigned int *vlen);
 int zipmapValidateIntegrity(unsigned char *zm, size_t size, int deep);
 
 #endif

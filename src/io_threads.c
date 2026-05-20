@@ -175,8 +175,8 @@ void IOThreadsAfterSleep(int numevents) {
         float cpu_sys = (float)getInstantaneousMetric(STATS_METRIC_MAIN_THREAD_CPU_SYS) / 10000.0;
         float cpu_user = (float)getInstantaneousMetric(STATS_METRIC_MAIN_THREAD_CPU_USER) / 10000.0;
         /* Ignite IO threads if sys CPU > 30%, or if sys CPU > 5% and user CPU > 50% */
-        should_ignite = (cpu_sys > IO_IGNITION_CPU_SYS) ||
-                        (cpu_sys > IO_IGNITION_CPU_SYS_LOW && cpu_user > IO_IGNITION_CPU_USER);
+        should_ignite = (cpu_sys > IO_IGNITION_CPU_SYS)
+                        || (cpu_sys > IO_IGNITION_CPU_SYS_LOW && cpu_user > IO_IGNITION_CPU_USER);
 #else
         should_ignite = (numevents >= IO_IGNITION_EVENTS);
 #endif
@@ -263,7 +263,8 @@ static void flushPendingIOResponses(int blocking) {
         /* Try to enqueue. If blocking is set, retry until success. */
         do {
             pushed = mpscEnqueue(&io_shared_outbox, job, &io_thread_ticket);
-            if (pushed || !blocking || server.crashed) break; /* On server crash we kill the IO threads, no point in sending back jobs to the main-thread. */
+            if (pushed || !blocking || server.crashed)
+                break; /* On server crash we kill the IO threads, no point in sending back jobs to the main-thread. */
             atomic_thread_fence(memory_order_acquire);
         } while (true);
 
@@ -325,14 +326,9 @@ static void *IOThreadMain(void *myid) {
                 untagJob(batch_jobs[i], &data, &type);
 
                 switch (type) {
-                case JOB_REQ_FREE_ARGV:
-                    IOThreadFreeArgv((robj **)data);
-                    break;
-                case JOB_REQ_POLL:
-                    IOThreadPoll((aeEventLoop *)data);
-                    break;
-                default:
-                    serverPanic("Invalid SPSC job type: %d", type);
+                case JOB_REQ_FREE_ARGV: IOThreadFreeArgv((robj **)data); break;
+                case JOB_REQ_POLL: IOThreadPoll((aeEventLoop *)data); break;
+                default: serverPanic("Invalid SPSC job type: %d", type);
                 }
             }
             processed += batch_count;
@@ -349,23 +345,12 @@ static void *IOThreadMain(void *myid) {
             untagJob(tagged_job, &data, &type);
 
             switch (type) {
-            case JOB_REQ_READ_CLIENT:
-                ioThreadReadQueryFromClient((client *)data);
-                break;
-            case JOB_REQ_WRITE_CLIENT:
-                ioThreadWriteToClient((client *)data);
-                break;
-            case JOB_REQ_FREE_OBJ:
-                decrRefCount(data);
-                break;
-            case JOB_REQ_ACCEPT:
-                ioThreadAccept((client *)data);
-                break;
-            case JOB_REQ_POLL:
-                IOThreadPoll((aeEventLoop *)data);
-                break;
-            default:
-                serverPanic("Invalid SPMC job type: %d", type);
+            case JOB_REQ_READ_CLIENT: ioThreadReadQueryFromClient((client *)data); break;
+            case JOB_REQ_WRITE_CLIENT: ioThreadWriteToClient((client *)data); break;
+            case JOB_REQ_FREE_OBJ: decrRefCount(data); break;
+            case JOB_REQ_ACCEPT: ioThreadAccept((client *)data); break;
+            case JOB_REQ_POLL: IOThreadPoll((aeEventLoop *)data); break;
+            default: serverPanic("Invalid SPMC job type: %d", type);
             }
             processed++;
         }

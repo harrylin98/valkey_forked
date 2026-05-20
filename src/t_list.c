@@ -53,7 +53,8 @@ static void listTypeTryConvertListpack(robj *o, robj **argv, int start, int end,
         add_length = end - start + 1;
     }
 
-    if (quicklistNodeExceedsLimit(server.list_max_listpack_size, lpBytes(objectGetVal(o)) + add_bytes,
+    if (quicklistNodeExceedsLimit(server.list_max_listpack_size,
+                                  lpBytes(objectGetVal(o)) + add_bytes,
                                   lpLength(objectGetVal(o)) + add_length)) {
         /* Invoke callback before conversion. */
         if (fn) fn(data);
@@ -123,8 +124,13 @@ static void listTypeTryConvertQuicklist(robj *o, int shrinking, beforeConvertCB 
  *                       wanna consider converting from quicklist to listpack. When we
  *                       know we're shrinking, we use a lower (more strict) threshold in
  *                       order to avoid repeated conversions on every list change. */
-static void
-listTypeTryConversionRaw(robj *o, list_conv_type lct, robj **argv, int start, int end, beforeConvertCB fn, void *data) {
+static void listTypeTryConversionRaw(robj *o,
+                                     list_conv_type lct,
+                                     robj **argv,
+                                     int start,
+                                     int end,
+                                     beforeConvertCB fn,
+                                     void *data) {
     if (o->encoding == OBJ_ENCODING_QUICKLIST) {
         if (lct == LIST_CONV_GROWING) return; /* Growing has nothing to do with quicklist */
         listTypeTryConvertQuicklist(o, lct == LIST_CONV_SHRINKING, fn, data);
@@ -169,8 +175,9 @@ void listTypePush(robj *subject, robj *value, int where) {
             new_val = (where == LIST_HEAD) ? lpPrependInteger(objectGetVal(subject), (long)objectGetVal(value))
                                            : lpAppendInteger(objectGetVal(subject), (long)objectGetVal(value));
         } else {
-            new_val = (where == LIST_HEAD) ? lpPrepend(objectGetVal(subject), objectGetVal(value), sdslen(objectGetVal(value)))
-                                           : lpAppend(objectGetVal(subject), objectGetVal(value), sdslen(objectGetVal(value)));
+            new_val = (where == LIST_HEAD)
+                          ? lpPrepend(objectGetVal(subject), objectGetVal(value), sdslen(objectGetVal(value)))
+                          : lpAppend(objectGetVal(subject), objectGetVal(value), sdslen(objectGetVal(value)));
         }
         objectSetVal(subject, new_val);
     } else {
@@ -276,8 +283,8 @@ int listTypeNext(listTypeIterator *li, listTypeEntry *entry) {
     } else if (li->encoding == OBJ_ENCODING_LISTPACK) {
         entry->lpe = li->lpi;
         if (entry->lpe != NULL) {
-            li->lpi =
-                (li->direction == LIST_TAIL) ? lpNext(objectGetVal(li->subject), li->lpi) : lpPrev(objectGetVal(li->subject), li->lpi);
+            li->lpi = (li->direction == LIST_TAIL) ? lpNext(objectGetVal(li->subject), li->lpi)
+                                                   : lpPrev(objectGetVal(li->subject), li->lpi);
             return 1;
         }
     } else {
@@ -336,7 +343,8 @@ void listTypeInsert(listTypeEntry *entry, robj *value, int where) {
         }
     } else if (entry->li->encoding == OBJ_ENCODING_LISTPACK) {
         int lpw = (where == LIST_TAIL) ? LP_AFTER : LP_BEFORE;
-        objectSetVal(subject, lpInsertString(objectGetVal(subject), (unsigned char *)str, len, entry->lpe, lpw, &entry->lpe));
+        objectSetVal(subject,
+                     lpInsertString(objectGetVal(subject), (unsigned char *)str, len, entry->lpe, lpw, &entry->lpe));
     } else {
         serverPanic("Unknown list encoding");
     }
@@ -855,8 +863,8 @@ void lrangeCommand(client *c) {
     robj *o;
     long start, end;
 
-    if ((getLongFromObjectOrReply(c, c->argv[2], &start, NULL) != C_OK) ||
-        (getLongFromObjectOrReply(c, c->argv[3], &end, NULL) != C_OK))
+    if ((getLongFromObjectOrReply(c, c->argv[2], &start, NULL) != C_OK)
+        || (getLongFromObjectOrReply(c, c->argv[3], &end, NULL) != C_OK))
         return;
 
     if ((o = lookupKeyReadOrReply(c, c->argv[1], shared.emptyarray)) == NULL || checkType(c, o, OBJ_LIST)) return;
@@ -869,8 +877,8 @@ void ltrimCommand(client *c) {
     robj *o;
     long start, end, llen, ltrim, rtrim;
 
-    if ((getLongFromObjectOrReply(c, c->argv[2], &start, NULL) != C_OK) ||
-        (getLongFromObjectOrReply(c, c->argv[3], &end, NULL) != C_OK))
+    if ((getLongFromObjectOrReply(c, c->argv[2], &start, NULL) != C_OK)
+        || (getLongFromObjectOrReply(c, c->argv[3], &end, NULL) != C_OK))
         return;
 
     if ((o = lookupKeyWriteOrReply(c, c->argv[1], shared.ok)) == NULL || checkType(c, o, OBJ_LIST)) return;
@@ -949,9 +957,10 @@ void lposCommand(client *c) {
             j++;
             if (getRangeLongFromObjectOrReply(c, c->argv[j], -LONG_MAX, LONG_MAX, &rank, NULL) != C_OK) return;
             if (rank == 0) {
-                addReplyError(c, "RANK can't be zero: use 1 to start from "
-                                 "the first match, 2 from the second ... "
-                                 "or use negative to start from the end of the list");
+                addReplyError(c,
+                              "RANK can't be zero: use 1 to start from "
+                              "the first match, 2 from the second ... "
+                              "or use negative to start from the end of the list");
                 return;
             }
         } else if (!strcasecmp(opt, "COUNT") && moreargs) {
@@ -1282,8 +1291,13 @@ void lmpopGenericCommand(client *c, int numkeys_idx, int is_block) {
     long count = -1;  /* Reply will consist of up to count elements, depending on the list's length. */
 
     /* Parse the numkeys. */
-    if (getRangeLongFromObjectOrReply(c, c->argv[numkeys_idx], 1, LONG_MAX, &numkeys,
-                                      "numkeys should be greater than 0") != C_OK)
+    if (getRangeLongFromObjectOrReply(c,
+                                      c->argv[numkeys_idx],
+                                      1,
+                                      LONG_MAX,
+                                      &numkeys,
+                                      "numkeys should be greater than 0")
+        != C_OK)
         return;
 
     /* Parse the where. where_idx: the index of where in the c->argv. */
@@ -1301,8 +1315,8 @@ void lmpopGenericCommand(client *c, int numkeys_idx, int is_block) {
 
         if (count == -1 && !strcasecmp(opt, "COUNT") && moreargs) {
             j++;
-            if (getRangeLongFromObjectOrReply(c, c->argv[j], 1, LONG_MAX, &count, "count should be greater than 0") !=
-                C_OK)
+            if (getRangeLongFromObjectOrReply(c, c->argv[j], 1, LONG_MAX, &count, "count should be greater than 0")
+                != C_OK)
                 return;
         } else {
             addReplyErrorObject(c, shared.syntaxerr);
